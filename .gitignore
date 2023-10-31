@@ -12,6 +12,7 @@ build/
 *.iws
 *.iml
 *.ipr
+### IntelliJ IDEA ###
 out/
 !**/src/main/**/out/
 !**/src/test/**/out/

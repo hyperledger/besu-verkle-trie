@@ -1,0 +1,21 @@
+**/build
+**/target
+
+**/Cargo.lock
+
+**/.idea
+**/.classpath
+**/.project
+**/.settings
+
+**/.vscode
+
+**/.gradle/
+
+## build files
+**/*.com
+**/*.class
+**/*.dll
+**/*.exe
+**/*.o
+**/*.so

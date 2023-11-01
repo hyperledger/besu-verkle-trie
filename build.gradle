@@ -1,5 +1,6 @@
+
 /*
- * Copyright Besu Contributors
+ * Copyright ConsenSys AG.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -13,140 +14,87 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-plugins {
-  id 'java-library'
-  id 'maven-publish'
-  id 'com.jfrog.artifactory' version '4.20.0'
-}
-
-dependencies {
-    implementation "com.google.guava:guava:16+"
-    implementation 'net.java.dev.jna:jna:5.12.1'
-    implementation 'org.apache.tuweni:tuweni-bytes:2.3.1'
-    implementation 'org.apache.tuweni:tuweni-units:2.3.1'
-    implementation 'org.apache.tuweni:tuweni-rlp:2.3.1'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.2'
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.12.5'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
-    testImplementation 'org.assertj:assertj-core:3.22.0'
-    testImplementation 'org.mockito:mockito-core:4.4.0'
-}
-
-test {
-  useJUnitPlatform()
-}
-
-sourceSets {
-    test {
-        resources {
-            srcDirs = ['src/test/resources']
-        }
-    }
-}
-
-
-
-task macArmLibCopy(type: Copy) {
-  from 'build/darwin-aarch64/lib/libipa_multipoint_jni.dylib'
-  into 'build/resources/main/darwin-aarch64'
-}
-processResources.dependsOn macArmLibCopy
-
-task macLibCopy(type: Copy) {
-  from 'build/darwin-x86-64/lib/libipa_multipoint_jni.dylib'
-  into 'build/resources/main/darwin-x86-64'
-}
-processResources.dependsOn macLibCopy
-
-task linuxLibCopy(type: Copy) {
-  from 'build/linux-gnu-x86_64/lib/libipa_multipoint_jni.so'
-  into 'build/resources/main/linux-x86-64'
-}
-processResources.dependsOn linuxLibCopy
-
-task linuxArm64LibCopy(type: Copy) {
-  from 'build/linux-gnu-aarch64/lib/libipa_multipoint_jni.so'
-  into 'build/resources/main/linux-aarch64'
-}
-processResources.dependsOn linuxArm64LibCopy
-
-jar {
-  archiveBaseName = 'besu-native-ipa-multipoint'
-  includeEmptyDirs = false
-  manifest {
-    attributes(
-        'Specification-Title': archiveBaseName,
-        'Specification-Version': project.version,
-        'Implementation-Title': archiveBaseName,
-        'Implementation-Version': project.version,
-        'Automatic-Module-Name': 'org.hyperledger.besu.native.ipa.multipoint'
-    )
+buildscript {
+  repositories {
+    mavenCentral()
   }
 }
 
-task sourcesJar(type: Jar, dependsOn: classes) {
-  archiveBaseName = 'besu-native-ipa-multipoint'
-  classifier = 'sources'
-  from sourceSets.main.allSource
+plugins {
+  id 'java-library'
+  id 'maven-publish'
+  id 'signing'
+  id 'com.jfrog.artifactory' version '4.20.0'
 }
 
-task javadocJar(type: Jar, dependsOn: javadoc) {
-  archiveBaseName = 'besu-native-ipa-multipoint'
-  classifier = 'javadoc'
-  from javadoc.destinationDir
-}
+allprojects {
+  apply plugin: 'java-library'
+  apply plugin: 'maven-publish'
+  apply plugin: 'signing'
 
+  sourceCompatibility = 17
+  targetCompatibility = 17
 
-publishing {
-  publications {
-    mavenJava(MavenPublication) {
-      groupId "org.hyperledger.besu"
-      artifactId "ipa-multipoint"
-      version "${project.version}"
+  repositories {
+    mavenCentral()
+  }
 
-      from components.java
-      artifact sourcesJar
-      artifact javadocJar
+  artifacts {
+    archives jar
+  }
 
-      pom {
-        name = "Besu Native - ${project.name}"
-        description = 'IPA Multipoint Library'
-        url = 'http://github.com/hyperledger/besu-native'
-        licenses {
-          license {
-            name = 'The Apache License, Version 2.0'
-            url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+  signing {
+    useGpgCmd()
+    sign configurations.archives
+  }
+
+  publishing {
+    publications {
+      MavenDeployment(MavenPublication) { publication ->
+        from components.java
+
+        groupId = 'org.hyperledger.besu'  // Updated groupId
+        artifactId = 'besu-verkle-trie'   // Updated artifactId
+        version = project.version
+
+        pom {
+          name = "Verkle Tries - ${project.name}"
+          description = 'VerkleTries'
+          url = 'https://github.com/hyperledger/besu-verkle-trie'
+          licenses {
+            license {
+              name = 'The Apache License, Version 2.0'
+              url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+            }
           }
-        }
-        scm {
-          connection = 'scm:git:git://github.com/hyperledger/besu-native.git'
-          developerConnection = 'scm:git:ssh://github.com/hyperledger/besu-native.git'
-          url = 'https://github.com/hyperledger/besu-native'
+          scm {
+            connection = 'scm:git:git://github.com/hyperledger/besu-verkle-trie'
+            developerConnection = 'scm:git:ssh://github.com/hyperledger/besu-verkle-trie'
+            url = 'https://github.com/hyperledger/besu-verkle-trie'
+          }
         }
       }
     }
   }
-}
 
-def artifactoryUser = project.hasProperty('artifactoryUser') ? project.property('artifactoryUser') : System.getenv('ARTIFACTORY_USER')
-def artifactoryKey = project.hasProperty('artifactoryApiKey') ? project.property('artifactoryApiKey') : System.getenv('ARTIFACTORY_KEY')
-def artifactoryRepo = System.getenv('ARTIFACTORY_REPO') ?: 'besu-maven'
-def artifactoryOrg = System.getenv('ARTIFACTORY_ORG') ?: 'hyperledger'
+  def artifactoryUser = project.hasProperty('artifactoryUser') ? project.property('artifactoryUser') : System.getenv('ARTIFACTORY_USER')
+  def artifactoryKey = project.hasProperty('artifactoryApiKey') ? project.property('artifactoryApiKey') : System.getenv('ARTIFACTORY_KEY')
+  def artifactoryRepo = System.getenv('ARTIFACTORY_REPO') ?: 'besu-maven'
+  def artifactoryOrg = System.getenv('ARTIFACTORY_ORG') ?: 'hyperledger'
 
-artifactory {
-  contextUrl = "https://hyperledger.jfrog.io/${artifactoryOrg}"
-  publish {
-    repository {
-      repoKey = artifactoryRepo
-      username = artifactoryUser
-      password = artifactoryKey
-    }
-    defaults {
-      publications('mavenJava')
-      publishArtifacts = true
-      publishPom = true
-    }
+  artifactory {
+      contextUrl = "https://hyperledger.jfrog.io/${artifactoryOrg}"
+      publish {
+          repository {
+              repoKey = artifactoryRepo
+              username = artifactoryUser
+              password = artifactoryKey
+          }
+          defaults {
+              publications('mavenJava')
+              publishArtifacts = true
+              publishPom = true
+          }
+      }
   }
 }
-

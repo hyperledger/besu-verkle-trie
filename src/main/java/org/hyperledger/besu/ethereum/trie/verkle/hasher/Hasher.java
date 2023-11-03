@@ -13,24 +13,24 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  */
-package org.hyperledger.besu.ethereum.trie.verkle;
+package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
-import java.util.HashMap;
-import java.util.Optional;
-
-import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
-public class NodeLoaderMock implements NodeLoader {
+/**
+ * Defines an interface for a Verkle Trie node hashing strategy.
+ *
+ * @param <V> The type of values to be hashed.
+ */
+public interface Hasher<V> {
 
-  public HashMap<Bytes, Bytes> storage;
+  /**
+   * Calculates the commitment hash for an array of inputs.
+   *
+   * @param inputs An array of values to be hashed.
+   * @return The commitment hash calculated from the inputs.
+   */
+  public Bytes32 commit(V[] inputs);
 
-  public NodeLoaderMock(HashMap<Bytes, Bytes> storage) {
-    this.storage = storage;
-  }
-
-  @Override
-  public Optional<Bytes> getNode(Bytes location, Bytes32 hash) {
-    return Optional.ofNullable(storage.get(location));
-  }
+  // public Bytes32 commit_sparse(V[] input, int[] index)
 }

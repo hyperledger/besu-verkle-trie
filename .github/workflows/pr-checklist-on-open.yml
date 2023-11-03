@@ -1,0 +1,20 @@
+name: "comment on pr with checklist"
+on:
+  pull_request_target:
+    types: [ opened ]
+    branches: [ main ]
+jobs:
+  checklist:
+    name: "add checklist as a comment on newly opened PRs"
+    runs-on: [besu-research-ubuntu-8]
+    steps:
+      - uses: actions/github-script@v5
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '- [ ] I thought about the changelog.'
+            })

@@ -1,5 +1,5 @@
 /*
- * Copyright Hyperledger Besu Contributors.
+ * Copyright Besu Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -11,10 +11,12 @@
  * specific language governing permissions and limitations under the License.
  *
  * SPDX-License-Identifier: Apache-2.0
+ *
  */
 package org.hyperledger.besu.ethereum.trie.verkle;
 
 import java.util.Optional;
+
 import org.apache.tuweni.bytes.Bytes32;
 
 /** Verkle Trie. */
@@ -27,7 +29,7 @@ public interface VerkleTrie<K, V> {
    * @return an {@code Optional} of value mapped to the hash if it exists; otherwise empty
    */
   Optional<V> get(K key);
-  
+
   /**
    * Updates the value mapped to the specified key, creating the mapping if one does not already
    * exist.

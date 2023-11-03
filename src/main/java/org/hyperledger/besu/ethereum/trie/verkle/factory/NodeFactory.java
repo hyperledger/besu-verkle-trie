@@ -13,24 +13,28 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  */
-package org.hyperledger.besu.ethereum.trie.verkle;
+package org.hyperledger.besu.ethereum.trie.verkle.factory;
 
-import java.util.HashMap;
+import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
+
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
-public class NodeLoaderMock implements NodeLoader {
+/**
+ * An interface representing a factory for creating nodes in the Verkle Trie.
+ *
+ * @param <V> The type of the nodes to be created.
+ */
+public interface NodeFactory<V> {
 
-  public HashMap<Bytes, Bytes> storage;
-
-  public NodeLoaderMock(HashMap<Bytes, Bytes> storage) {
-    this.storage = storage;
-  }
-
-  @Override
-  public Optional<Bytes> getNode(Bytes location, Bytes32 hash) {
-    return Optional.ofNullable(storage.get(location));
-  }
+  /**
+   * Retrieve a node with the given location and hash.
+   *
+   * @param location The location of the node.
+   * @param hash The hash of the node.
+   * @return An optional containing the retrieved node, or empty if not found.
+   */
+  Optional<Node<V>> retrieve(final Bytes location, final Bytes32 hash);
 }

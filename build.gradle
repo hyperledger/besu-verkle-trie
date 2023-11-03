@@ -1,3 +1,7 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+
+import java.util.regex.Pattern
+
 /*
  * Copyright Besu Contributors
  *
@@ -13,11 +17,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+
 buildscript {
   repositories {
     maven {
       url = uri("https://hyperledger.jfrog.io/hyperledger/besu-maven")
       content { includeGroupByRegex('org\\.hyperledger\\..*') }
+    }
+    maven {
+      url "https://plugins.gradle.org/m2/"
     }
     mavenCentral()
   }
@@ -26,25 +34,39 @@ buildscript {
 plugins {
   id 'java-library'
   id 'maven-publish'
+  id 'net.ltgt.errorprone' version '2.0.2'
+  id 'io.spring.dependency-management' version '1.0.11.RELEASE'
+  id 'com.diffplug.spotless' version '6.12.0'
   id 'com.jfrog.artifactory' version '4.20.0'
 }
 
-dependencies {
-    implementation "com.google.guava:guava:16.0.1"
-    implementation 'net.java.dev.jna:jna:5.12.1'
-    implementation 'org.apache.tuweni:tuweni-bytes:2.3.1'
-    implementation 'org.apache.tuweni:tuweni-units:2.3.1'
-    implementation 'org.apache.tuweni:tuweni-rlp:2.3.1'
-    implementation 'org.hyperledger.besu:ipa-multipoint:0.8.3-SNAPSHOT'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.2'
-    testImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.2'
-    testImplementation 'com.fasterxml.jackson.core:jackson-databind:2.12.5'
-    testImplementation 'org.assertj:assertj-core:3.22.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.2'
+test {
+  useJUnitPlatform()
 }
+
+dependencies {
+  implementation "com.google.guava:guava"
+  implementation 'net.java.dev.jna:jna'
+  implementation 'io.tmio:tuweni-bytes'
+  implementation 'io.tmio:tuweni-units'
+  implementation 'io.tmio:tuweni-rlp'
+  implementation 'org.hyperledger.besu:ipa-multipoint'
+
+  testImplementation 'org.junit.jupiter:junit-jupiter-api'
+  testImplementation 'org.junit.jupiter:junit-jupiter-params'
+  testImplementation 'com.fasterxml.jackson.core:jackson-databind'
+  testImplementation 'org.assertj:assertj-core'
+  testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+}
+
+
 allprojects {
   apply plugin: 'java-library'
   apply plugin: 'maven-publish'
+  apply plugin: 'net.ltgt.errorprone'
+  apply from: "${rootDir}/gradle/versions.gradle"
+
+  version = rootProject.version
 
   sourceCompatibility = 17
   targetCompatibility = 17
@@ -96,18 +118,112 @@ allprojects {
   def artifactoryOrg = System.getenv('ARTIFACTORY_ORG') ?: 'hyperledger'
 
   artifactory {
-      contextUrl = "https://hyperledger.jfrog.io/${artifactoryOrg}"
-      publish {
-          repository {
-              repoKey = artifactoryRepo
-              username = artifactoryUser
-              password = artifactoryKey
-          }
-          defaults {
-              publications('mavenJava')
-              publishArtifacts = true
-              publishPom = true
-          }
+    contextUrl = "https://hyperledger.jfrog.io/${artifactoryOrg}"
+    publish {
+      repository {
+        repoKey = artifactoryRepo
+        username = artifactoryUser
+        password = artifactoryKey
       }
+      defaults {
+        publications('mavenJava')
+        publishArtifacts = true
+        publishPom = true
+      }
+    }
   }
+
+  apply plugin: 'com.diffplug.spotless'
+  spotless {
+    java {
+      // This path needs to be relative to each project
+      target 'src/**/*.java'
+      targetExclude '**/src/reference-test/**', '**/src/main/generated/**', '**/src/test/generated/**', '**/src/jmh/generated/**'
+      removeUnusedImports()
+      googleJavaFormat('1.15.0')
+      importOrder 'org.hyperledger', 'java', ''
+      trimTrailingWhitespace()
+      endWithNewline()
+      licenseHeaderFile "${rootDir}/gradle/spotless.java.license"
+    }
+    groovyGradle {
+      target '*.gradle'
+      greclipse('4.21.0').configFile(rootProject.file('gradle/formatter.properties'))
+      endWithNewline()
+    }
+    // Below this line are currently only license header tasks
+    format 'groovy', { target '**/src/*/grovy/**/*.groovy' }
+    format 'bash', { target '**/*.sh' }
+    format 'sol', { target '**/*.sol' }
+  }
+
+  tasks.withType(JavaCompile) {
+    options.compilerArgs += [
+      '-Xlint:unchecked',
+      '-Xlint:cast',
+      '-Xlint:rawtypes',
+      '-Xlint:overloads',
+      '-Xlint:divzero',
+      '-Xlint:finally',
+      '-Xlint:static',
+      '-Werror',
+    ]
+    options.errorprone {
+      excludedPaths = '.*/(generated/*.*|.*ReferenceTest_.*|build/.*/annotation-output/.*)'
+
+      // Our equals need to be symmetric, this checker doesn't respect that.
+      check('EqualsGetClass', CheckSeverity.OFF)
+      // We like to use futures with no return values.
+      check('FutureReturnValueIgnored', CheckSeverity.OFF)
+      // We use the JSR-305 annotations instead of the Google annotations.
+      check('ImmutableEnumChecker', CheckSeverity.OFF)
+      // This is a style check instead of an error-prone pattern.
+      check('UnnecessaryParentheses', CheckSeverity.OFF)
+
+      // This check is broken in Java 12.  See https://github.com/google/error-prone/issues/1257
+      if (JavaVersion.current() == JavaVersion.VERSION_12) {
+        check('Finally', CheckSeverity.OFF)
+      }
+      // This check is broken after Java 12.  See https://github.com/google/error-prone/issues/1352
+      if (JavaVersion.current() > JavaVersion.VERSION_12) {
+        check('TypeParameterUnusedInFormals', CheckSeverity.OFF)
+      }
+
+      check('FieldCanBeFinal', CheckSeverity.WARN)
+      check('InsecureCryptoUsage', CheckSeverity.WARN)
+      check('WildcardImport', CheckSeverity.WARN)
+    }
+    options.encoding = 'UTF-8'
+  }
+
 }
+def sep = Pattern.quote(File.separator)
+
+dependencies {
+  errorprone 'com.google.errorprone:error_prone_core'
+}
+
+task checkSpdxHeader(type: CheckSpdxHeader) {
+  apply plugin: 'groovy'
+
+  rootPath = "${projectDir}"
+  spdxHeader = "* SPDX-License-Identifier: Apache-2.0"
+  filesRegex = "(.*.java)|(.*.groovy)"
+  excludeRegex = [
+    "(.*${sep}generalstate${sep}GeneralStateRegressionReferenceTest.*)",
+    "(.*${sep}generalstate${sep}GeneralStateReferenceTest.*)",
+    "(.*${sep}generalstate${sep}LegacyGeneralStateReferenceTest.*)",
+    "(.*${sep}blockchain${sep}BlockchainReferenceTest.*)",
+    "(.*${sep}blockchain${sep}LegacyBlockchainReferenceTest.*)",
+    "(.*${sep}.gradle${sep}.*)",
+    "(.*${sep}.idea${sep}.*)",
+    "(.*${sep}out${sep}.*)",
+    "(.*${sep}build${sep}.*)",
+    "(.*${sep}src${sep}[^${sep}]+${sep}generated${sep}.*)"
+  ].join("|")
+
+}
+
+
+check.dependsOn checkSpdxHeader
+build.dependsOn spotlessApply

@@ -90,8 +90,11 @@ allprojects {
 
         groupId = 'org.hyperledger.besu'  // Updated groupId
         artifactId = 'besu-verkle-trie'   // Updated artifactId
-        version = project.version
-
+        version "${project.version}"
+        versionMapping {
+          usage('java-api') { fromResolutionOf('runtimeClasspath') }
+          usage('java-runtime') { fromResolutionResult() }
+        }
         pom {
           name = "Verkle Tries - ${project.name}"
           description = 'VerkleTries'

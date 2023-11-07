@@ -15,6 +15,8 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle;
 
+import org.hyperledger.besu.ethereum.trie.NodeLoader;
+
 import java.util.HashMap;
 import java.util.Optional;
 

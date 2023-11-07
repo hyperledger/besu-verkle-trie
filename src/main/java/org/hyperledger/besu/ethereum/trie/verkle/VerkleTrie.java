@@ -15,6 +15,8 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle;
 
+import org.hyperledger.besu.ethereum.trie.NodeUpdater;
+
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes32;

@@ -17,6 +17,7 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 
 import static com.google.common.base.Preconditions.checkNotNull;
 
+import org.hyperledger.besu.ethereum.trie.NodeUpdater;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.CommitVisitor;

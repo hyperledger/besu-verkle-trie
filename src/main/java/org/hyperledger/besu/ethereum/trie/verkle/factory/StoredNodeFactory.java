@@ -20,6 +20,7 @@ import org.hyperledger.besu.ethereum.trie.verkle.node.BranchNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.StoredNode;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -94,8 +95,7 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
     int nChild = BranchNode.maxChild();
     ArrayList<Node<V>> children = new ArrayList<Node<V>>(nChild);
     for (int i = 0; i < nChild; i++) {
-      Optional<Node<V>> child = retrieve(Bytes.concatenate(location, Bytes.of(i)), hash);
-      children.add(child.orElse(NullNode.instance()));
+      children.add(new StoredNode<>(this, Bytes.concatenate(location, Bytes.of(i))));
     }
     return new BranchNode<V>(location, hash, path, children);
   }

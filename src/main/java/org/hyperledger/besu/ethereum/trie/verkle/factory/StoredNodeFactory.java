@@ -15,7 +15,7 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.factory;
 
-import org.hyperledger.besu.ethereum.trie.verkle.NodeLoader;
+import org.hyperledger.besu.ethereum.trie.NodeLoader;
 import org.hyperledger.besu.ethereum.trie.verkle.node.BranchNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;

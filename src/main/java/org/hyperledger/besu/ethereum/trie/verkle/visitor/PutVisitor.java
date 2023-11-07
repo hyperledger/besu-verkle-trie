@@ -112,7 +112,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     if (commonPath.compareTo(nodePath) == 0) {
       final LeafNode<V> newNode = new LeafNode<V>(leafNode.getLocation(), value, path);
       newNode.markDirty();
-      return newNode;
+      return leafNode;
     }
 
     return insertNewBranching(leafNode, commonPath, pathSuffix, nodeSuffix);

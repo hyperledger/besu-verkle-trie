@@ -18,8 +18,8 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.hyperledger.besu.ethereum.trie.NodeUpdater;
+import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.CommitVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.GetVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.HashVisitor;
@@ -42,7 +42,7 @@ public class SimpleVerkleTrie<K extends Bytes, V extends Bytes> implements Verkl
 
   /** Creates a new Verkle Trie with a null node as the root. */
   public SimpleVerkleTrie() {
-    this.root = NullNode.instance();
+    this.root = new InternalNode<V>(Bytes.EMPTY);
   }
 
   /**
@@ -82,10 +82,12 @@ public class SimpleVerkleTrie<K extends Bytes, V extends Bytes> implements Verkl
    * @param value The value to associate with the key.
    */
   @Override
-  public void put(final K key, final V value) {
+  public Optional<V> put(final K key, final V value) {
     checkNotNull(key);
     checkNotNull(value);
-    this.root = root.accept(new PutVisitor<V>(value), key);
+    PutVisitor<V> visitor = new PutVisitor<V>(value);
+    this.root = root.accept(visitor, key);
+    return visitor.getOldValue();
   }
 
   /**
@@ -106,7 +108,7 @@ public class SimpleVerkleTrie<K extends Bytes, V extends Bytes> implements Verkl
    */
   @Override
   public Bytes32 getRootHash() {
-    root = root.accept(new HashVisitor<V>(), root.getPath());
+    root = root.accept(new HashVisitor<V>(), Bytes.EMPTY);
     return root.getHash().get();
   }
 
@@ -127,7 +129,7 @@ public class SimpleVerkleTrie<K extends Bytes, V extends Bytes> implements Verkl
    */
   @Override
   public void commit(final NodeUpdater nodeUpdater) {
-    root = root.accept(new HashVisitor<V>(), root.getPath());
+    root = root.accept(new HashVisitor<V>(), Bytes.EMPTY);
     root = root.accept(new CommitVisitor<V>(nodeUpdater), Bytes.EMPTY);
   }
 }

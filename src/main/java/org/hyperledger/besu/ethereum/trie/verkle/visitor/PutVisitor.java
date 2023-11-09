@@ -15,10 +15,14 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
-import org.hyperledger.besu.ethereum.trie.verkle.node.BranchNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
+import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
+
+import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 
@@ -32,6 +36,8 @@ import org.apache.tuweni.bytes.Bytes;
  */
 public class PutVisitor<V> implements PathNodeVisitor<V> {
   private final V value;
+  private Bytes visited; // add consumed bytes to visited
+  private Optional<V> oldValue;
 
   /**
    * Constructs a new PutVisitor with the provided value to insert or update.
@@ -40,53 +46,61 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
    */
   public PutVisitor(V value) {
     this.value = value;
-  }
-
-  /**
-   * Inserts or updates a value in a branch node.
-   *
-   * @param node The branch node to insert or update the value.
-   * @param commonPath The common path between the node and the path.
-   * @param pathSuffix The path suffix associated with the value.
-   * @param nodeSuffix The remaining node suffix after the common path.
-   * @return The updated node with the inserted or updated value.
-   */
-  protected Node<V> insertNewBranching(
-      final Node<V> node, final Bytes commonPath, final Bytes pathSuffix, final Bytes nodeSuffix) {
-    final Node<V> updatedNode = node.replacePath(nodeSuffix.slice(1));
-    // Should also add byte to location
-    BranchNode<V> newBranchNode = new BranchNode<V>(node.getLocation(), commonPath);
-    newBranchNode.replaceChild(nodeSuffix.get(0), updatedNode);
-    final Node<V> insertedNode =
-        newBranchNode.child(pathSuffix.get(0)).accept(this, pathSuffix.slice(1));
-    newBranchNode.replaceChild(pathSuffix.get(0), insertedNode);
-    return newBranchNode;
+    this.visited = Bytes.EMPTY;
+    this.oldValue = Optional.empty();
   }
 
   /**
    * Visits a branch node to insert or update a value associated with the provided path.
    *
-   * @param branchNode The branch node to visit.
+   * @param internalNode The internal node to visit.
    * @param path The path associated with the value to insert or update.
    * @return The updated branch node with the inserted or updated value.
    */
   @Override
-  public Node<V> visit(final BranchNode<V> branchNode, final Bytes path) {
-    final Bytes nodePath = branchNode.getPath();
-    final Bytes commonPath = nodePath.commonPrefix(path);
-    final int commonPathLength = commonPath.size();
-    final Bytes pathSuffix = path.slice(commonPathLength);
-    final Bytes nodeSuffix = nodePath.slice(commonPathLength);
-    if (commonPath.compareTo(nodePath) == 0) {
-      final byte childIndex = pathSuffix.get(0);
-      final Node<V> updatedChild = branchNode.child(childIndex).accept(this, pathSuffix.slice(1));
-      branchNode.replaceChild(childIndex, updatedChild);
+  public Node<V> visit(final InternalNode<V> internalNode, final Bytes path) {
+    assert path.size() < 33;
+    final byte index = path.get(0);
+    visited = Bytes.concatenate(visited, Bytes.of(index));
+    final Node<V> updatedChild = internalNode.child(index).accept(this, path.slice(1));
+    internalNode.replaceChild(index, updatedChild);
+    if (updatedChild.isDirty()) {
+      internalNode.markDirty();
+    }
+    return internalNode;
+  }
+
+  /**
+   * Visits a stem node to insert or update a value associated with the provided path.
+   *
+   * @param stemNode The stem node to visit.
+   * @param path The path associated with the value to insert or update.
+   * @return The updated branch node with the inserted or updated value.
+   */
+  @Override
+  public Node<V> visit(final StemNode<V> stemNode, final Bytes path) {
+    assert path.size() < 33;
+    final Bytes location = stemNode.getLocation().get();
+    final Bytes stem = stemNode.getStem();
+    final Bytes fullPath = Bytes.concatenate(location, path);
+    final Bytes newStem = fullPath.slice(0, stem.size());
+
+    if (stem.compareTo(newStem) == 0) { // Same stem => skip to leaf in StemNode
+      final byte index = fullPath.get(newStem.size());
+      visited = Bytes.concatenate(newStem, Bytes.of(index));
+      final Node<V> updatedChild = stemNode.child(index).accept(this, fullPath);
+      stemNode.replaceChild(index, updatedChild);
       if (updatedChild.isDirty()) {
-        branchNode.markDirty();
+        stemNode.markDirty();
       }
-      return branchNode;
-    } else {
-      return insertNewBranching(branchNode, commonPath, pathSuffix, nodeSuffix);
+      return stemNode;
+    } else { // Divergent stems => push the stem node one level deeper
+      InternalNode<V> newNode = new InternalNode<V>(location);
+      final int depth = location.size();
+      StemNode<V> updatedStemNode = stemNode.replaceLocation(stem.slice(0, depth + 1));
+      newNode.replaceChild(stem.get(depth), updatedStemNode);
+      newNode.markDirty();
+      return newNode.accept(this, path);
     }
   }
 
@@ -99,23 +113,17 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(final LeafNode<V> leafNode, final Bytes path) {
-    /*
-     * Leaf node is used to store a value.
-     * However, it is a mixture with ExtensionNode and can have a non-empty path:
-     * An extension all the way to a LeafNode is stored as a single LeafNode
-     */
-    final Bytes nodePath = leafNode.getPath();
-    final Bytes commonPath = nodePath.commonPrefix(path);
-    final int commonPathLength = commonPath.size();
-    final Bytes pathSuffix = path.slice(commonPathLength);
-    final Bytes nodeSuffix = nodePath.slice(commonPathLength);
-    if (commonPath.compareTo(nodePath) == 0) {
-      final LeafNode<V> newNode = new LeafNode<V>(leafNode.getLocation(), value, path);
+    assert path.size() < 33;
+    LeafNode<V> newNode;
+    oldValue = leafNode.getValue();
+    if (oldValue != value) {
+      newNode = new LeafNode<V>(leafNode.getLocation(), value);
       newNode.markDirty();
-      return newNode;
+    } else {
+      newNode = leafNode;
     }
-
-    return insertNewBranching(leafNode, commonPath, pathSuffix, nodeSuffix);
+    visited = Bytes.EMPTY;
+    return newNode;
   }
 
   /**
@@ -127,6 +135,35 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(final NullNode<V> nullNode, final Bytes path) {
-    return new LeafNode<V>(value, path);
+    assert path.size() < 33;
+    // Replace NullNode with a StemNode and visit it
+    final Bytes leafKey = Bytes.concatenate(visited, path);
+    StemNode<V> stemNode = new StemNode<V>(visited, leafKey);
+    return stemNode.accept(this, path);
+  }
+
+  /**
+   * Visits a null leaf node to insert a value associated with the provided path.
+   *
+   * @param nullLeafNode The null leaf node to visit.
+   * @param path The path associated with the value to insert or update.
+   * @return A new leaf node containing the inserted or updated value.
+   */
+  @Override
+  public Node<V> visit(final NullLeafNode<V> nullLeafNode, final Bytes path) {
+    assert path.size() < 33;
+    oldValue = Optional.empty();
+    LeafNode<V> newNode = new LeafNode<V>(visited, value);
+    visited = Bytes.EMPTY;
+    return newNode;
+  }
+
+  /**
+   * Return the old value that was replaced, or optional empty if none.
+   *
+   * @return Previous value before put, or empty.
+   */
+  public Optional<V> getOldValue() {
+    return oldValue;
   }
 }

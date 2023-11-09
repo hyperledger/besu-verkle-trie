@@ -15,10 +15,12 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
-import org.hyperledger.besu.ethereum.trie.verkle.node.BranchNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
+import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
 /**
  * Defines a visitor interface for nodes in the Verkle Trie.
@@ -28,12 +30,24 @@ import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 public interface NodeVisitor<V> {
 
   /**
-   * Visits a branch node.
+   * Visits an internal node.
    *
-   * @param branchNode The branch node to visit.
+   * @param internalNode The internal node to visit.
+   * @return The result of visiting the internal node.
+   */
+  default Node<V> visit(InternalNode<V> internalNode) {
+    return internalNode;
+  }
+
+  /**
+   * Visits a stem node.
+   *
+   * @param stemNode The stem node to visit.
    * @return The result of visiting the branch node.
    */
-  Node<V> visit(BranchNode<V> branchNode);
+  default Node<V> visit(StemNode<V> stemNode) {
+    return stemNode;
+  }
 
   /**
    * Visits a leaf node.
@@ -41,7 +55,9 @@ public interface NodeVisitor<V> {
    * @param leafNode The leaf node to visit.
    * @return The result of visiting the leaf node.
    */
-  Node<V> visit(LeafNode<V> leafNode);
+  default Node<V> visit(LeafNode<V> leafNode) {
+    return leafNode;
+  }
 
   /**
    * Visits a null node.
@@ -49,5 +65,17 @@ public interface NodeVisitor<V> {
    * @param nullNode The null node to visit.
    * @return The result of visiting the null node.
    */
-  Node<V> visit(NullNode<V> nullNode);
+  default Node<V> visit(NullNode<V> nullNode) {
+    return nullNode;
+  }
+
+  /**
+   * Visits a null leaf node.
+   *
+   * @param nullLeafNode The null node to visit.
+   * @return The result of visiting the null node.
+   */
+  default Node<V> visit(NullLeafNode<V> nullLeafNode) {
+    return nullLeafNode;
+  }
 }

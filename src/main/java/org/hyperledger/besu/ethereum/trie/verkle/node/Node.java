@@ -32,8 +32,10 @@ import org.apache.tuweni.bytes.Bytes32;
  */
 public interface Node<V> {
 
-  /** A constant representing an empty hash value. */
+  /** A constant representing a commitment to NullNodes */
   Bytes32 EMPTY_HASH = Bytes32.ZERO;
+
+  Bytes32 EMPTY_COMMITMENT = Bytes32.ZERO;
 
   /**
    * Accept a visitor to perform operations on the node based on a provided path.
@@ -53,16 +55,6 @@ public interface Node<V> {
   Node<V> accept(NodeVisitor<V> visitor);
 
   /**
-   * Get the path associated with the node.
-   *
-   * @return The path of the node.
-   */
-  default Bytes getPath() {
-    return Bytes.EMPTY;
-  }
-  ;
-
-  /**
    * Get the location of the node.
    *
    * @return An optional containing the location of the node if available.
@@ -79,7 +71,6 @@ public interface Node<V> {
   default Optional<V> getValue() {
     return Optional.empty();
   }
-  ;
 
   /**
    * Get the hash associated with the node.
@@ -89,15 +80,15 @@ public interface Node<V> {
   default Optional<Bytes32> getHash() {
     return Optional.empty();
   }
-  ;
 
   /**
-   * Replace the path of the node.
+   * Get the commitment associated with the node.
    *
-   * @param path The new path to set.
-   * @return A new node with the updated path.
+   * @return An optional containing the hash of the node if available.
    */
-  Node<V> replacePath(Bytes path);
+  default Optional<Bytes32> getCommitment() {
+    return Optional.empty();
+  }
 
   /**
    * Get the encoded value of the node.

@@ -15,10 +15,12 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
-import org.hyperledger.besu.ethereum.trie.verkle.node.BranchNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
+import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
 import org.apache.tuweni.bytes.Bytes;
 
@@ -31,13 +33,26 @@ import org.apache.tuweni.bytes.Bytes;
 public interface PathNodeVisitor<V> {
 
   /**
+   * Visits a internal node with a specified path.
+   *
+   * @param internalNode The internal node to visit.
+   * @param path The path associated with the visit.
+   * @return The result of visiting the internal node.
+   */
+  default Node<V> visit(InternalNode<V> internalNode, Bytes path) {
+    return internalNode;
+  }
+
+  /**
    * Visits a branch node with a specified path.
    *
-   * @param branchNode The branch node to visit.
+   * @param stemNode The branch node to visit.
    * @param path The path associated with the visit.
    * @return The result of visiting the branch node.
    */
-  Node<V> visit(BranchNode<V> branchNode, Bytes path);
+  default Node<V> visit(StemNode<V> stemNode, Bytes path) {
+    return stemNode;
+  }
 
   /**
    * Visits a leaf node with a specified path.
@@ -46,7 +61,9 @@ public interface PathNodeVisitor<V> {
    * @param path The path associated with the visit.
    * @return The result of visiting the leaf node.
    */
-  Node<V> visit(LeafNode<V> leafNode, Bytes path);
+  default Node<V> visit(LeafNode<V> leafNode, Bytes path) {
+    return leafNode;
+  }
 
   /**
    * Visits a null node with a specified path.
@@ -55,5 +72,18 @@ public interface PathNodeVisitor<V> {
    * @param path The path associated with the visit.
    * @return The result of visiting the null node.
    */
-  Node<V> visit(NullNode<V> nullNode, Bytes path);
+  default Node<V> visit(NullNode<V> nullNode, Bytes path) {
+    return nullNode;
+  }
+
+  /**
+   * Visits a null leaf node with a specified path.
+   *
+   * @param nullLeafNode The null leaf node to visit.
+   * @param path The path associated with the visit.
+   * @return The result of visiting the null node.
+   */
+  default Node<V> visit(NullLeafNode<V> nullLeafNode, Bytes path) {
+    return nullLeafNode;
+  }
 }

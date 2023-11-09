@@ -19,26 +19,22 @@ import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPWriter;
 
 /**
  * Represents a branch node in the Verkle Trie.
  *
  * @param <V> The type of the node's value.
  */
-public class BranchNode<V> implements Node<V> {
+public abstract class BranchNode<V> implements Node<V> {
   private final Optional<Bytes> location; // Location in the tree
-  private final Bytes path; // Extension path
-  private final Optional<Bytes32> hash; // Vector commitment of children's commitments
-  private Optional<Bytes> encodedValue = Optional.empty(); // Encoded value
+  private final Optional<Bytes32> hash; // Vector commitment's hash
+  private final Optional<Bytes32> commitment; // Vector commitment serialized
   private final List<Node<V>> children; // List of children nodes
 
   private boolean dirty = true; // not persisted
@@ -47,36 +43,40 @@ public class BranchNode<V> implements Node<V> {
    * Constructs a new BranchNode with location, hash, path, and children.
    *
    * @param location The location in the tree.
-   * @param hash The vector commitment of children's commitments.
-   * @param path The extension path.
+   * @param hash Node's vector commitment's hash.
+   * @param commitment Node's vector commitment.
    * @param children The list of children nodes.
    */
   public BranchNode(
-      final Bytes location, final Bytes32 hash, final Bytes path, final List<Node<V>> children) {
+      final Bytes location,
+      final Bytes32 hash,
+      final Bytes32 commitment,
+      final List<Node<V>> children) {
     assert (children.size() == maxChild());
     this.location = Optional.of(location);
     this.hash = Optional.of(hash);
-    this.path = path;
+    this.commitment = Optional.of(commitment);
     this.children = children;
   }
 
   /**
-   * Constructs a new BranchNode with optional location, optional hash, path, and children.
+   * Constructs a new BranchNode with optional location, optional hash, optional commitment and
+   * children.
    *
    * @param location The optional location in the tree.
    * @param hash The optional vector commitment of children's commitments.
-   * @param path The extension path.
+   * @param commitment Node's optional vector commitment.
    * @param children The list of children nodes.
    */
   public BranchNode(
       final Optional<Bytes> location,
       final Optional<Bytes32> hash,
-      final Bytes path,
+      final Optional<Bytes32> commitment,
       final List<Node<V>> children) {
     assert (children.size() == maxChild());
     this.location = location;
     this.hash = hash;
-    this.path = path;
+    this.commitment = commitment;
     this.children = children;
   }
 
@@ -84,16 +84,14 @@ public class BranchNode<V> implements Node<V> {
    * Constructs a new BranchNode with optional location, path, and children.
    *
    * @param location The optional location in the tree.
-   * @param path The extension path.
    * @param children The list of children nodes.
    */
-  public BranchNode(
-      final Optional<Bytes> location, final Bytes path, final List<Node<V>> children) {
+  public BranchNode(final Optional<Bytes> location, final List<Node<V>> children) {
     assert (children.size() == maxChild());
     this.location = location;
-    this.path = path;
     this.children = children;
     hash = Optional.empty();
+    commitment = Optional.empty();
   }
 
   /**
@@ -101,16 +99,15 @@ public class BranchNode<V> implements Node<V> {
    * NullNodes.
    *
    * @param location The optional location in the tree.
-   * @param path The extension path.
    */
-  public BranchNode(final Optional<Bytes> location, final Bytes path) {
-    this.location = location;
-    this.path = path;
+  public BranchNode(final Bytes location) {
+    this.location = Optional.of(location);
     this.children = new ArrayList<>();
     for (int i = 0; i < maxChild(); i++) {
       children.add(NullNode.instance());
     }
     hash = Optional.of(EMPTY_HASH);
+    commitment = Optional.of(EMPTY_COMMITMENT);
   }
 
   /**
@@ -130,9 +127,7 @@ public class BranchNode<V> implements Node<V> {
    * @return The result of the visitor's operation.
    */
   @Override
-  public Node<V> accept(PathNodeVisitor<V> visitor, Bytes path) {
-    return visitor.visit(this, path);
-  }
+  public abstract Node<V> accept(PathNodeVisitor<V> visitor, Bytes path);
 
   /**
    * Accepts a visitor for generic node operations.
@@ -141,9 +136,7 @@ public class BranchNode<V> implements Node<V> {
    * @return The result of the visitor's operation.
    */
   @Override
-  public Node<V> accept(final NodeVisitor<V> visitor) {
-    return visitor.visit(this);
-  }
+  public abstract Node<V> accept(final NodeVisitor<V> visitor);
 
   /**
    * Get the child node at a specified index.
@@ -166,7 +159,7 @@ public class BranchNode<V> implements Node<V> {
   }
 
   /**
-   * Get the vector commitment of children's commitments.
+   * Get the vector commitment's hash of child commitment hashes.
    *
    * @return An optional containing the vector commitment.
    */
@@ -176,13 +169,13 @@ public class BranchNode<V> implements Node<V> {
   }
 
   /**
-   * Replace the vector commitment with a new one.
+   * Get the vector commitment's hash of child commitment hashes.
    *
-   * @param hash The new vector commitment to set.
-   * @return A new BranchNode with the updated vector commitment.
+   * @return An optional containing the vector commitment.
    */
-  public Node<V> replaceHash(Bytes32 hash) {
-    return new BranchNode<V>(location, Optional.of(hash), path, children);
+  @Override
+  public Optional<Bytes32> getCommitment() {
+    return commitment;
   }
 
   /**
@@ -196,42 +189,12 @@ public class BranchNode<V> implements Node<V> {
   }
 
   /**
-   * Get the extension path of the node.
-   *
-   * @return The extension path.
-   */
-  @Override
-  public Bytes getPath() {
-    return path;
-  }
-
-  /**
-   * Replace the extension path with a new one.
-   *
-   * @param path The new extension path to set.
-   * @return A new BranchNode with the updated extension path.
-   */
-  @Override
-  public Node<V> replacePath(Bytes path) {
-    BranchNode<V> updatedNode = new BranchNode<V>(location, path, children);
-    return updatedNode;
-  }
-
-  /**
    * Get the RLP-encoded value of the node.
    *
    * @return The RLP-encoded value.
    */
   @Override
-  public Bytes getEncodedValue() {
-    if (encodedValue.isPresent()) {
-      return encodedValue.get();
-    }
-    List<Bytes> values = Arrays.asList((Bytes) getHash().get(), getPath());
-    Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
-    this.encodedValue = Optional.of(result);
-    return result;
-  }
+  public abstract Bytes getEncodedValue();
 
   /**
    * Get the list of children nodes.

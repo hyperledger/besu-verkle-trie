@@ -15,10 +15,11 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
-import org.hyperledger.besu.ethereum.trie.verkle.node.BranchNode;
-import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
+import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
 import org.apache.tuweni.bytes.Bytes;
 
@@ -28,43 +29,32 @@ import org.apache.tuweni.bytes.Bytes;
  * @param <V> The type of node values.
  */
 public class GetVisitor<V> implements PathNodeVisitor<V> {
-  private final Node<V> NULL_NODE_RESULT = NullNode.instance();
+  private final Node<V> NULL_NODE_RESULT = NullLeafNode.instance();
 
   /**
-   * Visits a BranchNode to determine the node matching a given path.
+   * Visits a internalNode to determine the node matching a given path.
    *
-   * @param branchNode The BranchNode being visited.
+   * @param internalNode The internalNode being visited.
    * @param path The path to search in the tree.
    * @return The matching node or NULL_NODE_RESULT if not found.
    */
   @Override
-  public Node<V> visit(final BranchNode<V> branchNode, final Bytes path) {
-    final Bytes nodePath = branchNode.getPath();
-    final Bytes commonPath = nodePath.commonPrefix(path);
-    if (commonPath.compareTo(nodePath) != 0) {
-      // path diverges before the end of the extension, so it cannot match
-      return NULL_NODE_RESULT;
-    }
-    final Bytes pathSuffix = path.slice(commonPath.size());
-    final byte childIndex = pathSuffix.get(0);
-    return branchNode.child(childIndex).accept(this, pathSuffix.slice(1));
+  public Node<V> visit(final InternalNode<V> internalNode, final Bytes path) {
+    final byte childIndex = path.get(0);
+    return internalNode.child(childIndex).accept(this, path.slice(1));
   }
 
   /**
-   * Visits a LeafNode to determine the matching node based on a given path.
+   * Visits a stemNode to determine the node matching a given path.
    *
-   * @param leafNode The LeafNode being visited.
+   * @param stemNode The stemNode being visited.
    * @param path The path to search in the tree.
    * @return The matching node or NULL_NODE_RESULT if not found.
    */
   @Override
-  public Node<V> visit(LeafNode<V> leafNode, Bytes path) {
-    final Bytes leafPath = leafNode.getPath();
-    final Bytes commonPath = leafPath.commonPrefix(path);
-    if (commonPath.compareTo(leafPath) != 0) {
-      return NULL_NODE_RESULT;
-    }
-    return leafNode;
+  public Node<V> visit(final StemNode<V> stemNode, final Bytes path) {
+    final byte childIndex = path.get(path.size() - 1); // extract suffix
+    return stemNode.child(childIndex).accept(this, path.slice(1));
   }
 
   /**
@@ -76,6 +66,18 @@ public class GetVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(NullNode<V> nullNode, Bytes path) {
+    return NULL_NODE_RESULT;
+  }
+
+  /**
+   * Visits a NullLeafNode to determine the matching node based on a given path.
+   *
+   * @param nullLeafNode The NullLeafNode being visited.
+   * @param path The path to search in the tree.
+   * @return NullLeafNode represents a missing leaf node on the path.
+   */
+  @Override
+  public Node<V> visit(NullLeafNode<V> nullLeafNode, Bytes path) {
     return NULL_NODE_RESULT;
   }
 }

@@ -30,15 +30,15 @@ import org.apache.tuweni.bytes.Bytes32;
  * structure. It implements the Node interface and represents a node that contains no information or
  * value.
  */
-public class NullNode<V> implements Node<V> {
+public class NullLeafNode<V> implements Node<V> {
   @SuppressWarnings("rawtypes")
-  private static final NullNode instance = new NullNode();
+  private static final NullLeafNode instance = new NullLeafNode();
 
   /**
    * Constructs a new `NullNode`. This constructor is protected to ensure that `NullNode` instances
    * are only created as singletons.
    */
-  protected NullNode() {}
+  protected NullLeafNode() {}
 
   /**
    * Gets the shared instance of the `NullNode`.
@@ -47,7 +47,7 @@ public class NullNode<V> implements Node<V> {
    * @return The shared `NullNode` instance.
    */
   @SuppressWarnings("unchecked")
-  public static <V> NullNode<V> instance() {
+  public static <V> NullLeafNode<V> instance() {
     return instance;
   }
 
@@ -101,7 +101,7 @@ public class NullNode<V> implements Node<V> {
    */
   @Override
   public String print() {
-    return "[NULL]";
+    return "[NULL-LEAF]";
   }
 
   /**

@@ -64,18 +64,6 @@ public class StoredNode<V> implements Node<V> {
   }
 
   /**
-   * Get the path associated with the node.
-   *
-   * @return The path of the node.
-   */
-  @Override
-  public Bytes getPath() {
-    final Node<V> node = load();
-    return node.getPath();
-  }
-  ;
-
-  /**
    * Get the location of the node.
    *
    * @return An optional containing the location of the node if available.
@@ -108,17 +96,14 @@ public class StoredNode<V> implements Node<V> {
   }
 
   /**
-   * Replace the path of the node.
+   * Get the commitment associated with the node.
    *
-   * @param path The new path to set.
-   * @return A new node with the updated path.
+   * @return An optional containing the commitment of the node if available.
    */
   @Override
-  public Node<V> replacePath(Bytes path) {
+  public Optional<Bytes32> getCommitment() {
     final Node<V> node = load();
-    markDirty();
-    loadedNode = Optional.of(node.replacePath(path));
-    return loadedNode.get();
+    return node.getCommitment();
   }
 
   /**

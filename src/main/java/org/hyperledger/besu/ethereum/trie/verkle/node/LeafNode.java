@@ -24,7 +24,6 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.rlp.RLPWriter;
 
@@ -34,60 +33,32 @@ import org.apache.tuweni.rlp.RLPWriter;
  * @param <V> The type of the node's value.
  */
 public class LeafNode<V> implements Node<V> {
-  private final Optional<Bytes> location; // Location in the tree
+  private final Optional<Bytes> location; // Location in the tree, or the key
   protected final V value; // Value associated with the node
-  private final Bytes path; // Extension path
-  private final Optional<Bytes32> hash; // Hash of the node
   private Optional<Bytes> encodedValue = Optional.empty(); // Encoded value
   private final Function<V, Bytes> valueSerializer; // Serializer function for the value
   private boolean dirty = true; // not persisted
 
   /**
-   * Constructs a new LeafNode with optional location, value, path, and optional hash.
+   * Constructs a new LeafNode with location, value.
+   *
+   * @param location The location of the node in the tree.
+   * @param value The value associated with the node.
+   */
+  public LeafNode(final Bytes location, final V value) {
+    this.location = Optional.of(location);
+    this.value = value;
+    this.valueSerializer = val -> (Bytes) val;
+  }
+  /**
+   * Constructs a new LeafNode with optional location, value.
    *
    * @param location The location of the node in the tree (Optional).
    * @param value The value associated with the node.
-   * @param path The path or key of the node.
-   * @param hash The hash of the node (Optional).
    */
-  public LeafNode(
-      final Optional<Bytes> location,
-      final V value,
-      final Bytes path,
-      final Optional<Bytes32> hash) {
+  public LeafNode(final Optional<Bytes> location, final V value) {
     this.location = location;
     this.value = value;
-    this.path = path;
-    this.hash = hash;
-    this.valueSerializer = val -> (Bytes) val;
-  }
-
-  /**
-   * Constructs a new LeafNode with a provided optional location, value, and path.
-   *
-   * @param location The location of the node in the tree (Optional).
-   * @param value The value associated with the node.
-   * @param path The path or key of the node.
-   */
-  public LeafNode(final Optional<Bytes> location, final V value, final Bytes path) {
-    this.location = location;
-    this.path = path;
-    this.value = value;
-    this.hash = Optional.empty();
-    this.valueSerializer = val -> (Bytes) val;
-  }
-
-  /**
-   * Constructs a new LeafNode with a value and path.
-   *
-   * @param value The value associated with the node.
-   * @param path The path or key of the node.
-   */
-  public LeafNode(final V value, final Bytes path) {
-    location = Optional.empty();
-    this.value = value;
-    this.path = path;
-    hash = Optional.empty();
     this.valueSerializer = val -> (Bytes) val;
   }
 
@@ -133,17 +104,6 @@ public class LeafNode<V> implements Node<V> {
   public Optional<Bytes> getLocation() {
     return location;
   }
-
-  /**
-   * Get the path or key of the node.
-   *
-   * @return The path of the node.
-   */
-  @Override
-  public Bytes getPath() {
-    return path;
-  }
-
   /**
    * Get the children of the node. A leaf node does not have children, so this method throws an
    * UnsupportedOperationException.
@@ -154,37 +114,6 @@ public class LeafNode<V> implements Node<V> {
   @Override
   public List<Node<V>> getChildren() {
     throw new UnsupportedOperationException("LeafNode does not have children.");
-  }
-
-  /**
-   * Get the hash of the node if available.
-   *
-   * @return An optional containing the hash of the node if available.
-   */
-  @Override
-  public Optional<Bytes32> getHash() {
-    return hash;
-  }
-
-  /**
-   * Replace the hash of the node.
-   *
-   * @param hash The new hash to set.
-   * @return A new node with the updated hash.
-   */
-  public Node<V> replaceHash(Bytes32 hash) {
-    return new LeafNode<V>(location, value, path, Optional.of(hash));
-  }
-
-  /**
-   * Replace the path of the node.
-   *
-   * @param path The new path to set.
-   * @return A new node with the updated path.
-   */
-  @Override
-  public Node<V> replacePath(Bytes path) {
-    return new LeafNode<V>(location, value, path, hash);
   }
 
   /**
@@ -199,7 +128,7 @@ public class LeafNode<V> implements Node<V> {
     }
     Bytes encodedVal =
         getValue().isPresent() ? valueSerializer.apply(getValue().get()) : Bytes.EMPTY;
-    List<Bytes> values = Arrays.asList(Bytes.EMPTY, getPath(), encodedVal);
+    List<Bytes> values = Arrays.asList(encodedVal);
     Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
     this.encodedValue = Optional.of(result);
     return result;

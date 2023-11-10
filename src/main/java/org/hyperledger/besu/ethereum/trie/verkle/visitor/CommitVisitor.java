@@ -16,10 +16,12 @@
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
 import org.hyperledger.besu.ethereum.trie.NodeUpdater;
-import org.hyperledger.besu.ethereum.trie.verkle.node.BranchNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
+import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
 import org.apache.tuweni.bytes.Bytes;
 
@@ -45,24 +47,46 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
   }
 
   /**
-   * Visits a BranchNode to commit any changes in the node and its children.
+   * Visits a InternalNode to commit any changes in the node and its children.
    *
-   * @param branchNode The BranchNode being visited.
+   * @param internalNode The internalNode being visited.
    * @param location The location in the Trie tree.
-   * @return The visited BranchNode.
+   * @return The visited internalNode.
    */
   @Override
-  public Node<V> visit(final BranchNode<V> branchNode, final Bytes location) {
-    if (!branchNode.isDirty()) {
-      return branchNode;
+  public Node<V> visit(final InternalNode<V> internalNode, final Bytes location) {
+    if (!internalNode.isDirty()) {
+      return internalNode;
     }
-    for (int i = 0; i < BranchNode.maxChild(); ++i) {
+    for (int i = 0; i < InternalNode.maxChild(); ++i) {
       Bytes index = Bytes.of(i);
-      final Node<V> child = branchNode.child((byte) i);
+      final Node<V> child = internalNode.child((byte) i);
       child.accept(this, Bytes.concatenate(location, index));
     }
-    nodeUpdater.store(location, null, branchNode.getEncodedValue());
-    return branchNode;
+    nodeUpdater.store(location, null, internalNode.getEncodedValue());
+    return internalNode;
+  }
+
+  /**
+   * Visits a stemNode to commit any changes in the node and its children.
+   *
+   * @param stemNode The stemNode being visited.
+   * @param location The location in the Trie tree.
+   * @return The visited stemNode.
+   */
+  @Override
+  public Node<V> visit(final StemNode<V> stemNode, final Bytes location) {
+    if (!stemNode.isDirty()) {
+      return stemNode;
+    }
+    final Bytes stem = stemNode.getStem();
+    for (int i = 0; i < StemNode.maxChild(); ++i) {
+      Bytes index = Bytes.of(i);
+      final Node<V> child = stemNode.child((byte) i);
+      child.accept(this, Bytes.concatenate(stem, index));
+    }
+    nodeUpdater.store(location, null, stemNode.getEncodedValue());
+    return stemNode;
   }
 
   /**
@@ -91,5 +115,17 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
   @Override
   public Node<V> visit(final NullNode<V> nullNode, final Bytes location) {
     return nullNode;
+  }
+
+  /**
+   * Visits a NullLeafNode, indicating no changes to commit.
+   *
+   * @param nullLeafNode The NullLeafNode being visited.
+   * @param location The location in the Trie tree.
+   * @return The NullLeafNode indicating no changes.
+   */
+  @Override
+  public Node<V> visit(final NullLeafNode<V> nullLeafNode, final Bytes location) {
+    return nullLeafNode;
   }
 }

@@ -16,10 +16,10 @@
 package org.hyperledger.besu.ethereum.trie.verkle.factory;
 
 import org.hyperledger.besu.ethereum.trie.NodeLoader;
-import org.hyperledger.besu.ethereum.trie.verkle.node.BranchNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StoredNode;
 
 import java.util.ArrayList;
@@ -30,6 +30,12 @@ import java.util.function.Function;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.rlp.RLP;
+
+enum NodeType {
+  LEAF,
+  INTERNAL,
+  STEM
+}
 
 /**
  * A factory for creating Verkle Trie nodes based on stored data.
@@ -54,8 +60,8 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   /**
    * Retrieves a Verkle Trie node from stored data based on the location and hash.
    *
-   * @param location The location of the node.
-   * @param hash The hash of the node.
+   * @param location Node's location
+   * @param hash Node's hash
    * @return An optional containing the retrieved node, or an empty optional if the node is not
    *     found.
    */
@@ -67,48 +73,76 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
     }
     Bytes encodedValues = optionalEncodedValues.get();
     List<Bytes> values = RLP.decodeToList(encodedValues, reader -> reader.readValue().copy());
-    Bytes hashOrEmpty = values.get(0);
-    if (hashOrEmpty.isEmpty() && values.size() == 1) { // NullNode
-      return Optional.of(NullNode.instance());
+    final int nValues = values.size();
+    NodeType type =
+        (nValues == 1 ? NodeType.LEAF : (nValues == 2 ? NodeType.INTERNAL : NodeType.STEM));
+    return switch (type) {
+      case LEAF -> Optional.of(createLeafNode(location, values));
+      case INTERNAL -> Optional.of(createInternalNode(location, values));
+      case STEM -> Optional.of(createStemNode(location, values));
+      default -> Optional.empty();
+    };
+  }
+
+  /**
+   * Creates a internalNode using the provided location, hash, and path.
+   *
+   * @param location The location of the internalNode.
+   * @param values List of Bytes values retrieved from storage.
+   * @return A internalNode instance.
+   */
+  InternalNode<V> createInternalNode(Bytes location, List<Bytes> values) {
+    final int nChild = InternalNode.maxChild();
+    ArrayList<Node<V>> children = new ArrayList<Node<V>>(nChild);
+    for (int i = 0; i < nChild; i++) {
+      children.add(new StoredNode<>(this, Bytes.concatenate(location, Bytes.of(i))));
     }
-    Bytes path = values.get(1);
-    if (hashOrEmpty.isEmpty() && values.size() > 1) { // LeafNode
-      V value = valueDeserializer.apply(values.get(2));
-      return Optional.of(createLeafNode(location, path, value));
-    }
-    if (!hashOrEmpty.isEmpty()) { // BranchNode
-      Bytes32 savedHash = (Bytes32) hashOrEmpty;
-      return Optional.of(createBranchNode(location, savedHash, path));
-    }
-    return Optional.empty(); // should not be here.
+    final Bytes32 hash = (Bytes32) values.get(0);
+    final Bytes32 commitment = (Bytes32) values.get(1);
+    return new InternalNode<V>(location, hash, commitment, children);
   }
 
   /**
    * Creates a BranchNode using the provided location, hash, and path.
    *
    * @param location The location of the BranchNode.
-   * @param hash The hash of the BranchNode.
-   * @param path The path associated with the BranchNode.
+   * @param values List of Bytes values retrieved from storage.
    * @return A BranchNode instance.
    */
-  protected BranchNode<V> createBranchNode(Bytes location, Bytes32 hash, Bytes path) {
-    int nChild = BranchNode.maxChild();
+  StemNode<V> createStemNode(Bytes location, List<Bytes> values) {
+    final int nChild = StemNode.maxChild();
+    final Bytes stem = values.get(0);
+    final Bytes32 hash = (Bytes32) values.get(1);
+    final Bytes32 commitment = (Bytes32) values.get(2);
+    final Bytes32 leftHash = (Bytes32) values.get(3);
+    final Bytes32 leftCommitment = (Bytes32) values.get(4);
+    final Bytes32 rightHash = (Bytes32) values.get(5);
+    final Bytes32 rightCommitment = (Bytes32) values.get(6);
     ArrayList<Node<V>> children = new ArrayList<Node<V>>(nChild);
     for (int i = 0; i < nChild; i++) {
-      children.add(new StoredNode<>(this, Bytes.concatenate(location, Bytes.of(i))));
+      children.add(new StoredNode<>(this, Bytes.concatenate(stem, Bytes.of(i))));
     }
-    return new BranchNode<V>(location, hash, path, children);
+    return new StemNode<V>(
+        location,
+        stem,
+        hash,
+        commitment,
+        leftHash,
+        leftCommitment,
+        rightHash,
+        rightCommitment,
+        children);
   }
 
   /**
    * Creates a LeafNode using the provided location, path, and value.
    *
-   * @param location The location of the LeafNode.
-   * @param path The path associated with the LeafNode.
-   * @param value The value stored in the LeafNode.
+   * @param key The key of the LeafNode.
+   * @param values List of Bytes values retrieved from storage.
    * @return A LeafNode instance.
    */
-  protected LeafNode<V> createLeafNode(Bytes location, Bytes path, V value) {
-    return new LeafNode<V>(Optional.of(location), value, path);
+  LeafNode<V> createLeafNode(Bytes key, List<Bytes> values) {
+    V value = valueDeserializer.apply(values.get(0));
+    return new LeafNode<V>(Optional.of(key), value);
   }
 }

@@ -27,6 +27,11 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.rlp.RLPWriter;
 
+/**
+ * Represents an internal node in the Verkle Trie.
+ *
+ * @param <V> The type of the node's value.
+ */
 public class InternalNode<V> extends BranchNode<V> {
   private Optional<Bytes> encodedValue = Optional.empty(); // Encoded value
 
@@ -109,8 +114,9 @@ public class InternalNode<V> extends BranchNode<V> {
   /**
    * Replace the vector commitment with a new one.
    *
-   * @param hash The new vector commitment to set.
-   * @return A new BranchNode with the updated vector commitment.
+   * @param hash The new vector commitment's hash to set.
+   * @param commitment The new vector commitment to set.
+   * @return A new InternalNode with the updated vector commitment.
    */
   public Node<V> replaceHash(Bytes32 hash, Bytes32 commitment) {
     return new InternalNode<V>(
@@ -143,10 +149,10 @@ public class InternalNode<V> extends BranchNode<V> {
     final StringBuilder builder = new StringBuilder();
     builder.append("Internal:");
     for (int i = 0; i < maxChild(); i++) {
-      final Node<V> child = child((byte) i);
-      if (child == NullNode.instance()) {
-        final String label = "[" + Integer.toHexString(i) + "] ";
-        final String childRep = child.print().replaceAll("\n\t", "\n\t\t");
+      final Node<V> childNode = child((byte) i);
+      if (childNode != NullNode.instance()) {
+        final String label = String.format("[%02x] ", i);
+        final String childRep = childNode.print().replaceAll("\n\t", "\n\t\t");
         builder.append("\n\t").append(label).append(childRep);
       }
     }

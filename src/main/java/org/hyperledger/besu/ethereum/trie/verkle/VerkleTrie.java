@@ -38,6 +38,7 @@ public interface VerkleTrie<K, V> {
    *
    * @param key The key that corresponds to the value to be updated.
    * @param value The value to associate the key with.
+   * @return Optional previous value before replacement if it exists.
    */
   Optional<V> put(K key, V value);
 

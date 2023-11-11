@@ -37,8 +37,9 @@ import org.apache.tuweni.bytes.Bytes;
  */
 public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   private final Node<V> NULL_NODE = NullNode.instance();
-  private final Node<V> NULL_LEAF_NODE = NullNode.instance();
+  private final Node<V> NULL_LEAF_NODE = NullLeafNode.instance();
   private final FlattenVisitor<V> flatten = new FlattenVisitor<>();
+  private final GetVisitor<V> getter = new GetVisitor<>();
 
   /**
    * Visits a internal node to remove a node associated with the provided path and maintain the
@@ -51,17 +52,18 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   @Override
   public Node<V> visit(InternalNode<V> internalNode, Bytes path) {
     final byte index = path.get(0);
-    final Node<V> updatedChild = internalNode.child(index).accept(this, path.slice(1));
+    final Node<V> childNode = internalNode.child(index);
+    final Node<V> updatedChild = childNode.accept(this, path.slice(1));
     internalNode.replaceChild(index, updatedChild);
-    if (updatedChild.isDirty()) {
+    final boolean wasChildNullified = (childNode != NULL_NODE && updatedChild == NULL_NODE);
+    if (updatedChild.isDirty() || wasChildNullified) {
       internalNode.markDirty();
     }
     final Optional<Byte> onlyChildIndex = findOnlyChild(internalNode);
     if (onlyChildIndex.isEmpty()) {
       return internalNode;
     }
-    final Node<V> childNode = internalNode.child(onlyChildIndex.get());
-    final Node<V> newNode = childNode.accept(flatten, Bytes.of(index));
+    final Node<V> newNode = internalNode.child(onlyChildIndex.get()).accept(flatten);
     if (newNode != NULL_NODE) { // Flatten StemNode one-level up
       newNode.markDirty();
       return newNode;
@@ -153,7 +155,10 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   boolean allLeavesAreNull(final StemNode<V> stemNode) {
     final List<Node<V>> children = stemNode.getChildren();
     for (int i = 0; i < children.size(); ++i) {
-      if (children.get(i) != NullLeafNode.instance()) {
+      Node<V> child =
+          children.get(i).accept(getter, Bytes.EMPTY); // forces to load node if StoredNode;
+      stemNode.replaceChild((byte) i, child);
+      if (child != NULL_LEAF_NODE) {
         return false;
       }
     }

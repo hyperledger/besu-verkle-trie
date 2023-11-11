@@ -34,7 +34,7 @@ import org.apache.tuweni.rlp.RLPWriter;
  */
 public class LeafNode<V> implements Node<V> {
   private final Optional<Bytes> location; // Location in the tree, or the key
-  protected final V value; // Value associated with the node
+  private final V value; // Value associated with the node
   private Optional<Bytes> encodedValue = Optional.empty(); // Encoded value
   private final Function<V, Bytes> valueSerializer; // Serializer function for the value
   private boolean dirty = true; // not persisted

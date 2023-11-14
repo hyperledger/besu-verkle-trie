@@ -31,10 +31,12 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.rlp.RLP;
 
+/** Node types that are saved to storage. */
 enum NodeType {
-  LEAF,
+  ROOT,
   INTERNAL,
-  STEM
+  STEM,
+  LEAF
 }
 
 /**
@@ -67,15 +69,20 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
    */
   @Override
   public Optional<Node<V>> retrieve(final Bytes location, final Bytes32 hash) {
+    /* Currently, Root and Leaf are distinguishable by location.
+     * To distinguish internal from stem, we further need values.
+     * Currently, they are distinguished by values length.
+     */
     Optional<Bytes> optionalEncodedValues = nodeLoader.getNode(location, hash);
     if (optionalEncodedValues.isEmpty()) {
       return Optional.empty();
     }
     Bytes encodedValues = optionalEncodedValues.get();
     List<Bytes> values = RLP.decodeToList(encodedValues, reader -> reader.readValue().copy());
+    final int locLength = location.size();
     final int nValues = values.size();
     NodeType type =
-        (nValues == 1 ? NodeType.LEAF : (nValues == 2 ? NodeType.INTERNAL : NodeType.STEM));
+        (locLength == 32 ? NodeType.LEAF : (nValues == 2 ? NodeType.INTERNAL : NodeType.STEM));
     return switch (type) {
       case LEAF -> Optional.of(createLeafNode(location, values));
       case INTERNAL -> Optional.of(createInternalNode(location, values));

@@ -32,9 +32,10 @@ import org.apache.tuweni.bytes.Bytes32;
  */
 public interface Node<V> {
 
-  /** A constant representing a commitment to NullNodes */
+  /** A constant representing a commitment's hash to NullNodes */
   Bytes32 EMPTY_HASH = Bytes32.ZERO;
 
+  /** A constant representing a commitment to NullNodes */
   Bytes32 EMPTY_COMMITMENT = Bytes32.ZERO;
 
   /**

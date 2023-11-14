@@ -22,16 +22,25 @@ import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
 import org.apache.tuweni.bytes.Bytes;
 
-public class FlattenVisitor<V> implements PathNodeVisitor<V> {
+/**
+ * Class representing a visitor for flattening a node in a Trie tree.
+ *
+ * <p>Flattening a node means that it is merged with its parent, adding one level to the extension
+ * path. Per current specs, only StemNodes can have extensions, so only StemNodes can potentially be
+ * flattened.
+ *
+ * @param <V> The type of node values.
+ */
+public class FlattenVisitor<V> implements NodeVisitor<V> {
   private final Node<V> NULL_NODE = NullNode.instance();
 
   @Override
-  public Node<V> visit(InternalNode<V> internalNode, Bytes path) {
+  public Node<V> visit(InternalNode<V> internalNode) {
     return NULL_NODE;
   }
 
   @Override
-  public Node<V> visit(StemNode<V> stemNode, Bytes path) {
+  public Node<V> visit(StemNode<V> stemNode) {
     final Bytes location = stemNode.getLocation().get();
     final Bytes newLocation = location.slice(0, location.size() - 1);
     // Should not flatten root node

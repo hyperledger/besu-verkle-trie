@@ -27,6 +27,13 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.rlp.RLP;
 import org.apache.tuweni.rlp.RLPWriter;
 
+/**
+ * Represents a stem node in the Verkle Trie.
+ *
+ * <p>StemNodes are nodes storing the stem of the key, and is the root of the suffix to value trie.
+ *
+ * @param <V> The type of the node's value.
+ */
 public class StemNode<V> extends BranchNode<V> {
   private final Node<V> NULL_LEAF_NODE = NullLeafNode.instance();
 
@@ -150,6 +157,15 @@ public class StemNode<V> extends BranchNode<V> {
   }
 
   /**
+   * Get Node's extension.
+   *
+   * @return the extension path.
+   */
+  public Optional<Bytes> getPathExtension() {
+    return getLocation().map((loc) -> stem.slice(loc.size()));
+  }
+
+  /**
    * Get the leftHash.
    *
    * @return the leftHash.
@@ -189,6 +205,7 @@ public class StemNode<V> extends BranchNode<V> {
    * Creates a new node by replacing its location
    *
    * @param location The location in the tree.
+   * @return StemNode with new location.
    */
   public StemNode<V> replaceLocation(final Bytes location) {
     return new StemNode<V>(
@@ -212,6 +229,7 @@ public class StemNode<V> extends BranchNode<V> {
    * @param leftCommitment Node's left vector commitment
    * @param rightHash Node's right vector commitment hash
    * @param rightCommitment Node's right vector commitment
+   * @return StemNode with new commitments.
    */
   public StemNode<V> replaceHash(
       final Bytes32 hash,
@@ -264,11 +282,11 @@ public class StemNode<V> extends BranchNode<V> {
   @Override
   public String print() {
     final StringBuilder builder = new StringBuilder();
-    builder.append("Stem:");
+    builder.append(String.format("Stem: %s", stem));
     for (int i = 0; i < maxChild(); i++) {
       final Node<V> child = child((byte) i);
-      if (child == NullLeafNode.instance()) {
-        final String label = "[" + Integer.toHexString(i) + "] ";
+      if (child != NullLeafNode.instance()) {
+        final String label = String.format("[%02x] ", i);
         final String childRep = child.print().replaceAll("\n\t", "\n\t\t");
         builder.append("\n\t").append(label).append(childRep);
       }

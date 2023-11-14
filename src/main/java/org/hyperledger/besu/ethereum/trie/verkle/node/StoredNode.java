@@ -25,6 +25,13 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
+/**
+ * Represents a regular node that can possibly be stored in storage.
+ *
+ * <p>StoredNodes wrap regular nodes and loads them lazily from storage as needed.
+ *
+ * @param <V> The type of the node's value.
+ */
 public class StoredNode<V> implements Node<V> {
   private final Bytes location;
   private final NodeFactory<V> nodeFactory;
@@ -32,6 +39,12 @@ public class StoredNode<V> implements Node<V> {
 
   private boolean dirty = true; // not persisted
 
+  /**
+   * Constructs a new StoredNode at location.
+   *
+   * @param nodeFactory The node factory for creating nodes from storage.
+   * @param location The location in the tree.
+   */
   public StoredNode(final NodeFactory<V> nodeFactory, final Bytes location) {
     this.location = location;
     this.nodeFactory = nodeFactory;
@@ -152,13 +165,19 @@ public class StoredNode<V> implements Node<V> {
   @Override
   public String print() {
     final Node<V> node = load();
-    return node.print();
+    return String.format("(stored) %s", node.print());
   }
 
   private Node<V> load() {
-    if (!loadedNode.isPresent()) {
+    if (loadedNode.isEmpty()) {
       loadedNode = nodeFactory.retrieve(location, null);
     }
-    return loadedNode.orElse(NullNode.instance());
+    if (loadedNode.isPresent()) {
+      return loadedNode.get();
+    } else if (location.size() == 32) {
+      return NullLeafNode.instance();
+    } else {
+      return NullNode.instance();
+    }
   }
 }

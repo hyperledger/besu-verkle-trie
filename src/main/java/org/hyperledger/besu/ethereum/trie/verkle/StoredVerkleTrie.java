@@ -16,11 +16,17 @@
 package org.hyperledger.besu.ethereum.trie.verkle;
 
 import org.hyperledger.besu.ethereum.trie.verkle.factory.NodeFactory;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 
 import org.apache.tuweni.bytes.Bytes;
 
+/**
+ * Implementation of a Verkle Trie with nodes saved in storage.
+ *
+ * @param <K> The type of keys in the Verkle Trie.
+ * @param <V> The type of values in the Verkle Trie.
+ */
 public class StoredVerkleTrie<K extends Bytes, V extends Bytes> extends SimpleVerkleTrie<K, V> {
+  /** NodeFactory that load nodes from storage */
   protected final NodeFactory<V> nodeFactory;
 
   /**
@@ -29,7 +35,7 @@ public class StoredVerkleTrie<K extends Bytes, V extends Bytes> extends SimpleVe
    * @param nodeFactory The {@link NodeFactory} to retrieve node.
    */
   public StoredVerkleTrie(final NodeFactory<V> nodeFactory) {
-    super(nodeFactory.retrieve(Bytes.EMPTY, null).orElse(NullNode.instance()));
+    super(nodeFactory.retrieve(Bytes.EMPTY, null));
     this.nodeFactory = nodeFactory;
   }
 }

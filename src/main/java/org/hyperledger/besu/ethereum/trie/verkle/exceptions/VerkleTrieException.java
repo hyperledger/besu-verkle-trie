@@ -17,22 +17,46 @@ package org.hyperledger.besu.ethereum.trie.verkle.exceptions;
 
 import org.apache.tuweni.bytes.Bytes;
 
+/** This exception is thrown when there is an issue retrieving or decoding values from Storage */
 public class VerkleTrieException extends RuntimeException {
+  /** Location at which the Exception occurs */
   private Bytes location;
 
+  /**
+   * Constructs a VerkleTrieException.
+   *
+   * @param message Exception's messasge.
+   */
   public VerkleTrieException(final String message) {
     super(message);
   }
 
+  /**
+   * Constructs a VerkleTrieException at location.
+   *
+   * @param message Exception's messasge.
+   * @param location Exception occured at location.
+   */
   public VerkleTrieException(final String message, final Bytes location) {
     super(message);
     this.location = location;
   }
 
+  /**
+   * Constructs a VerkleTrieException throwned from another exception.
+   *
+   * @param message Exception's messasge.
+   * @param cause Exception from which this exception was throwned.
+   */
   public VerkleTrieException(final String message, final Exception cause) {
     super(message, cause);
   }
 
+  /**
+   * Location at which the exception occured
+   *
+   * @return the location at which the exception occured
+   */
   public Bytes getLocation() {
     return location;
   }

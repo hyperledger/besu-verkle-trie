@@ -55,6 +55,15 @@ public class SimpleVerkleTrie<K extends Bytes, V extends Bytes> implements Verkl
   }
 
   /**
+   * Creates a new Verkle Trie with the specified node as the root.
+   *
+   * @param root The root node of the Verkle Trie.
+   */
+  public SimpleVerkleTrie(Optional<Node<V>> root) {
+    this.root = root.orElse(new InternalNode<V>(Bytes.EMPTY));
+  }
+
+  /**
    * Retrieves the root node of the Verkle Trie.
    *
    * @return The root node of the Verkle Trie.

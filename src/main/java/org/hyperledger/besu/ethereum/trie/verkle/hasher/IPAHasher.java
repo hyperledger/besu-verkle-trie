@@ -21,7 +21,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /**
- * A class responsible for hashing an array of Bytes32 using the IPA (Inter-Participant Agreement)
+ * A class responsible for hashing an array of Bytes32 using the IPA (Inner Product Argument)
  * hashing algorithm.
  *
  * <p>This class implements the Hasher interface and provides a method to commit multiple Bytes32

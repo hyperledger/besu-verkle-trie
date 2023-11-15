@@ -15,14 +15,11 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
+import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
-/**
- * Defines an interface for a Verkle Trie node hashing strategy.
- *
- * @param <V> The type of values to be hashed.
- */
-public interface Hasher<V> {
+/** Defines an interface for a Verkle Trie node hashing strategy. */
+public interface Hasher {
 
   /**
    * Calculates the commitment hash for an array of inputs.
@@ -30,7 +27,14 @@ public interface Hasher<V> {
    * @param inputs An array of values to be hashed.
    * @return The commitment hash calculated from the inputs.
    */
-  public Bytes32 commit(V[] inputs);
+  public Bytes32 commit(Bytes32[] inputs);
 
-  // public Bytes32 commit_sparse(V[] input, int[] index)
+  /**
+   * Calculates the hash for an address and index.
+   *
+   * @param address Account address.
+   * @param index Index in storage.
+   * @return The trie-key hash
+   */
+  public Bytes32 trieKeyHash(Bytes address, Bytes32 index);
 }

@@ -38,14 +38,14 @@ public class TrieKeyAdapter {
   private final UInt256 VERKLE_NODE_WIDTH = UInt256.valueOf(256);
   private final UInt256 MAIN_STORAGE_OFFSET = UInt256.valueOf(256).pow(31);
 
-  private final Hasher<Bytes32> hasher;
+  private final Hasher hasher;
 
   /**
    * Creates a TrieKeyAdapter with the provided hasher.
    *
    * @param hasher The hasher used for key generation.
    */
-  public TrieKeyAdapter(Hasher<Bytes32> hasher) {
+  public TrieKeyAdapter(Hasher hasher) {
     this.hasher = hasher;
   }
 
@@ -56,34 +56,8 @@ public class TrieKeyAdapter {
    * @param subIndex The subIndex.
    * @return The modified key.
    */
-  Bytes32 swapLastByte(Bytes32 base, UInt256 subIndex) {
-    Bytes32 key =
-        (Bytes32) Bytes.concatenate(base.slice(0, 31), Bytes.of(subIndex.toBytes().get(31)));
-    return key;
-  }
-
-  /**
-   * Generates the base key for a given address and treeIndex.
-   *
-   * @param address The address.
-   * @param treeIndex The tree index.
-   * @return The generated base key.
-   */
-  Bytes32 baseKey(Bytes32 address, UInt256 treeIndex) {
-    int type_encoding = 2;
-    UInt256 encoding =
-        UInt256.valueOf(type_encoding).add(VERKLE_NODE_WIDTH.multiply(UInt256.valueOf(16)));
-
-    Bytes32[] input =
-        new Bytes32[] {
-          Bytes32.rightPad(encoding.toBytes().slice(16, 16).reverse()),
-          Bytes32.rightPad(address.slice(0, 16)),
-          Bytes32.rightPad(address.slice(16, 16)),
-          Bytes32.rightPad(treeIndex.toBytes().slice(16, 16).reverse()),
-          Bytes32.rightPad(treeIndex.toBytes().slice(0, 16).reverse())
-        };
-    Bytes32 key = hasher.commit(input);
-    return key;
+  Bytes32 swapLastByte(Bytes32 base, Bytes subIndex) {
+    return (Bytes32) Bytes.concatenate(base.slice(0, 31), subIndex);
   }
 
   /**
@@ -93,13 +67,14 @@ public class TrieKeyAdapter {
    * @param storageKey The storage key.
    * @return The generated storage key.
    */
-  public Bytes32 storageKey(Bytes32 address, UInt256 storageKey) {
+  public Bytes32 storageKey(Bytes address, Bytes32 storageKey) {
+    UInt256 index = UInt256.fromBytes(storageKey);
     UInt256 headerOffset = CODE_OFFSET.subtract(HEADER_STORAGE_OFFSET);
     UInt256 offset =
-        ((storageKey.compareTo(headerOffset) < 0) ? HEADER_STORAGE_OFFSET : MAIN_STORAGE_OFFSET);
-    UInt256 pos = offset.add(storageKey);
-    Bytes32 base = baseKey(address, pos.divide(VERKLE_NODE_WIDTH));
-    Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
+        ((index.compareTo(headerOffset) < 0) ? HEADER_STORAGE_OFFSET : MAIN_STORAGE_OFFSET);
+    UInt256 pos = offset.add(index);
+    Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH));
+    Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH).toMinimalBytes());
     return key;
   }
 
@@ -110,10 +85,21 @@ public class TrieKeyAdapter {
    * @param chunkId The chunk ID.
    * @return The generated code chunk key.
    */
-  public Bytes32 codeChunkKey(Bytes32 address, UInt256 chunkId) {
+  public Bytes32 codeChunkKey(Bytes address, long chunkId) {
+    return codeChunkKey(address, UInt256.valueOf(chunkId));
+  }
+
+  /**
+   * Generates a code chunk key for a given address and chunkId.
+   *
+   * @param address The address.
+   * @param chunkId The chunk ID.
+   * @return The generated code chunk key.
+   */
+  public Bytes32 codeChunkKey(Bytes address, UInt256 chunkId) {
     UInt256 pos = CODE_OFFSET.add(chunkId);
-    Bytes32 base = baseKey(address, pos.divide(VERKLE_NODE_WIDTH));
-    Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
+    Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH).toBytes());
+    Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH).toMinimalBytes());
     return key;
   }
 
@@ -124,9 +110,9 @@ public class TrieKeyAdapter {
    * @param leafKey The leaf key.
    * @return The generated header key.
    */
-  Bytes32 headerKey(Bytes32 address, UInt256 leafKey) {
-    Bytes32 base = baseKey(address, UInt256.valueOf(0));
-    Bytes32 key = swapLastByte(base, leafKey);
+  Bytes32 headerKey(Bytes address, UInt256 leafKey) {
+    Bytes32 base = hasher.trieKeyHash(address, UInt256.valueOf(0).toBytes());
+    Bytes32 key = swapLastByte(base, leafKey.toBytes().slice(31));
     return key;
   }
 
@@ -136,7 +122,7 @@ public class TrieKeyAdapter {
    * @param address The address.
    * @return The generated version key.
    */
-  public Bytes32 versionKey(Bytes32 address) {
+  public Bytes32 versionKey(Bytes address) {
     return headerKey(address, VERSION_LEAF_KEY);
   }
 
@@ -146,7 +132,7 @@ public class TrieKeyAdapter {
    * @param address The address.
    * @return The generated balance key.
    */
-  public Bytes32 balanceKey(Bytes32 address) {
+  public Bytes32 balanceKey(Bytes address) {
     return headerKey(address, BALANCE_LEAF_KEY);
   }
 
@@ -156,7 +142,7 @@ public class TrieKeyAdapter {
    * @param address The address.
    * @return The generated nonce key.
    */
-  public Bytes32 nonceKey(Bytes32 address) {
+  public Bytes32 nonceKey(Bytes address) {
     return headerKey(address, NONCE_LEAF_KEY);
   }
 
@@ -166,7 +152,7 @@ public class TrieKeyAdapter {
    * @param address The address.
    * @return The generated code Keccak key.
    */
-  public Bytes32 codeKeccakKey(Bytes32 address) {
+  public Bytes32 codeKeccakKey(Bytes address) {
     return headerKey(address, CODE_KECCAK_LEAF_KEY);
   }
 
@@ -176,7 +162,7 @@ public class TrieKeyAdapter {
    * @param address The address.
    * @return The generated code size key.
    */
-  public Bytes32 codeSizeKey(Bytes32 address) {
+  public Bytes32 codeSizeKey(Bytes address) {
     return headerKey(address, CODE_SIZE_LEAF_KEY);
   }
 }

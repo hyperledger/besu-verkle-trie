@@ -16,7 +16,7 @@
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
-import org.hyperledger.besu.ethereum.trie.verkle.hasher.IPAHasher;
+import org.hyperledger.besu.ethereum.trie.verkle.hasher.PedersenHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
@@ -32,7 +32,7 @@ import org.apache.tuweni.bytes.Bytes32;
  * @param <V> The type of the node's value.
  */
 public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
-  Hasher<Bytes32> hasher = new IPAHasher();
+  Hasher hasher = new PedersenHasher();
 
   /**
    * Visits a internal node, computes its hash, and returns a new internal node with the updated

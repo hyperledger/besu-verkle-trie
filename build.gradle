@@ -44,6 +44,14 @@ test {
   useJUnitPlatform()
 }
 
+sourceSets {
+  test {
+    resources {
+      srcDirs = ['src/test/resources']
+    }
+  }
+}
+
 dependencies {
   implementation "com.google.guava:guava"
   implementation 'net.java.dev.jna:jna'

@@ -177,23 +177,23 @@ public class TrieKeyAdapter {
    * @return List of 32-bytes code chunks
    */
   public List<Bytes32> chunkifyCode(Bytes bytecode) {
-    List<Bytes32> chunks = new ArrayList<Bytes32>();
     if (bytecode.isEmpty()) {
-      return chunks;
+      return new ArrayList<Bytes32>();
     }
 
-    // Chunking parameters
+    // Chunking variables
     int CHUNK_SIZE = 31;
     int nChunks = 1 + ((bytecode.size() - 1) / CHUNK_SIZE);
     int padSize = nChunks * CHUNK_SIZE - bytecode.size();
     Bytes code = Bytes.concatenate(bytecode, Bytes.repeat((byte) 0, padSize));
+    List<Bytes32> chunks = new ArrayList<Bytes32>(nChunks);
 
     // OpCodes for PUSH's
     int PUSH_OFFSET = 95;
     int PUSH1 = PUSH_OFFSET + 1;
     int PUSH32 = PUSH_OFFSET + 32;
 
-    // Cursors
+    // Iterator data
     int chunkPos = 0; // cursor position to start of current chunk
     int posInChunk = 0; // cursor position relative to the current chunk
     int nPushData = 0; // number of bytes in current push data
@@ -209,9 +209,9 @@ public class TrieKeyAdapter {
           posInChunk += opCode - PUSH_OFFSET;
         }
       }
-      nPushData = posInChunk - CHUNK_SIZE;
       chunks.add(
           (Bytes32) Bytes.concatenate(Bytes.of(nPushData), code.slice(chunkPos, CHUNK_SIZE)));
+      nPushData = posInChunk - CHUNK_SIZE;
     }
 
     return chunks;

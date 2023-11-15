@@ -17,6 +17,9 @@ package org.hyperledger.besu.ethereum.trie.verkle.adapter;
 
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
@@ -163,6 +166,54 @@ public class TrieKeyAdapter {
    * @return The generated code size key.
    */
   public Bytes32 codeSizeKey(Bytes address) {
-    return headerKey(address, CODE_SIZE_LEAF_KEY);
+    return (headerKey(address, CODE_SIZE_LEAF_KEY));
+  }
+
+  /**
+   * Chunk code's bytecode for insertion in the Trie. Each chunk code uses its position in the list
+   * as chunkId
+   *
+   * @param bytecode Code's bytecode
+   * @return List of 32-bytes code chunks
+   */
+  public List<Bytes32> chunkifyCode(Bytes bytecode) {
+    List<Bytes32> chunks = new ArrayList<Bytes32>();
+    if (bytecode.isEmpty()) {
+      return chunks;
+    }
+
+    // Chunking parameters
+    int CHUNK_SIZE = 31;
+    int nChunks = 1 + ((bytecode.size() - 1) / CHUNK_SIZE);
+    int padSize = nChunks * CHUNK_SIZE - bytecode.size();
+    Bytes code = Bytes.concatenate(bytecode, Bytes.repeat((byte) 0, padSize));
+
+    // OpCodes for PUSH's
+    int PUSH_OFFSET = 95;
+    int PUSH1 = PUSH_OFFSET + 1;
+    int PUSH32 = PUSH_OFFSET + 32;
+
+    // Cursors
+    int chunkPos = 0; // cursor position to start of current chunk
+    int posInChunk = 0; // cursor position relative to the current chunk
+    int nPushData = 0; // number of bytes in current push data
+
+    // Create chunk iteratively
+    for (int chunkId = 0; chunkId < nChunks; ++chunkId) {
+      chunkPos = chunkId * CHUNK_SIZE;
+      posInChunk = nPushData;
+      while (posInChunk < CHUNK_SIZE) {
+        int opCode = Byte.toUnsignedInt(code.get(chunkPos + posInChunk));
+        posInChunk += 1;
+        if (PUSH1 <= opCode && opCode <= PUSH32) {
+          posInChunk += opCode - PUSH_OFFSET;
+        }
+      }
+      nPushData = posInChunk - CHUNK_SIZE;
+      chunks.add(
+          (Bytes32) Bytes.concatenate(Bytes.of(nPushData), code.slice(chunkPos, CHUNK_SIZE)));
+    }
+
+    return chunks;
   }
 }

@@ -27,7 +27,7 @@ import org.apache.tuweni.bytes.Bytes32;
  * <p>This class implements the Hasher interface and provides a method to commit multiple Bytes32
  * inputs using the IPA hashing algorithm.
  */
-public class IPAHasher implements Hasher<Bytes32> {
+public class PedersenHasher implements Hasher {
   /**
    * Commits an array of Bytes32 using the IPA hashing algorithm.
    *
@@ -42,5 +42,19 @@ public class IPAHasher implements Hasher<Bytes32> {
     }
     Bytes input_serialized = Bytes.concatenate(rev);
     return (Bytes32) Bytes32.wrap(LibIpaMultipoint.commit(input_serialized.toArray())).reverse();
+  }
+
+  /**
+   * Calculates the hash for an address and index.
+   *
+   * @param address Account address.
+   * @param index Index in storage.
+   * @return The trie-key hash
+   */
+  @Override
+  public Bytes32 trieKeyHash(Bytes address, Bytes32 index) {
+    Bytes32 addr = Bytes32.leftPad(address);
+    Bytes input = Bytes.concatenate(addr, index);
+    return Bytes32.wrap(LibIpaMultipoint.pedersenHash(input.toArray()));
   }
 }

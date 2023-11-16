@@ -29,7 +29,7 @@ import org.apache.tuweni.bytes.Bytes32;
  * inputs using the SHA-256 hashing algorithm. It utilizes the Java built-in MessageDigest for
  * SHA-256.
  */
-public class SHA256Hasher implements Hasher<Bytes32> {
+public class SHA256Hasher implements Hasher {
   /**
    * Commits an array of Bytes32 using the SHA-256 hashing algorithm provided by the MessageDigest.
    *
@@ -47,5 +47,17 @@ public class SHA256Hasher implements Hasher<Bytes32> {
       out = Bytes32.ZERO;
     }
     return out;
+  }
+
+  /**
+   * Calculates the hash for an address and index.
+   *
+   * @param address Account address.
+   * @param index Index in storage.
+   * @return The trie-key hash
+   */
+  @Override
+  public Bytes32 trieKeyHash(Bytes address, Bytes32 index) {
+    return commit(new Bytes32[] {Bytes32.leftPad(address), index});
   }
 }

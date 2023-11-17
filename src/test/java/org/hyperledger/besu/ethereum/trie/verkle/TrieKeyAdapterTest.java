@@ -18,7 +18,7 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.hyperledger.besu.ethereum.trie.verkle.adapter.TrieKeyAdapter;
-import org.hyperledger.besu.ethereum.trie.verkle.hasher.SHA256Hasher;
+import org.hyperledger.besu.ethereum.trie.verkle.hasher.PedersenHasher;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,14 +36,14 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public class TrieKeyAdapterTest {
   Bytes address = Bytes.fromHexString("0x00112233445566778899aabbccddeeff00112233");
-  TrieKeyAdapter adapter = new TrieKeyAdapter(new SHA256Hasher());
+  TrieKeyAdapter adapter = new TrieKeyAdapter(new PedersenHasher());
 
   @Test
   public void testStorageKey() {
     UInt256 storageKey = UInt256.valueOf(32);
     // Need to change this once commit is fixed
     Bytes32 expected =
-        Bytes32.fromHexString("0x1719aec0fd8358bc50c95799bd3cd38da48f6519f78d64ccb2546f554d80a060");
+        Bytes32.fromHexString("0xc224b9edaff18b27ce2604ad0f33a162d19840fd25290436dedcce42ad15d260");
     assertThat(adapter.storageKey(address, storageKey)).isEqualTo(expected);
   }
 
@@ -52,15 +52,25 @@ public class TrieKeyAdapterTest {
     UInt256 chunkId = UInt256.valueOf(24);
     // Need to change this once commit is fixed
     Bytes32 expected =
-        Bytes32.fromHexString("0x1719aec0fd8358bc50c95799bd3cd38da48f6519f78d64ccb2546f554d80a098");
+        Bytes32.fromHexString("0xc224b9edaff18b27ce2604ad0f33a162d19840fd25290436dedcce42ad15d298");
     assertThat(adapter.codeChunkKey(address, chunkId)).isEqualTo(expected);
+  }
+
+  @Test
+  public void testCodeChunkKey2() {
+    Bytes addr = Bytes.fromHexString("0x6f22ffbc56eff051aecf839396dd1ed9ad6bba9d");
+    UInt256 chunkId =
+        UInt256.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000080");
+    Bytes32 expected =
+        Bytes32.fromHexString("0x07361aa490296db032a91d3a5a69d3c3ef0e477baf8fced7f6775e4739614200");
+    assertThat(adapter.codeChunkKey(addr, chunkId)).isEqualTo(expected);
   }
 
   @Test
   public void testVersionKey() {
     // Need to change this once commit is fixed
     Bytes32 expected =
-        Bytes32.fromHexString("0x1719aec0fd8358bc50c95799bd3cd38da48f6519f78d64ccb2546f554d80a000");
+        Bytes32.fromHexString("0xc224b9edaff18b27ce2604ad0f33a162d19840fd25290436dedcce42ad15d200");
     assertThat(adapter.versionKey(address)).isEqualTo(expected);
   }
 
@@ -68,7 +78,7 @@ public class TrieKeyAdapterTest {
   public void testBalanceKey() {
     // Need to change this once commit is fixed
     Bytes32 expected =
-        Bytes32.fromHexString("0x1719aec0fd8358bc50c95799bd3cd38da48f6519f78d64ccb2546f554d80a001");
+        Bytes32.fromHexString("0xc224b9edaff18b27ce2604ad0f33a162d19840fd25290436dedcce42ad15d201");
     assertThat(adapter.balanceKey(address)).isEqualTo(expected);
   }
 
@@ -76,7 +86,7 @@ public class TrieKeyAdapterTest {
   public void testNonceKey() {
     // Need to change this once commit is fixed
     Bytes32 expected =
-        Bytes32.fromHexString("0x1719aec0fd8358bc50c95799bd3cd38da48f6519f78d64ccb2546f554d80a002");
+        Bytes32.fromHexString("0xc224b9edaff18b27ce2604ad0f33a162d19840fd25290436dedcce42ad15d202");
     assertThat(adapter.nonceKey(address)).isEqualTo(expected);
   }
 
@@ -84,7 +94,7 @@ public class TrieKeyAdapterTest {
   public void testCodeKeccakKey() {
     // Need to change this once commit is fixed
     Bytes32 expected =
-        Bytes32.fromHexString("0x1719aec0fd8358bc50c95799bd3cd38da48f6519f78d64ccb2546f554d80a003");
+        Bytes32.fromHexString("0xc224b9edaff18b27ce2604ad0f33a162d19840fd25290436dedcce42ad15d203");
     assertThat(adapter.codeKeccakKey(address)).isEqualTo(expected);
   }
 
@@ -92,25 +102,25 @@ public class TrieKeyAdapterTest {
   public void testCodeSizeKey() {
     // Need to change this once commit is fixed
     Bytes32 expected =
-        Bytes32.fromHexString("0x1719aec0fd8358bc50c95799bd3cd38da48f6519f78d64ccb2546f554d80a004");
+        Bytes32.fromHexString("0xc224b9edaff18b27ce2604ad0f33a162d19840fd25290436dedcce42ad15d204");
     assertThat(adapter.codeSizeKey(address)).isEqualTo(expected);
   }
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  public static List<TestData> JsonData() throws IOException {
-    InputStream inputStream = TrieKeyAdapterTest.class.getResourceAsStream("/erc20CodeChunks.json");
-    return objectMapper.readValue(inputStream, new TypeReference<List<TestData>>() {});
+  public static List<TestChunkifyData> JsonChunkifyData() throws IOException {
+    InputStream inputStream = TrieKeyAdapterTest.class.getResourceAsStream("/chunkifyCode.json");
+    return objectMapper.readValue(inputStream, new TypeReference<List<TestChunkifyData>>() {});
   }
 
-  static class TestData {
+  static class TestChunkifyData {
     public String bytecode;
     public ArrayList<String> chunks;
   }
 
   @ParameterizedTest
-  @MethodSource("JsonData")
-  public void TestChunkifyCode(TestData testData) {
+  @MethodSource("JsonChunkifyData")
+  public void TestChunkifyCode(TestChunkifyData testData) {
     Bytes bytecode = Bytes.fromHexString(testData.bytecode);
     List<Bytes32> result = adapter.chunkifyCode(bytecode);
     assertThat(testData.chunks.size()).isEqualTo(result.size());
@@ -121,6 +131,39 @@ public class TrieKeyAdapterTest {
       value = Bytes32.fromHexString(testData.chunks.get(i));
       assertThat(value).isEqualByComparingTo(result.get(i));
       // expected.add(value);
+    }
+  }
+
+  static class KeyValueData {
+    public String key;
+    public String value;
+  }
+
+  static class TestCodeData {
+    public String address;
+    public String bytecode;
+    public ArrayList<KeyValueData> chunks;
+  }
+
+  public static List<TestCodeData> JsonContractCodeData() throws IOException {
+    InputStream inputStream = TrieKeyAdapterTest.class.getResourceAsStream("/contractCode.json");
+    return objectMapper.readValue(inputStream, new TypeReference<List<TestCodeData>>() {});
+  }
+
+  @ParameterizedTest
+  @MethodSource("JsonContractCodeData")
+  public void TestContractCode(TestCodeData testData) {
+    Bytes addr = Bytes.fromHexString(testData.address);
+    Bytes bytecode = Bytes.fromHexString(testData.bytecode);
+    List<Bytes32> chunks = adapter.chunkifyCode(bytecode);
+    assertThat(chunks.size()).as("Same number of chunks").isEqualTo(testData.chunks.size());
+    for (int i = 0; i < chunks.size(); ++i) {
+      Bytes32 key = adapter.codeChunkKey(addr, UInt256.valueOf(i));
+      Bytes32 expectedKey = Bytes32.fromHexString(testData.chunks.get(i).key);
+      assertThat(key).as(String.format("Key %s", i)).isEqualTo(expectedKey);
+      Bytes32 value = chunks.get(i);
+      Bytes32 expectedValue = Bytes32.fromHexString(testData.chunks.get(i).value);
+      assertThat(value).as(String.format("Value %s", i)).isEqualTo(expectedValue);
     }
   }
 }

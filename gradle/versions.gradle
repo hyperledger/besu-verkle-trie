@@ -23,6 +23,10 @@ dependencyManagement {
 
         dependency 'org.assertj:assertj-core:3.24.2'
 
+        dependency 'org.slf4j:slf4j-api:2.0.9'
+
+        dependency 'ch.qos.logback:logback-classic:1.4.11'
+
         dependencySet(group: 'io.tmio', version: '2.4.2') {
             entry 'tuweni-bytes'
             entry 'tuweni-rlp'

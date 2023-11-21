@@ -50,6 +50,7 @@ public class LeafNode<V> implements Node<V> {
     this.value = value;
     this.valueSerializer = val -> (Bytes) val;
   }
+
   /**
    * Constructs a new LeafNode with optional location, value.
    *
@@ -104,6 +105,7 @@ public class LeafNode<V> implements Node<V> {
   public Optional<Bytes> getLocation() {
     return location;
   }
+
   /**
    * Get the children of the node. A leaf node does not have children, so this method throws an
    * UnsupportedOperationException.
@@ -158,5 +160,27 @@ public class LeafNode<V> implements Node<V> {
   @Override
   public String print() {
     return "Leaf:" + getValue().map(Object::toString).orElse("empty");
+  }
+
+  /**
+   * Generates DOT representation for the LeafNode.
+   *
+   * @return DOT representation of the LeafNode.
+   */
+  @Override
+  public String toDot(Boolean showRepeatingEdges) {
+    Bytes locationBytes = getLocation().orElse(Bytes.EMPTY);
+
+    return new StringBuilder()
+        .append(getClass().getSimpleName())
+        .append(locationBytes)
+        .append("[location=\"")
+        .append(locationBytes)
+        .append("\", suffix=\"")
+        .append(locationBytes.get(locationBytes.size() - 1))
+        .append("\", value=\"")
+        .append(getValue().orElse(null))
+        .append("\"]\n")
+        .toString();
   }
 }

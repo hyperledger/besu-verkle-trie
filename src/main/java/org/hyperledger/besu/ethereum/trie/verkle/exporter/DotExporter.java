@@ -27,13 +27,13 @@ import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /** Utility class for exporting Verkle Trie representations to DOT files. */
 public class DotExporter {
 
-  private static final Logger LOG = LoggerFactory.getLogger(DotExporter.class);
+  private static final Logger LOG = LogManager.getLogger(DotExporter.class);
   private static final Pattern FILE_EXTENSION_PATTERN = Pattern.compile("\\.(dot|gv)$");
   private static final String DEFAULT_FILE_NAME = "./VerkleTrie.gv";
 

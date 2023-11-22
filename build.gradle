@@ -108,13 +108,13 @@ allprojects {
 
   task sourcesJar(type: Jar, dependsOn: classes) {
     archiveBaseName = 'besu-verkle.trie'
-    classifier = 'sources'
+    archiveClassifier = 'sources'
     from sourceSets.main.allSource
   }
 
   task javadocJar(type: Jar, dependsOn: javadoc) {
     archiveBaseName = 'besu-verkle.trie'
-    classifier = 'javadoc'
+    archiveClassifier = 'javadoc'
     from javadoc.destinationDir
   }
 

@@ -124,6 +124,11 @@ public class NullNode<V> implements Node<V> {
     // do nothing
   }
 
+  /**
+   * Mark the `NullNode` as clean.
+   *
+   * <p>This method intentionally does nothing.
+   */
   @Override
   public void markClean() {
     // do nothing

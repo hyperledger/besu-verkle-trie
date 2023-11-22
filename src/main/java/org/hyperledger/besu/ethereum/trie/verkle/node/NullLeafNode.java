@@ -128,6 +128,4 @@ public class NullLeafNode<V> implements Node<V> {
   public void markDirty() {
     // do nothing
   }
-
-  
 }

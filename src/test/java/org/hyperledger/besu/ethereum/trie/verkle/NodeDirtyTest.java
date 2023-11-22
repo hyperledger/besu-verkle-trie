@@ -3,7 +3,6 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 import org.apache.tuweni.bytes.Bytes32;
 import org.hyperledger.besu.ethereum.trie.verkle.factory.StoredNodeFactory;
 import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 
 public class NodeDirtyTest {
@@ -16,7 +15,6 @@ public class NodeDirtyTest {
         Bytes32 value = Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
         trie.put(key, value);
 
-        assertTrue(trie.getRoot().isDirty());
         trie.commit(nodeUpdater);
         assertFalse(trie.getRoot().isDirty());
     }

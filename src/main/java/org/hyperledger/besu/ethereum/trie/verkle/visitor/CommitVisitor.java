@@ -28,7 +28,8 @@ import org.apache.tuweni.bytes.Bytes;
 /**
  * A visitor class responsible for committing changes to nodes in a Trie tree.
  *
- * <p>It iterates through the nodes and stores the changes in the Trie structure.
+ * <p>
+ * It iterates through the nodes and stores the changes in the Trie structure.
  *
  * @param <V> The type of node values.
  */
@@ -40,7 +41,8 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
   /**
    * Constructs a CommitVisitor with a provided NodeUpdater.
    *
-   * @param nodeUpdater The NodeUpdater used to store changes in the Trie structure.
+   * @param nodeUpdater The NodeUpdater used to store changes in the Trie
+   *                    structure.
    */
   public CommitVisitor(final NodeUpdater nodeUpdater) {
     this.nodeUpdater = nodeUpdater;
@@ -50,7 +52,7 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
    * Visits a InternalNode to commit any changes in the node and its children.
    *
    * @param internalNode The internalNode being visited.
-   * @param location The location in the Trie tree.
+   * @param location     The location in the Trie tree.
    * @return The visited internalNode.
    */
   @Override
@@ -64,6 +66,7 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
       child.accept(this, Bytes.concatenate(location, index));
     }
     nodeUpdater.store(location, null, internalNode.getEncodedValue());
+    internalNode.markClean();
     return internalNode;
   }
 
@@ -86,6 +89,7 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
       child.accept(this, Bytes.concatenate(stem, index));
     }
     nodeUpdater.store(location, null, stemNode.getEncodedValue());
+    stemNode.markClean();
     return stemNode;
   }
 
@@ -102,6 +106,7 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
       return leafNode;
     }
     nodeUpdater.store(location, null, leafNode.getEncodedValue());
+    leafNode.markClean();
     return leafNode;
   }
 
@@ -121,7 +126,7 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
    * Visits a NullLeafNode, indicating no changes to commit.
    *
    * @param nullLeafNode The NullLeafNode being visited.
-   * @param location The location in the Trie tree.
+   * @param location     The location in the Trie tree.
    * @return The NullLeafNode indicating no changes.
    */
   @Override

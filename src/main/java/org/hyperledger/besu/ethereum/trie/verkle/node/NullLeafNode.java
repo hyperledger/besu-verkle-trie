@@ -114,6 +114,11 @@ public class NullLeafNode<V> implements Node<V> {
     return false;
   }
 
+  @Override
+  public void markClean() {
+    // do nothing
+  }
+
   /**
    * Mark the `NullNode` as dirty (not used, no operation).
    *
@@ -123,4 +128,6 @@ public class NullLeafNode<V> implements Node<V> {
   public void markDirty() {
     // do nothing
   }
+
+  
 }

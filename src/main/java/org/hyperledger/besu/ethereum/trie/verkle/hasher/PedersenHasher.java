@@ -21,15 +21,16 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /**
- * A class responsible for hashing an array of Bytes32 using the IPA (Inner Product Argument)
- * hashing algorithm.
+ * A class responsible for hashing an array of Bytes32 using the pedersen commitment - multi scalar
+ * multiplication vector commitment algorithm.
  *
  * <p>This class implements the Hasher interface and provides a method to commit multiple Bytes32
- * inputs using the IPA hashing algorithm.
+ * inputs using the pedersen commitment - multi scalar multiplication vector commitment algorithm.
  */
 public class PedersenHasher implements Hasher {
   /**
-   * Commits an array of Bytes32 using the IPA hashing algorithm.
+   * Commits an array of Bytes32 using the pedersen commitment - multi scalar multiplication vector
+   * commitment algorithm.
    *
    * @param inputs An array of Bytes32 inputs to be hashed and committed.
    * @return The resulting hash as a Bytes32.

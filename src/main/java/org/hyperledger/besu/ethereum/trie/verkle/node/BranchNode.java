@@ -241,4 +241,39 @@ public abstract class BranchNode<V> implements Node<V> {
     }
     return builder.toString();
   }
+
+  /**
+   * Generates DOT representation for the BranchNode.
+   *
+   * @return DOT representation of the BranchNode.
+   */
+  @Override
+  public String toDot(Boolean showRepeatingEdges) {
+    StringBuilder result =
+        new StringBuilder()
+            .append(getClass().getSimpleName())
+            .append(getLocation().orElse(Bytes.EMPTY))
+            .append("\", location=\"")
+            .append(getLocation().orElse(Bytes.EMPTY))
+            .append("\", commitment=\"")
+            .append(getHash().orElse(Bytes32.ZERO))
+            .append("\"]\n");
+
+    for (Node<V> child : getChildren()) {
+      String edgeString =
+          getClass().getSimpleName()
+              + getLocation().orElse(Bytes.EMPTY)
+              + " -> "
+              + child.getClass().getSimpleName()
+              + child.getLocation().orElse(Bytes.EMPTY)
+              + "\n";
+
+      if (showRepeatingEdges || !result.toString().contains(edgeString)) {
+        result.append(edgeString);
+      }
+      result.append(child.toDot(showRepeatingEdges));
+    }
+
+    return result.toString();
+  }
 }

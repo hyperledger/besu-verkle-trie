@@ -297,4 +297,37 @@ public class StemNode<V> extends BranchNode<V> {
   private Bytes extractStem(final Bytes stemValue) {
     return stemValue.slice(0, 31);
   }
+
+  @Override
+  public String toDot(Boolean showRepeatingEdges) {
+    StringBuilder result =
+        new StringBuilder()
+            .append(getClass().getSimpleName())
+            .append(getLocation().orElse(Bytes.EMPTY))
+            .append("[location=\"")
+            .append(getLocation().orElse(Bytes.EMPTY))
+            .append("\", stem=\"")
+            .append(getStem())
+            .append("\", leftCommitment=\"")
+            .append(getLeftCommitment().orElse(Bytes32.ZERO))
+            .append("\", rightCommitment=\"")
+            .append(getRightCommitment().orElse(Bytes32.ZERO))
+            .append("\"]\n");
+
+    for (Node<V> child : getChildren()) {
+      String edgeString =
+          getClass().getSimpleName()
+              + getLocation().orElse(Bytes.EMPTY)
+              + " -> "
+              + child.getClass().getSimpleName()
+              + child.getLocation().orElse(Bytes.EMPTY)
+              + "\n";
+
+      if (showRepeatingEdges || !result.toString().contains(edgeString)) {
+        result.append(edgeString);
+      }
+      result.append(child.toDot(showRepeatingEdges));
+    }
+    return result.toString();
+  }
 }

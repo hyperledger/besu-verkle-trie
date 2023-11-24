@@ -62,7 +62,6 @@ public class DotDisplayTest {
     assertEquals(expectedTree, actualTree);
   }
 
-
   @Test
   public void testToDotTrieTwoValuesNoRepeatingEdges() throws IOException {
     SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<Bytes32, Bytes32>();
@@ -125,25 +124,25 @@ public class DotDisplayTest {
   public void testToDotTrieTwoValueNoRepeatingEdgesExportFromGo() throws IOException {
     SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();
     Bytes32 key =
-        Bytes32.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000");
-    Bytes32 value =
         Bytes32.fromHexString("0x4020000000000000000000000000000000000000000000000000000000000000");
+    Bytes32 value =
+        Bytes32.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000");
     trie.put(key, value);
     Bytes32 key2 =
         Bytes32.fromHexString("0x4000000000000000000000000000000000000000000000000000000000000000");
     Bytes32 value2 =
         Bytes32.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000");
+    Bytes32 key3 =
+        Bytes32.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000");
+    Bytes32 value3 =
+        Bytes32.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000");
     trie.put(key, value);
     trie.put(key2, value2);
+    trie.put(key3, value3);
 
-    // trie.dotTreeToFile("src/test/resources/VerkleTrie.gv");
-
-    // final String fileName = "expectedTreeOneValueNoRepeatingEdges.txt";
-    // final String expectedTree = getResources(fileName);
-
-    // final String actualFromFile = getResources("VerkleTrie.gv");
+    final String fileName = "expectedTreeThreeValuesNoRepeatingEdges.txt";
+    final String expectedTree = getResources(fileName);
     final String actualTree = trie.toDotTree();
-    System.out.println(actualTree);
-    // assertEquals(expectedTree, actualFromFile);
+    assertEquals(expectedTree, actualTree);
   }
 }

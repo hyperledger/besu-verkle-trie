@@ -121,7 +121,7 @@ public class DotDisplayTest {
   }
 
   @Test
-  public void testToDotTrieTwoValueNoRepeatingEdgesExportFromGo() throws IOException {
+  public void testToDotTrieTwoValueNoRepeatingEdges() throws IOException {
     SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();
     Bytes32 key =
         Bytes32.fromHexString("0x4020000000000000000000000000000000000000000000000000000000000000");

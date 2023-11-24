@@ -306,11 +306,11 @@ public class StemNode<V> extends BranchNode<V> {
             .append(getLocation().orElse(Bytes.EMPTY))
             .append(" [label=\"S: ")
             .append(getLocation().orElse(Bytes.EMPTY))
-            .append("\nStem: \"")
+            .append("\nStem: ")
             .append(getStem())
-            .append("\nLeftCommitment: \"")
+            .append("\nLeftCommitment: ")
             .append(getLeftCommitment().orElse(Bytes32.ZERO))
-            .append("\nRightCommitment: \"")
+            .append("\nRightCommitment: ")
             .append(getRightCommitment().orElse(Bytes32.ZERO))
             .append("\"]\n");
 

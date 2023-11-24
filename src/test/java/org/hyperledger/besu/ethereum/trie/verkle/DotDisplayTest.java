@@ -124,8 +124,6 @@ public class DotDisplayTest {
     assertEquals(expectedTree, actualTree);
   }
 
-  
-
   @Test
   public void testToDotTrieThreeValueNoRepeatingEdges() throws IOException {
     SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();

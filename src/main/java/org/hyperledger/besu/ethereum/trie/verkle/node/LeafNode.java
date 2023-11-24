@@ -178,9 +178,12 @@ public class LeafNode<V> implements Node<V> {
         .append(locationBytes)
         .append("\nSuffix: ")
         .append(Bytes.of(locationBytes.get(locationBytes.size() - 1)))
-        .append("\nValue: ")
-        .append(getValue().orElse(null))
         .append("\"]\n")
+        .append(getClass().getSimpleName())
+        .append(locationBytes)
+        .append(" -> ")
+        .append("Value").append(locationBytes)
+        .append("\nValue").append(locationBytes).append(" [label=\"Value: ").append(getValue().orElse(null)).append("\"]\n")
         .toString();
   }
 }

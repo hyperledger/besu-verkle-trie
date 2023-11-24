@@ -58,7 +58,7 @@ public class DotDisplayTest {
     final String fileName = "expectedTreeOneValueNoRepeatingEdges.txt";
     final String expectedTree = getResources(fileName);
     final String actualTree = trie.toDotTree();
-    System.out.println(actualTree);
+
     assertEquals(expectedTree, actualTree);
   }
 
@@ -81,6 +81,7 @@ public class DotDisplayTest {
     final String expectedTree = getResources(fileName);
 
     final String actualTree = trie.toDotTree();
+
     assertEquals(expectedTree, actualTree);
   }
 
@@ -96,6 +97,7 @@ public class DotDisplayTest {
     final String fileName = "expectedTreeOneValueRepeatingEdges.txt";
     final String expectedTree = getResources(fileName);
     final String actualTree = trie.toDotTree(true);
+
     assertEquals(expectedTree, actualTree);
   }
 
@@ -116,12 +118,16 @@ public class DotDisplayTest {
 
     final String fileName = "expectedTreeTwoValuesRepeatingEdges.txt";
     final String expectedTree = getResources(fileName);
-    final String actualTree = trie.toDotTree(true);
+
+    final String actualTree = trie.toDotTree();
+
     assertEquals(expectedTree, actualTree);
   }
 
+  
+
   @Test
-  public void testToDotTrieTwoValueNoRepeatingEdges() throws IOException {
+  public void testToDotTrieThreeValueNoRepeatingEdges() throws IOException {
     SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();
     Bytes32 key =
         Bytes32.fromHexString("0x4020000000000000000000000000000000000000000000000000000000000000");
@@ -143,6 +149,7 @@ public class DotDisplayTest {
     final String fileName = "expectedTreeThreeValuesNoRepeatingEdges.txt";
     final String expectedTree = getResources(fileName);
     final String actualTree = trie.toDotTree();
+
     assertEquals(expectedTree, actualTree);
   }
 }

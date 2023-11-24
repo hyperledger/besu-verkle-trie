@@ -178,7 +178,7 @@ public class StoredNode<V> implements Node<V> {
     String result =
         getClass().getSimpleName()
             + getLocation().orElse(Bytes.EMPTY)
-            + "[location=\""
+            + " [label=\"SD: "
             + getLocation().orElse(Bytes.EMPTY)
             + "\"]\n";
     return result;

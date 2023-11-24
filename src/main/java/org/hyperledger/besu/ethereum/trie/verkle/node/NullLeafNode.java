@@ -114,7 +114,7 @@ public class NullLeafNode<V> implements Node<V> {
     String result =
         getClass().getSimpleName()
             + getLocation().orElse(Bytes.EMPTY)
-            + " [location=\""
+            + " [label=\"NL: "
             + getLocation().orElse(Bytes.EMPTY)
             + "\"]\n";
     return result;

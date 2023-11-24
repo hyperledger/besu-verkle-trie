@@ -170,10 +170,10 @@ public class InternalNode<V> extends BranchNode<V> {
         new StringBuilder()
             .append(getClass().getSimpleName())
             .append(getLocation().orElse(Bytes.EMPTY))
-            .append("[location=\"")
+            .append(" [label=\"I: ")
             .append(getLocation().orElse(Bytes.EMPTY))
-            .append("\", commitment=\"")
-            .append(getHash().orElse(Bytes32.ZERO))
+            .append("\nCommitment: ")
+            .append(getCommitment().orElse(Bytes32.ZERO))
             .append("\"]\n");
 
     for (Node<V> child : getChildren()) {

@@ -304,13 +304,13 @@ public class StemNode<V> extends BranchNode<V> {
         new StringBuilder()
             .append(getClass().getSimpleName())
             .append(getLocation().orElse(Bytes.EMPTY))
-            .append("[location=\"")
+            .append(" [label=\"S: ")
             .append(getLocation().orElse(Bytes.EMPTY))
-            .append("\", stem=\"")
+            .append("\nStem: \"")
             .append(getStem())
-            .append("\", leftCommitment=\"")
+            .append("\nLeftCommitment: \"")
             .append(getLeftCommitment().orElse(Bytes32.ZERO))
-            .append("\", rightCommitment=\"")
+            .append("\nRightCommitment: \"")
             .append(getRightCommitment().orElse(Bytes32.ZERO))
             .append("\"]\n");
 

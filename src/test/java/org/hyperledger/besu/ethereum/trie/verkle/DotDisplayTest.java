@@ -58,7 +58,6 @@ public class DotDisplayTest {
     final String fileName = "expectedTreeOneValueNoNulls.txt";
     final String expectedTree = getResources(fileName);
     final String actualTree = trie.toDotTree();
-    
 
     assertEquals(expectedTree, actualTree);
   }
@@ -121,7 +120,7 @@ public class DotDisplayTest {
     final String expectedTree = getResources(fileName);
 
     final String actualTree = trie.toDotTree(true);
-  
+
     assertEquals(expectedTree, actualTree);
   }
 

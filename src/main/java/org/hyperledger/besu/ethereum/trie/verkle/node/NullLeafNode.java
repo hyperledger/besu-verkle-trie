@@ -111,6 +111,9 @@ public class NullLeafNode<V> implements Node<V> {
    */
   @Override
   public String toDot(Boolean showRepeatingEdges) {
+    if (!showRepeatingEdges) {
+      return "";
+    }
     String result =
         getClass().getSimpleName()
             + getLocation().orElse(Bytes.EMPTY)

@@ -58,7 +58,7 @@ public class DotExporterTest {
 
     trie.dotTreeToFile("src/test/resources/VerkleTrie.gv");
 
-    final String fileName = "expectedTreeOneValueNoRepeatingEdges.txt";
+    final String fileName = "expectedTreeOneValueNoNulls.txt";
     final String expectedTree = getResources(fileName);
 
     final String actualFromFile = getResources("VerkleTrie.gv");

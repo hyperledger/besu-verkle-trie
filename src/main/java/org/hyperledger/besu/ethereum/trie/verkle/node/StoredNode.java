@@ -174,7 +174,7 @@ public class StoredNode<V> implements Node<V> {
    * @return DOT representation of the StoredNode.
    */
   @Override
-  public String toDot(Boolean showRepeatingEdges) {
+  public String toDot(Boolean showNullNodes) {
     String result =
         getClass().getSimpleName()
             + getLocation().orElse(Bytes.EMPTY)

@@ -248,7 +248,7 @@ public abstract class BranchNode<V> implements Node<V> {
    * @return DOT representation of the BranchNode.
    */
   @Override
-  public String toDot(Boolean showRepeatingEdges) {
+  public String toDot(Boolean showNullNodes) {
     StringBuilder result =
         new StringBuilder()
             .append(getClass().getSimpleName())
@@ -269,10 +269,10 @@ public abstract class BranchNode<V> implements Node<V> {
               + child.getLocation().orElse(Bytes.EMPTY)
               + "\n";
 
-      if (showRepeatingEdges || !result.toString().contains(edgeString)) {
+      if (showNullNodes || !result.toString().contains(edgeString)) {
         result.append(edgeString);
       }
-      result.append(child.toDot(showRepeatingEdges));
+      result.append(child.toDot(showNullNodes));
     }
 
     return result.toString();

@@ -129,10 +129,11 @@ public interface Node<V> {
   /**
    * Generates DOT representation for the Node.
    *
-   * @param showRepeatingEdges If true, prints all edges; if false, prints only unique edges.
+   * @param showNullNodes If true, prints NullNodes and NullLeafNodes; if false, prints only unique
+   *     edges.
    * @return DOT representation of the Node.
    */
-  String toDot(Boolean showRepeatingEdges);
+  String toDot(Boolean showNullNodes);
 
   /**
    * Generates DOT representation for the Node.

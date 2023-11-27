@@ -168,7 +168,7 @@ public class LeafNode<V> implements Node<V> {
    * @return DOT representation of the LeafNode.
    */
   @Override
-  public String toDot(Boolean showRepeatingEdges) {
+  public String toDot(Boolean showNullNodes) {
     Bytes locationBytes = getLocation().orElse(Bytes.EMPTY);
 
     return new StringBuilder()

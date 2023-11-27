@@ -58,7 +58,7 @@ public class DotDisplayTest {
     final String fileName = "expectedTreeOneValueNoNulls.txt";
     final String expectedTree = getResources(fileName);
     final String actualTree = trie.toDotTree();
-    // System.out.println(actualTree);
+    
 
     assertEquals(expectedTree, actualTree);
   }
@@ -117,17 +117,16 @@ public class DotDisplayTest {
     trie.put(key1, value1);
     trie.put(key2, value2);
 
-    // final String fileName = "expectedTreeTwoValuesShowNulls.txt";
-    // final String expectedTree = getResources(fileName);
+    final String fileName = "expectedTreeTwoValuesShowNulls.txt";
+    final String expectedTree = getResources(fileName);
 
     final String actualTree = trie.toDotTree(true);
-    System.out.println(actualTree);
-    // System.out.println(actualTree);
-    // assertEquals(expectedTree, actualTree);
+  
+    assertEquals(expectedTree, actualTree);
   }
 
   @Test
-  public void testToDotTrieThreeValueNoRepeatingEdges() throws IOException {
+  public void testToDotTrieThreeValueNoNulls() throws IOException {
     SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();
     Bytes32 key =
         Bytes32.fromHexString("0x4020000000000000000000000000000000000000000000000000000000000000");
@@ -149,7 +148,6 @@ public class DotDisplayTest {
     final String fileName = "expectedTreeThreeValuesNoNulls.txt";
     final String expectedTree = getResources(fileName);
     final String actualTree = trie.toDotTree();
-    // System.out.println(actualTree);
 
     assertEquals(expectedTree, actualTree);
   }

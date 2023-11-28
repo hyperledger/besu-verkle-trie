@@ -104,6 +104,7 @@ public class LeafNode<V> implements Node<V> {
   public Optional<Bytes> getLocation() {
     return location;
   }
+
   /**
    * Get the children of the node. A leaf node does not have children, so this method throws an
    * UnsupportedOperationException.
@@ -138,6 +139,12 @@ public class LeafNode<V> implements Node<V> {
   @Override
   public void markDirty() {
     dirty = true;
+  }
+
+  /** Marks the node as clean, indicating that it no longer needs to be persisted. */
+  @Override
+  public void markClean() {
+    dirty = false;
   }
 
   /**

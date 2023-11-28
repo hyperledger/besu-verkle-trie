@@ -112,6 +112,9 @@ public interface Node<V> {
   /** Marks the node as needs to be persisted */
   void markDirty();
 
+  /** Marks the node as no longer requiring persistence. */
+  void markClean();
+
   /**
    * Is this node not persisted and needs to be?
    *

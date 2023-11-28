@@ -47,10 +47,10 @@ public class NodeDirtyTest {
     assertTrue(trie.getRoot().isDirty());
     trie.commit(nodeUpdater);
     assertFalse(trie.getRoot().isDirty());
-    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    List<Node<Bytes32>> nodes = collectNodes(trie.getRoot());
     int index = 0;
-    for (Node<Bytes32> dirtyNode : nodes) {
-      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+    for (Node<Bytes32> node : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), node.isDirty());
       ++index;
     }
   }
@@ -71,10 +71,10 @@ public class NodeDirtyTest {
     assertTrue(trie.getRoot().isDirty());
     trie.commit(nodeUpdater);
     assertFalse(trie.getRoot().isDirty());
-    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    List<Node<Bytes32>> nodes = collectNodes(trie.getRoot());
     int index = 0;
-    for (Node<Bytes32> dirtyNode : nodes) {
-      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+    for (Node<Bytes32> node : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), node.isDirty());
       ++index;
     }
   }
@@ -97,10 +97,10 @@ public class NodeDirtyTest {
     assertTrue(trie.getRoot().isDirty());
     trie.commit(nodeUpdater);
     assertFalse(trie.getRoot().isDirty());
-    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    List<Node<Bytes32>> nodes = collectNodes(trie.getRoot());
     int index = 0;
-    for (Node<Bytes32> dirtyNode : nodes) {
-      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+    for (Node<Bytes32> node : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), node.isDirty());
       ++index;
     }
   }
@@ -134,10 +134,10 @@ public class NodeDirtyTest {
     trie.put(key2, value2);
     trie.put(key3, value3);
     assertTrue(trie.getRoot().isDirty());
-    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    List<Node<Bytes32>> nodes = collectNodes(trie.getRoot());
     int index = 0;
-    for (Node<Bytes32> dirtyNode : nodes) {
-      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+    for (Node<Bytes32> node : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), node.isDirty());
       ++index;
     }
   }
@@ -178,10 +178,10 @@ public class NodeDirtyTest {
     trie.put(key4, value4);
     trie.put(key3, value3);
     assertTrue(trie.getRoot().isDirty());
-    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    List<Node<Bytes32>> nodes = collectNodes(trie.getRoot());
     int index = 0;
-    for (Node<Bytes32> dirtyNode : nodes) {
-      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+    for (Node<Bytes32> node : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), node.isDirty());
       ++index;
     }
   }
@@ -228,10 +228,10 @@ public class NodeDirtyTest {
     assertFalse(trie.getRoot().isDirty());
     trie.put(key5, value5);
     assertTrue(trie.getRoot().isDirty());
-    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    List<Node<Bytes32>> nodes = collectNodes(trie.getRoot());
     int index = 0;
-    for (Node<Bytes32> dirtyNode : nodes) {
-      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+    for (Node<Bytes32> node : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), node.isDirty());
       ++index;
     }
   }
@@ -285,15 +285,15 @@ public class NodeDirtyTest {
     trie.put(key5, value5);
     trie.put(key6, value6);
     assertTrue(trie.getRoot().isDirty());
-    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    List<Node<Bytes32>> nodes = collectNodes(trie.getRoot());
     int index = 0;
-    for (Node<Bytes32> dirtyNode : nodes) {
-      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+    for (Node<Bytes32> node : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), node.isDirty());
       ++index;
     }
   }
 
-  private List<Node<Bytes32>> collectIsDirtyStateForNodes(
+  private List<Node<Bytes32>> collectNodes(
       Node<Bytes32> node, String path, List<Node<Bytes32>> nodes) {
     if (node instanceof NullNode || node instanceof NullLeafNode) {
       return nodes;
@@ -306,20 +306,20 @@ public class NodeDirtyTest {
       for (int i = 0; i < InternalNode.maxChild(); i++) {
         Bytes index = Bytes.of(i);
         Node<Bytes32> child = internalNode.child((byte) i);
-        collectIsDirtyStateForNodes(child, path + "[" + index.toString() + "]", nodes);
+        collectNodes(child, path + "[" + index.toString() + "]", nodes);
       }
     } else if (node instanceof StemNode) {
       StemNode<Bytes32> stemNode = (StemNode<Bytes32>) node;
       for (int i = 0; i < StemNode.maxChild(); i++) {
         Bytes index = Bytes.of(i);
         Node<Bytes32> child = stemNode.child((byte) i);
-        collectIsDirtyStateForNodes(child, path + "[" + index.toString() + "]", nodes);
+        collectNodes(child, path + "[" + index.toString() + "]", nodes);
       }
     }
     return nodes;
   }
 
-  private List<Node<Bytes32>> collectIsDirtyStateForNodes(Node<Bytes32> node) {
-    return collectIsDirtyStateForNodes(node, "", new ArrayList<>());
+  private List<Node<Bytes32>> collectNodes(Node<Bytes32> node) {
+    return collectNodes(node, "", new ArrayList<>());
   }
 }

@@ -15,17 +15,28 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import org.hyperledger.besu.ethereum.trie.verkle.factory.StoredNodeFactory;
+import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
+import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.junit.jupiter.api.Test;
 
 public class NodeDirtyTest {
-
   @Test
   public void testOneValueSimpleVerkleTrie() {
+    List<Boolean> isDirtyExpectedList = List.of(false, false, false);
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();
     Bytes32 key =
@@ -33,13 +44,20 @@ public class NodeDirtyTest {
     Bytes32 value =
         Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
     trie.put(key, value);
-
+    assertTrue(trie.getRoot().isDirty());
     trie.commit(nodeUpdater);
     assertFalse(trie.getRoot().isDirty());
+    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    int index = 0;
+    for (Node<Bytes32> dirtyNode : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+      ++index;
+    }
   }
 
   @Test
   public void testOneValueStoredVerkleTrie() {
+    List<Boolean> isDirtyExpectedList = List.of(false, false, false);
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
     StoredNodeFactory<Bytes32> nodeFactory =
@@ -50,8 +68,258 @@ public class NodeDirtyTest {
     Bytes32 value =
         Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
     trie.put(key, value);
-
+    assertTrue(trie.getRoot().isDirty());
     trie.commit(nodeUpdater);
     assertFalse(trie.getRoot().isDirty());
+    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    int index = 0;
+    for (Node<Bytes32> dirtyNode : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+      ++index;
+    }
+  }
+
+  @Test
+  public void testTwoValues() {
+    List<Boolean> isDirtyExpectedList = List.of(false, false, false, false, false);
+    NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
+    SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();
+    Bytes32 key1 =
+        Bytes32.fromHexString("0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff");
+    Bytes32 value1 =
+        Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
+    Bytes32 key2 =
+        Bytes32.fromHexString("0xff112233445566778899aabbccddeeff00112233445566778899aabbccddee00");
+    Bytes32 value2 =
+        Bytes32.fromHexString("0x0100000000000000000000000000000000000000000000000000000000000000");
+    trie.put(key1, value1);
+    trie.put(key2, value2);
+    assertTrue(trie.getRoot().isDirty());
+    trie.commit(nodeUpdater);
+    assertFalse(trie.getRoot().isDirty());
+    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    int index = 0;
+    for (Node<Bytes32> dirtyNode : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+      ++index;
+    }
+  }
+
+  @Test
+  public void testThreeValues() {
+
+    List<Boolean> isDirtyExpectedList = List.of(true, false, false, true, true, true, true);
+    NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
+    SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();
+
+    Bytes32 key1 =
+        Bytes32.fromHexString("0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff");
+    Bytes32 value1 =
+        Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key2 =
+        Bytes32.fromHexString("0xff112233445566778899aabbccddeeff00112233445566778899aabbccddee00");
+    Bytes32 value2 =
+        Bytes32.fromHexString("0x0100000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key3 =
+        Bytes32.fromHexString("0x2233445566778899aabbccddeeff00112233445566778899aabbccddeeff0011");
+    Bytes32 value3 =
+        Bytes32.fromHexString("0x0010000000000000000000000000000000000000000000000000000000000000");
+
+    trie.put(key1, value1);
+    assertTrue(trie.getRoot().isDirty());
+    trie.commit(nodeUpdater);
+    assertFalse(trie.getRoot().isDirty());
+    trie.put(key2, value2);
+    trie.put(key3, value3);
+    assertTrue(trie.getRoot().isDirty());
+    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    int index = 0;
+    for (Node<Bytes32> dirtyNode : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+      ++index;
+    }
+  }
+
+  @Test
+  public void testFourValues() {
+
+    List<Boolean> isDirtyExpectedList =
+        List.of(true, false, false, true, true, true, true, false, false);
+    NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
+    SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();
+
+    Bytes32 key1 =
+        Bytes32.fromHexString("0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff");
+    Bytes32 value1 =
+        Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key2 =
+        Bytes32.fromHexString("0xff112233445566778899aabbccddeeff00112233445566778899aabbccddee00");
+    Bytes32 value2 =
+        Bytes32.fromHexString("0x0100000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key3 =
+        Bytes32.fromHexString("0x2233445566778899aabbccddeeff00112233445566778899aabbccddeeff0011");
+    Bytes32 value3 =
+        Bytes32.fromHexString("0x0010000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key4 =
+        Bytes32.fromHexString("0x445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233");
+    Bytes32 value4 =
+        Bytes32.fromHexString("0x0001000000000000000000000000000000000000000000000000000000000000");
+
+    trie.put(key1, value1);
+    trie.put(key2, value2);
+    assertTrue(trie.getRoot().isDirty());
+    trie.commit(nodeUpdater);
+    assertFalse(trie.getRoot().isDirty());
+    trie.put(key4, value4);
+    trie.put(key3, value3);
+    assertTrue(trie.getRoot().isDirty());
+    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    int index = 0;
+    for (Node<Bytes32> dirtyNode : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+      ++index;
+    }
+  }
+
+  @Test
+  public void testFiveValues() {
+
+    List<Boolean> isDirtyExpectedList =
+        List.of(true, false, false, false, false, false, false, true, true, false, false);
+    NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
+    SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();
+
+    Bytes32 key1 =
+        Bytes32.fromHexString("0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff");
+    Bytes32 value1 =
+        Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key2 =
+        Bytes32.fromHexString("0xff112233445566778899aabbccddeeff00112233445566778899aabbccddee00");
+    Bytes32 value2 =
+        Bytes32.fromHexString("0x0100000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key3 =
+        Bytes32.fromHexString("0x2233445566778899aabbccddeeff00112233445566778899aabbccddeeff0011");
+    Bytes32 value3 =
+        Bytes32.fromHexString("0x0010000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key4 =
+        Bytes32.fromHexString("0x445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233");
+    Bytes32 value4 =
+        Bytes32.fromHexString("0x0001000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key5 =
+        Bytes32.fromHexString("0x66778899aabbccddeeff00112233445566778899aabbccddeeff001122334455");
+    Bytes32 value5 =
+        Bytes32.fromHexString("0x0000100000000000000000000000000000000000000000000000000000000000");
+
+    trie.put(key1, value1);
+    trie.put(key2, value2);
+    trie.put(key3, value3);
+    trie.put(key4, value4);
+    assertTrue(trie.getRoot().isDirty());
+    trie.commit(nodeUpdater);
+    assertFalse(trie.getRoot().isDirty());
+    trie.put(key5, value5);
+    assertTrue(trie.getRoot().isDirty());
+    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    int index = 0;
+    for (Node<Bytes32> dirtyNode : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+      ++index;
+    }
+  }
+
+  @Test
+  public void testSixValues() {
+
+    List<Boolean> isDirtyExpectedList =
+        List.of(
+            true, false, false, false, false, false, false, true, true, true, true, false, false);
+    NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
+    SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<>();
+
+    Bytes32 key1 =
+        Bytes32.fromHexString("0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff");
+    Bytes32 value1 =
+        Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key2 =
+        Bytes32.fromHexString("0xff112233445566778899aabbccddeeff00112233445566778899aabbccddee00");
+    Bytes32 value2 =
+        Bytes32.fromHexString("0x0100000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key3 =
+        Bytes32.fromHexString("0x2233445566778899aabbccddeeff00112233445566778899aabbccddeeff0011");
+    Bytes32 value3 =
+        Bytes32.fromHexString("0x0010000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key4 =
+        Bytes32.fromHexString("0x445566778899aabbccddeeff00112233445566778899aabbccddeeff00112233");
+    Bytes32 value4 =
+        Bytes32.fromHexString("0x0001000000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key5 =
+        Bytes32.fromHexString("0x66778899aabbccddeeff00112233445566778899aabbccddeeff001122334455");
+    Bytes32 value5 =
+        Bytes32.fromHexString("0x0000100000000000000000000000000000000000000000000000000000000000");
+
+    Bytes32 key6 =
+        Bytes32.fromHexString("0x8899aabbccddeeff00112233445566778899aabbccddeeff0011223344556677");
+    Bytes32 value6 =
+        Bytes32.fromHexString("0x0000010000000000000000000000000000000000000000000000000000000000");
+
+    trie.put(key1, value1);
+    trie.put(key2, value2);
+    trie.put(key3, value3);
+    trie.put(key4, value4);
+    assertTrue(trie.getRoot().isDirty());
+    trie.commit(nodeUpdater);
+    assertFalse(trie.getRoot().isDirty());
+    trie.put(key5, value5);
+    trie.put(key6, value6);
+    assertTrue(trie.getRoot().isDirty());
+    List<Node<Bytes32>> nodes = collectIsDirtyStateForNodes(trie.getRoot());
+    int index = 0;
+    for (Node<Bytes32> dirtyNode : nodes) {
+      assertEquals(isDirtyExpectedList.get(index), dirtyNode.isDirty());
+      ++index;
+    }
+  }
+
+  private List<Node<Bytes32>> collectIsDirtyStateForNodes(
+      Node<Bytes32> node, String path, List<Node<Bytes32>> nodes) {
+    if (node instanceof NullNode || node instanceof NullLeafNode) {
+      return nodes;
+    }
+
+    nodes.add(node);
+
+    if (node instanceof InternalNode) {
+      InternalNode<Bytes32> internalNode = (InternalNode<Bytes32>) node;
+      for (int i = 0; i < InternalNode.maxChild(); i++) {
+        Bytes index = Bytes.of(i);
+        Node<Bytes32> child = internalNode.child((byte) i);
+        collectIsDirtyStateForNodes(child, path + "[" + index.toString() + "]", nodes);
+      }
+    } else if (node instanceof StemNode) {
+      StemNode<Bytes32> stemNode = (StemNode<Bytes32>) node;
+      for (int i = 0; i < StemNode.maxChild(); i++) {
+        Bytes index = Bytes.of(i);
+        Node<Bytes32> child = stemNode.child((byte) i);
+        collectIsDirtyStateForNodes(child, path + "[" + index.toString() + "]", nodes);
+      }
+    }
+    return nodes;
+  }
+
+  private List<Node<Bytes32>> collectIsDirtyStateForNodes(Node<Bytes32> node) {
+    return collectIsDirtyStateForNodes(node, "", new ArrayList<>());
   }
 }

@@ -50,7 +50,6 @@ public class LeafNode<V> implements Node<V> {
     this.value = value;
     this.valueSerializer = val -> (Bytes) val;
   }
-
   /**
    * Constructs a new LeafNode with optional location, value.
    *

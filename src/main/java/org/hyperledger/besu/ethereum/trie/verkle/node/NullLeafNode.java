@@ -123,4 +123,14 @@ public class NullLeafNode<V> implements Node<V> {
   public void markDirty() {
     // do nothing
   }
+
+  /**
+   * Marks the node as clean, indicating that it no longer needs to be persisted.
+   *
+   * <p>This method intentionally does nothing.
+   */
+  @Override
+  public void markClean() {
+    // do nothing
+  }
 }

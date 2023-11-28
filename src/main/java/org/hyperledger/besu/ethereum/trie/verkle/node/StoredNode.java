@@ -147,6 +147,12 @@ public class StoredNode<V> implements Node<V> {
     dirty = true;
   }
 
+  /** Marks the node as no longer needs to be persisted */
+  @Override
+  public void markClean() {
+    dirty = false;
+  }
+
   /**
    * Is this node not persisted and needs to be?
    *

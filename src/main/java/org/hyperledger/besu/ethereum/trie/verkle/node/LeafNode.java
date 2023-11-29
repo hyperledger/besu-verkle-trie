@@ -50,6 +50,7 @@ public class LeafNode<V> implements Node<V> {
     this.value = value;
     this.valueSerializer = val -> (Bytes) val;
   }
+
   /**
    * Constructs a new LeafNode with optional location, value.
    *
@@ -165,5 +166,35 @@ public class LeafNode<V> implements Node<V> {
   @Override
   public String print() {
     return "Leaf:" + getValue().map(Object::toString).orElse("empty");
+  }
+
+  /**
+   * Generates DOT representation for the LeafNode.
+   *
+   * @return DOT representation of the LeafNode.
+   */
+  @Override
+  public String toDot(Boolean showNullNodes) {
+    Bytes locationBytes = getLocation().orElse(Bytes.EMPTY);
+
+    return new StringBuilder()
+        .append(getClass().getSimpleName())
+        .append(locationBytes)
+        .append(" [label=\"L: ")
+        .append(locationBytes)
+        .append("\nSuffix: ")
+        .append(Bytes.of(locationBytes.get(locationBytes.size() - 1)))
+        .append("\"]\n")
+        .append(getClass().getSimpleName())
+        .append(locationBytes)
+        .append(" -> ")
+        .append("Value")
+        .append(locationBytes)
+        .append("\nValue")
+        .append(locationBytes)
+        .append(" [label=\"Value: ")
+        .append(getValue().orElse(null))
+        .append("\"]\n")
+        .toString();
   }
 }

@@ -105,6 +105,25 @@ public class NullNode<V> implements Node<V> {
   }
 
   /**
+   * Generates DOT representation for the NullNode.
+   *
+   * @return DOT representation of the NullNode.
+   */
+  @Override
+  public String toDot(Boolean showRepeatingEdges) {
+    if (!showRepeatingEdges) {
+      return "";
+    }
+    String result =
+        getClass().getSimpleName()
+            + getLocation().orElse(Bytes.EMPTY)
+            + " [label=\"NL: "
+            + getLocation().orElse(Bytes.EMPTY)
+            + "\"]\n";
+    return result;
+  }
+
+  /**
    * Check if the `NullNode` is marked as dirty (needing to be persisted).
    *
    * @return `false` since a `NullNode` does not require persistence.

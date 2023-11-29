@@ -96,7 +96,6 @@ public class DotDisplayTest {
     final String fileName = "expectedTreeOneValueShowNulls.txt";
     final String expectedTree = getResources(fileName);
     final String actualTree = trie.toDotTree(true);
-    // System.out.println(actualTree);
 
     assertEquals(expectedTree, actualTree);
   }

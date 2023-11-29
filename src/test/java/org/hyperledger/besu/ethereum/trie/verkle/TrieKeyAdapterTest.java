@@ -114,7 +114,8 @@ public class TrieKeyAdapterTest {
   }
 
   public static List<TestChunkifyData> JsonContractCodeDataWithPush32On31Byte() throws IOException {
-    InputStream inputStream = TrieKeyAdapterTest.class.getResourceAsStream("/chukifyCodePush32on31stByte.json");
+    InputStream inputStream =
+        TrieKeyAdapterTest.class.getResourceAsStream("/chukifyCodePush32on31stByte.json");
     return objectMapper.readValue(inputStream, new TypeReference<List<TestChunkifyData>>() {});
   }
 
@@ -124,7 +125,7 @@ public class TrieKeyAdapterTest {
   }
 
   @ParameterizedTest
-  @MethodSource({"JsonChunkifyData","JsonContractCodeDataWithPush32On31Byte"})
+  @MethodSource({"JsonChunkifyData", "JsonContractCodeDataWithPush32On31Byte"})
   public void TestChunkifyCode(TestChunkifyData testData) {
     Bytes bytecode = Bytes.fromHexString(testData.bytecode);
     List<Bytes32> result = adapter.chunkifyCode(bytecode);

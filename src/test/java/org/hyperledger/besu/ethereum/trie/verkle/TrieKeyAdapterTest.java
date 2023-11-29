@@ -113,13 +113,18 @@ public class TrieKeyAdapterTest {
     return objectMapper.readValue(inputStream, new TypeReference<List<TestChunkifyData>>() {});
   }
 
+  public static List<TestChunkifyData> JsonContractCodeDataWithPush32On31Byte() throws IOException {
+    InputStream inputStream = TrieKeyAdapterTest.class.getResourceAsStream("/chukifyCodePush32on31stByte.json");
+    return objectMapper.readValue(inputStream, new TypeReference<List<TestChunkifyData>>() {});
+  }
+
   static class TestChunkifyData {
     public String bytecode;
     public ArrayList<String> chunks;
   }
 
   @ParameterizedTest
-  @MethodSource("JsonChunkifyData")
+  @MethodSource({"JsonChunkifyData","JsonContractCodeDataWithPush32On31Byte"})
   public void TestChunkifyCode(TestChunkifyData testData) {
     Bytes bytecode = Bytes.fromHexString(testData.bytecode);
     List<Bytes32> result = adapter.chunkifyCode(bytecode);

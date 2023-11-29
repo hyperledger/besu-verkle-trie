@@ -18,6 +18,7 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.hyperledger.besu.ethereum.trie.NodeUpdater;
+import org.hyperledger.besu.ethereum.trie.verkle.exporter.DotExporter;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.CommitVisitor;
@@ -26,6 +27,7 @@ import org.hyperledger.besu.ethereum.trie.verkle.visitor.HashVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PutVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.RemoveVisitor;
 
+import java.io.IOException;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -140,5 +142,51 @@ public class SimpleVerkleTrie<K extends Bytes, V extends Bytes> implements Verkl
   public void commit(final NodeUpdater nodeUpdater) {
     root = root.accept(new HashVisitor<V>(), Bytes.EMPTY);
     root = root.accept(new CommitVisitor<V>(nodeUpdater), Bytes.EMPTY);
+  }
+
+  /**
+   * Returns the DOT representation of the entire Verkle Trie.
+   *
+   * @param showNullNodes if true displays NullNodes and NullLeafNodes; if false does not.
+   * @return The DOT representation of the Verkle Trie.
+   */
+  public String toDotTree(Boolean showNullNodes) {
+    return String.format(
+        "digraph VerkleTrie {\n%s\n}",
+        getRoot().toDot(showNullNodes).replaceAll("^\\n+|\\n+$", ""));
+  }
+
+  /**
+   * Returns the DOT representation of the entire Verkle Trie.
+   *
+   * <p>The representation does not contain NullNodes and NullLeafNodes.
+   *
+   * @return The DOT representation of the Verkle Trie.
+   */
+  public String toDotTree() {
+    StringBuilder result = new StringBuilder("digraph VerkleTrie {\n");
+    Node<V> root = getRoot();
+    result.append(root.toDot());
+    return result.append("}").toString();
+  }
+
+  /**
+   * Exports the Verkle Trie DOT representation to a '.gv' file located in the current directory.
+   * The default file name is "VerkleTree.gv".
+   *
+   * @throws IOException if an I/O error occurs.
+   */
+  public void dotTreeToFile() throws IOException {
+    DotExporter.exportToDotFile(toDotTree());
+  }
+
+  /**
+   * /** Exports the Verkle Trie DOT representation to a '.gv' file located at the specified path.
+   *
+   * @param path The location where the DOT file will be saved.
+   * @throws IOException if ann I/O error occurs.
+   */
+  public void dotTreeToFile(String path) throws IOException {
+    DotExporter.exportToDotFile(toDotTree(), path);
   }
 }

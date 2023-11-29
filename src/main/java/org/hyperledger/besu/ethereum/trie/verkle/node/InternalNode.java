@@ -158,4 +158,39 @@ public class InternalNode<V> extends BranchNode<V> {
     }
     return builder.toString();
   }
+
+  /**
+   * Generates DOT representation for the InternalNode.
+   *
+   * @return DOT representation of the InternalNode.
+   */
+  @Override
+  public String toDot(Boolean showNullNodes) {
+    StringBuilder result =
+        new StringBuilder()
+            .append(getClass().getSimpleName())
+            .append(getLocation().orElse(Bytes.EMPTY))
+            .append(" [label=\"I: ")
+            .append(getLocation().orElse(Bytes.EMPTY))
+            .append("\nCommitment: ")
+            .append(getCommitment().orElse(Bytes32.ZERO))
+            .append("\"]\n");
+
+    for (Node<V> child : getChildren()) {
+      String edgeString =
+          getClass().getSimpleName()
+              + getLocation().orElse(Bytes.EMPTY)
+              + " -> "
+              + child.getClass().getSimpleName()
+              + child.getLocation().orElse(Bytes.EMPTY)
+              + "\n";
+
+      if (showNullNodes || !result.toString().contains(edgeString)) {
+        result.append(edgeString);
+      }
+      result.append(child.toDot(showNullNodes));
+    }
+
+    return result.toString();
+  }
 }

@@ -48,6 +48,15 @@ public class TrieKeyAdapterTest {
   }
 
   @Test
+  public void testStorageKeyForMainStorage() {
+    UInt256 storageKey = UInt256.valueOf(64);
+    // use shift left operation for the moment , should be pow in the future
+    Bytes32 expected =
+        Bytes32.fromHexString("0x3d08fd033c8f1e8b95f28b95a854a0e948062cb7ecb87587e54dcd826e577640");
+    assertThat(adapter.storageKey(address, storageKey)).isEqualTo(expected);
+  }
+
+  @Test
   public void testCodeChunkKey() {
     UInt256 chunkId = UInt256.valueOf(24);
     // Need to change this once commit is fixed

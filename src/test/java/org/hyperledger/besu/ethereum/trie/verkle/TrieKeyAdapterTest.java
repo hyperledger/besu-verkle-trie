@@ -48,6 +48,15 @@ public class TrieKeyAdapterTest {
   }
 
   @Test
+  public void testStorageKeyForMainStorage() {
+    UInt256 storageKey = UInt256.valueOf(64);
+    // use shift left operation for the moment , should be pow in the future
+    Bytes32 expected =
+        Bytes32.fromHexString("0x3d08fd033c8f1e8b95f28b95a854a0e948062cb7ecb87587e54dcd826e577640");
+    assertThat(adapter.storageKey(address, storageKey)).isEqualTo(expected);
+  }
+
+  @Test
   public void testCodeChunkKey() {
     UInt256 chunkId = UInt256.valueOf(24);
     // Need to change this once commit is fixed
@@ -113,13 +122,19 @@ public class TrieKeyAdapterTest {
     return objectMapper.readValue(inputStream, new TypeReference<List<TestChunkifyData>>() {});
   }
 
+  public static List<TestChunkifyData> JsonContractCodeDataWithPush32On31Byte() throws IOException {
+    InputStream inputStream =
+        TrieKeyAdapterTest.class.getResourceAsStream("/chukifyCodePush32on31stByte.json");
+    return objectMapper.readValue(inputStream, new TypeReference<List<TestChunkifyData>>() {});
+  }
+
   static class TestChunkifyData {
     public String bytecode;
     public ArrayList<String> chunks;
   }
 
   @ParameterizedTest
-  @MethodSource("JsonChunkifyData")
+  @MethodSource({"JsonChunkifyData", "JsonContractCodeDataWithPush32On31Byte"})
   public void TestChunkifyCode(TestChunkifyData testData) {
     Bytes bytecode = Bytes.fromHexString(testData.bytecode);
     List<Bytes32> result = adapter.chunkifyCode(bytecode);

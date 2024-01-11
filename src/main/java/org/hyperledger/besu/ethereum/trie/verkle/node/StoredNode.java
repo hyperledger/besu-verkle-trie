@@ -147,6 +147,12 @@ public class StoredNode<V> implements Node<V> {
     dirty = true;
   }
 
+  /** Marks the node as no longer needs to be persisted */
+  @Override
+  public void markClean() {
+    dirty = false;
+  }
+
   /**
    * Is this node not persisted and needs to be?
    *
@@ -166,6 +172,22 @@ public class StoredNode<V> implements Node<V> {
   public String print() {
     final Node<V> node = load();
     return String.format("(stored) %s", node.print());
+  }
+
+  /**
+   * Generates DOT representation for the StoredNode.
+   *
+   * @return DOT representation of the StoredNode.
+   */
+  @Override
+  public String toDot(Boolean showNullNodes) {
+    String result =
+        getClass().getSimpleName()
+            + getLocation().orElse(Bytes.EMPTY)
+            + " [label=\"SD: "
+            + getLocation().orElse(Bytes.EMPTY)
+            + "\"]\n";
+    return result;
   }
 
   private Node<V> load() {

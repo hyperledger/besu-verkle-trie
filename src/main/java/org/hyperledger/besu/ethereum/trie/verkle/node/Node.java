@@ -112,6 +112,9 @@ public interface Node<V> {
   /** Marks the node as needs to be persisted */
   void markDirty();
 
+  /** Marks the node as no longer requiring persistence. */
+  void markClean();
+
   /**
    * Is this node not persisted and needs to be?
    *
@@ -125,4 +128,24 @@ public interface Node<V> {
    * @return A string representation of the node.
    */
   String print();
+
+  /**
+   * Generates DOT representation for the Node.
+   *
+   * @param showNullNodes If true, prints NullNodes and NullLeafNodes; if false, prints only unique
+   *     edges.
+   * @return DOT representation of the Node.
+   */
+  String toDot(Boolean showNullNodes);
+
+  /**
+   * Generates DOT representation for the Node.
+   *
+   * <p>Representation does not contain repeating edges.
+   *
+   * @return DOT representation of the Node.
+   */
+  default String toDot() {
+    return toDot(false);
+  }
 }

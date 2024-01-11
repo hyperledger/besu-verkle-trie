@@ -50,6 +50,7 @@ public class LeafNode<V> implements Node<V> {
     this.value = value;
     this.valueSerializer = val -> (Bytes) val;
   }
+
   /**
    * Constructs a new LeafNode with optional location, value.
    *
@@ -104,6 +105,7 @@ public class LeafNode<V> implements Node<V> {
   public Optional<Bytes> getLocation() {
     return location;
   }
+
   /**
    * Get the children of the node. A leaf node does not have children, so this method throws an
    * UnsupportedOperationException.
@@ -140,6 +142,12 @@ public class LeafNode<V> implements Node<V> {
     dirty = true;
   }
 
+  /** Marks the node as clean, indicating that it no longer needs to be persisted. */
+  @Override
+  public void markClean() {
+    dirty = false;
+  }
+
   /**
    * Checks if the node needs to be persisted.
    *
@@ -158,5 +166,35 @@ public class LeafNode<V> implements Node<V> {
   @Override
   public String print() {
     return "Leaf:" + getValue().map(Object::toString).orElse("empty");
+  }
+
+  /**
+   * Generates DOT representation for the LeafNode.
+   *
+   * @return DOT representation of the LeafNode.
+   */
+  @Override
+  public String toDot(Boolean showNullNodes) {
+    Bytes locationBytes = getLocation().orElse(Bytes.EMPTY);
+
+    return new StringBuilder()
+        .append(getClass().getSimpleName())
+        .append(locationBytes)
+        .append(" [label=\"L: ")
+        .append(locationBytes)
+        .append("\nSuffix: ")
+        .append(Bytes.of(locationBytes.get(locationBytes.size() - 1)))
+        .append("\"]\n")
+        .append(getClass().getSimpleName())
+        .append(locationBytes)
+        .append(" -> ")
+        .append("Value")
+        .append(locationBytes)
+        .append("\nValue")
+        .append(locationBytes)
+        .append(" [label=\"Value: ")
+        .append(getValue().orElse(null))
+        .append("\"]\n")
+        .toString();
   }
 }

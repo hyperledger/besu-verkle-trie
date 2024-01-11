@@ -212,6 +212,11 @@ public abstract class BranchNode<V> implements Node<V> {
     dirty = true;
   }
 
+  /** Marks the node as clean, indicating that it no longer needs to be persisted. */
+  @Override
+  public void markClean() {
+    dirty = false;
+  }
   /**
    * Checks if the node is dirty, indicating that it needs to be persisted.
    *
@@ -240,5 +245,41 @@ public abstract class BranchNode<V> implements Node<V> {
       }
     }
     return builder.toString();
+  }
+
+  /**
+   * Generates DOT representation for the BranchNode.
+   *
+   * @return DOT representation of the BranchNode.
+   */
+  @Override
+  public String toDot(Boolean showNullNodes) {
+    StringBuilder result =
+        new StringBuilder()
+            .append(getClass().getSimpleName())
+            .append(getLocation().orElse(Bytes.EMPTY))
+            .append(" [label=\"B: ")
+            .append(getLocation().orElse(Bytes.EMPTY))
+            .append("\n")
+            .append("Commitment: ")
+            .append(getCommitment().orElse(Bytes32.ZERO))
+            .append("\"]\n");
+
+    for (Node<V> child : getChildren()) {
+      String edgeString =
+          getClass().getSimpleName()
+              + getLocation().orElse(Bytes.EMPTY)
+              + " -> "
+              + child.getClass().getSimpleName()
+              + child.getLocation().orElse(Bytes.EMPTY)
+              + "\n";
+
+      if (showNullNodes || !result.toString().contains(edgeString)) {
+        result.append(edgeString);
+      }
+      result.append(child.toDot(showNullNodes));
+    }
+
+    return result.toString();
   }
 }

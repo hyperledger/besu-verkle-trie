@@ -19,9 +19,14 @@ dependencyManagement {
 
         dependency 'net.java.dev.jna:jna:5.13.0'
 
-        dependency 'org.hyperledger.besu:ipa-multipoint:0.8.3-SNAPSHOT'
+        dependency 'org.hyperledger.besu:ipa-multipoint:0.8.4-SNAPSHOT'
 
         dependency 'org.assertj:assertj-core:3.24.2'
+
+        dependencySet(group: 'org.apache.logging.log4j', version: '2.20.0') {
+            entry 'log4j-api'
+            entry 'log4j-core'
+        }
 
         dependencySet(group: 'io.tmio', version: '2.4.2') {
             entry 'tuweni-bytes'

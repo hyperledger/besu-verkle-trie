@@ -64,6 +64,7 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
       child.accept(this, Bytes.concatenate(location, index));
     }
     nodeUpdater.store(location, null, internalNode.getEncodedValue());
+    internalNode.markClean();
     return internalNode;
   }
 
@@ -86,6 +87,7 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
       child.accept(this, Bytes.concatenate(stem, index));
     }
     nodeUpdater.store(location, null, stemNode.getEncodedValue());
+    stemNode.markClean();
     return stemNode;
   }
 
@@ -102,6 +104,7 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
       return leafNode;
     }
     nodeUpdater.store(location, null, leafNode.getEncodedValue());
+    leafNode.markClean();
     return leafNode;
   }
 

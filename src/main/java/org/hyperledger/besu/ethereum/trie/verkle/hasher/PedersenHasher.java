@@ -41,8 +41,12 @@ public class PedersenHasher implements Hasher {
    */
   @Override
   public Bytes32 commit(Bytes32[] inputs) {
+    Bytes32[] rev = new Bytes32[inputs.length];
+    for (int i = 0; i < inputs.length; ++i) {
+      rev[i] = (Bytes32) inputs[i].reverse();
+    }
     Bytes input_serialized = Bytes.concatenate(inputs);
-    return Bytes32.wrap(LibIpaMultipoint.commit(input_serialized.toArray(), committerPointer));
+    return (Bytes32) Bytes32.wrap(LibIpaMultipoint.commit(input_serialized.toArray(), committerPointer)).reverse();
   }
 
   /**

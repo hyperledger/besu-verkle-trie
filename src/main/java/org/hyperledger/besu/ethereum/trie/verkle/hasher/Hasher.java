@@ -29,6 +29,7 @@ public interface Hasher {
    */
   public Bytes32 commit(Bytes32[] inputs);
 
+  public Bytes32 commitRoot(Bytes32[] inputs);
   /**
    * Calculates the hash for an address and index.
    *

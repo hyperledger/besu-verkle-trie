@@ -59,7 +59,12 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
       internalNode.replaceChild(index, updatedChild);
       hashes[i] = updatedChild.getHash().get();
     }
-    final Bytes32 hash = hasher.commit(hashes);
+    final Bytes32 hash;
+    if (location.isEmpty()) {
+      hash = hasher.commitRoot(hashes);
+    } else {
+      hash = hasher.commit(hashes);
+    }
     return internalNode.replaceHash(hash, hash); // commitment should be different
   }
 

@@ -28,6 +28,10 @@ import org.apache.tuweni.bytes.Bytes32;
  * inputs using the pedersen commitment - multi scalar multiplication vector commitment algorithm.
  */
 public class PedersenHasher implements Hasher {
+
+  private static final long committerPointer =
+      LibIpaMultipoint.committerPointer(new LibIpaMultipoint());
+
   /**
    * Commits an array of Bytes32 using the pedersen commitment - multi scalar multiplication vector
    * commitment algorithm.
@@ -38,7 +42,7 @@ public class PedersenHasher implements Hasher {
   @Override
   public Bytes32 commit(Bytes32[] inputs) {
     Bytes input_serialized = Bytes.concatenate(inputs);
-    return Bytes32.wrap(LibIpaMultipoint.commit(input_serialized.toArray()));
+    return Bytes32.wrap(LibIpaMultipoint.commit(input_serialized.toArray(), committerPointer));
   }
 
   /**

@@ -1401,7 +1401,7 @@ public class SimpleVerkleTrieTest {
         .as("Get one value should be the inserted value")
         .isEqualTo(Optional.of(value));
     Bytes32 expectedRootHash =
-        Bytes32.fromHexString("afceaacfd8f1d62ceff7d2bbfc733e42fdb40cef6f7c3c870a5bdd9203c30a16");
+        Bytes32.fromHexString("0x70985156c77f266a97c35d5a051b6c48b3ed64669105ea0a6a248220bedaece4");
     assertThat(trie.getRootHash()).as("Retrieve root hash").isEqualByComparingTo(expectedRootHash);
   }
 
@@ -1425,7 +1425,7 @@ public class SimpleVerkleTrieTest {
     assertThat(trie.get(key3)).as("Get non-key returns empty").isEmpty();
 
     Bytes32 expectedRootHash =
-        Bytes32.fromHexString("1defb89c793eb6cf89a90fe7e9bff4b96b5c9774ad21433adb959466a7669602");
+        Bytes32.fromHexString("0x0e6714b82adb7af3d814aac5386878295949ded4eae3e33e08844af49fe042ba");
     assertThat(trie.getRootHash()).as("Get root hash").isEqualByComparingTo(expectedRootHash);
   }
 
@@ -1445,7 +1445,7 @@ public class SimpleVerkleTrieTest {
     assertThat(trie.get(key1).get()).as("Get first value").isEqualByComparingTo(value1);
     assertThat(trie.get(key2).get()).as("Get second value").isEqualByComparingTo(value2);
     Bytes32 expectedRootHash =
-        Bytes32.fromHexString("1758925a729ae085d4a2e32139f47c647f70495a6a38053bc0056996dd34b60e");
+        Bytes32.fromHexString("0x60d94a57c00df92c007416aac3d85cac54cd979408b0865088fc296611c65efc");
     assertThat(trie.getRootHash()).as("Retrieve root hash").isEqualByComparingTo(expectedRootHash);
   }
 
@@ -1465,7 +1465,7 @@ public class SimpleVerkleTrieTest {
     assertThat(trie.get(key1)).as("Retrieve first value").isEqualTo(Optional.of(value1));
     assertThat(trie.get(key2)).as("Retrieve second value").isEqualTo(Optional.of(value2));
     Bytes32 expectedRootHash =
-        Bytes32.fromHexString("88028cbafb20137dba8b42d243cfcac81f6ac635cf984c7a89e54ef006bf750d");
+        Bytes32.fromHexString("0x4fd3848fecececd160dad21e25eef54c40e39813814968f63971c0cb458e95ab");
     assertThat(trie.getRootHash()).as("Retrieve root hash").isEqualByComparingTo(expectedRootHash);
   }
 

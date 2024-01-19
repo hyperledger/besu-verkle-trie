@@ -49,6 +49,11 @@ public class SHA256Hasher implements Hasher {
     return out;
   }
 
+  @Override
+  public Bytes32 commitRoot(final Bytes32[] inputs) {
+    return commit(inputs);
+  }
+
   /**
    * Calculates the hash for an address and index.
    *

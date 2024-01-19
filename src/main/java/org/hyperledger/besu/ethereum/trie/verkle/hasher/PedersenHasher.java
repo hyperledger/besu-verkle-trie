@@ -46,7 +46,9 @@ public class PedersenHasher implements Hasher {
       rev[i] = (Bytes32) inputs[i].reverse();
     }
     Bytes input_serialized = Bytes.concatenate(rev);
-    return (Bytes32) Bytes32.wrap(LibIpaMultipoint.commit(input_serialized.toArray(), committerPointer)).reverse();
+    return (Bytes32)
+        Bytes32.wrap(LibIpaMultipoint.commit(input_serialized.toArray(), committerPointer))
+            .reverse();
   }
 
   /**
@@ -60,6 +62,6 @@ public class PedersenHasher implements Hasher {
   public Bytes32 trieKeyHash(Bytes address, Bytes32 index) {
     Bytes32 addr = Bytes32.leftPad(address);
     Bytes input = Bytes.concatenate(addr, index);
-    return Bytes32.wrap(LibIpaMultipoint.pedersenHash(input.toArray()));
+    return Bytes32.wrap(LibIpaMultipoint.pedersenHash(input.toArray(), committerPointer));
   }
 }

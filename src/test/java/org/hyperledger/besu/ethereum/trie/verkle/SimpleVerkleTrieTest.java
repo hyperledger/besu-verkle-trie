@@ -1578,14 +1578,10 @@ public class SimpleVerkleTrieTest {
       List<String> parts = Splitter.on(',').splitToList(keyVals[i]);
       trie.put(Bytes32.fromHexString(parts.get(0)), Bytes32.fromHexString(parts.get(1)));
     }
-    long startTime = System.nanoTime();
-    Bytes32 rootHash = trie.getRootHash();
+    // This value is calculated here: https://github.com/Quadratic-Labs/VerkleTries_Besu/blob/feature/test-genesis/tests/root-hashes/golang/main.go#L136
+    Bytes32 expectedRootHash = Bytes32.fromHexString("0x5e8519756841faf0b2c28951c451b61a4b407b70a5ce5b57992f4bec973173ff");
 
-    long estimatedTime2 = System.nanoTime() - startTime;
-
-    System.out.println("Get root hash time before optimizations: " + estimatedTime2);
-
-    System.out.println("Root hash is: " + rootHash);
+    assertThat(trie.getRootHash()).as("Retrieve root hash").isEqualByComparingTo(expectedRootHash);
   }
 
 

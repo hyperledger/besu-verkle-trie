@@ -17,10 +17,8 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import java.util.List;
 import java.util.Optional;
 
-import com.google.common.base.Splitter;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.junit.jupiter.api.Test;

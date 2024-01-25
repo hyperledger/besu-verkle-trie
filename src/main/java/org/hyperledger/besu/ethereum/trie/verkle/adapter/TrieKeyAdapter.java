@@ -24,6 +24,15 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
 
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.CODE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.HEADER_STORAGE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.VERKLE_NODE_WIDTH;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.VERSION_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.BALANCE_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.NONCE_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.CODE_KECCAK_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.CODE_SIZE_LEAF_KEY;
+
 /**
  * Utility class for generating keys used in a Verkle Trie.
  *
@@ -31,14 +40,7 @@ import org.apache.tuweni.units.bigints.UInt256;
  * code chunk keys, and header keys, used in a Verkle Trie structure.
  */
 public class TrieKeyAdapter {
-  private final UInt256 VERSION_LEAF_KEY = UInt256.valueOf(0);
-  private final UInt256 BALANCE_LEAF_KEY = UInt256.valueOf(1);
-  private final UInt256 NONCE_LEAF_KEY = UInt256.valueOf(2);
-  private final UInt256 CODE_KECCAK_LEAF_KEY = UInt256.valueOf(3);
-  private final UInt256 CODE_SIZE_LEAF_KEY = UInt256.valueOf(4);
-  private final UInt256 HEADER_STORAGE_OFFSET = UInt256.valueOf(64);
-  private final UInt256 CODE_OFFSET = UInt256.valueOf(128);
-  private final UInt256 VERKLE_NODE_WIDTH = UInt256.valueOf(256);
+
 
   // TODO should be UInt256.valueOf(256).pow(31) , but there is currently a bug
   // in the testnet and instead, the other clients are using a shift left operation.

@@ -1,5 +1,5 @@
 /*
- * Copyright Besu Contributors
+ * Copyright Hyperledger Besu Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -14,6 +14,15 @@
  *
  */
 package org.hyperledger.besu.ethereum.trie.verkle.adapter;
+
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.BALANCE_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_KECCAK_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_SIZE_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_STORAGE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.NONCE_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERSION_LEAF_KEY;
 
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 
@@ -31,19 +40,7 @@ import org.apache.tuweni.units.bigints.UInt256;
  * code chunk keys, and header keys, used in a Verkle Trie structure.
  */
 public class TrieKeyAdapter {
-  private final UInt256 VERSION_LEAF_KEY = UInt256.valueOf(0);
-  private final UInt256 BALANCE_LEAF_KEY = UInt256.valueOf(1);
-  private final UInt256 NONCE_LEAF_KEY = UInt256.valueOf(2);
-  private final UInt256 CODE_KECCAK_LEAF_KEY = UInt256.valueOf(3);
-  private final UInt256 CODE_SIZE_LEAF_KEY = UInt256.valueOf(4);
-  private final UInt256 HEADER_STORAGE_OFFSET = UInt256.valueOf(64);
-  private final UInt256 CODE_OFFSET = UInt256.valueOf(128);
-  private final UInt256 VERKLE_NODE_WIDTH = UInt256.valueOf(256);
 
-  // TODO should be UInt256.valueOf(256).pow(31) , but there is currently a bug
-  // in the testnet and instead, the other clients are using a shift left operation.
-  // So we are doing a shift left to follow the testnet,
-  // but this should be fixed later.
   private final UInt256 MAIN_STORAGE_OFFSET = UInt256.valueOf(256).shiftLeft(31);
 
   private final Hasher hasher;

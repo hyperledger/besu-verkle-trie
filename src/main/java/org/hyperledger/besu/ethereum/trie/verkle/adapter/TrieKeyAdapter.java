@@ -1,5 +1,5 @@
 /*
- * Copyright Besu Contributors
+ * Copyright Hyperledger Besu Contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except in compliance with
  * the License. You may obtain a copy of the License at
@@ -15,6 +15,15 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.adapter;
 
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.BALANCE_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.CODE_KECCAK_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.CODE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.CODE_SIZE_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.HEADER_STORAGE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.NONCE_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.VERKLE_NODE_WIDTH;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.VERSION_LEAF_KEY;
+
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 
 import java.util.ArrayList;
@@ -24,15 +33,6 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
 
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.CODE_OFFSET;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.HEADER_STORAGE_OFFSET;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.VERKLE_NODE_WIDTH;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.VERSION_LEAF_KEY;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.BALANCE_LEAF_KEY;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.NONCE_LEAF_KEY;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.CODE_KECCAK_LEAF_KEY;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.CODE_SIZE_LEAF_KEY;
-
 /**
  * Utility class for generating keys used in a Verkle Trie.
  *
@@ -40,7 +40,6 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.Constants.CODE_SIZE
  * code chunk keys, and header keys, used in a Verkle Trie structure.
  */
 public class TrieKeyAdapter {
-
 
   // TODO should be UInt256.valueOf(256).pow(31) , but there is currently a bug
   // in the testnet and instead, the other clients are using a shift left operation.

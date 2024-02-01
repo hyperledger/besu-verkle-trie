@@ -25,10 +25,16 @@ public interface Hasher {
    * Calculates the commitment hash for an array of inputs.
    *
    * @param inputs An array of values to be hashed.
-   * @return The commitment hash calculated from the inputs.
+   * @return The uncompressed serialized commitment.
    */
-  public Bytes32 commit(Bytes32[] inputs);
+  public Bytes commit(Bytes32[] inputs);
 
+  /**
+   * Calculates the commitment hash for an array of inputs.
+   *
+   * @param inputs An array of values to be hashed.
+   * @return The compressed serialized commitment used for calucating root Commitment.
+   */
   public Bytes32 commitRoot(Bytes32[] inputs);
   /**
    * Calculates the hash for an address and index.
@@ -38,4 +44,6 @@ public interface Hasher {
    * @return The trie-key hash
    */
   public Bytes32 trieKeyHash(Bytes address, Bytes32 index);
+
+  public Bytes32 groupToField(Bytes commitment);
 }

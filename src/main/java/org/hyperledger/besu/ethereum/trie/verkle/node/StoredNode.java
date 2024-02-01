@@ -114,7 +114,7 @@ public class StoredNode<V> implements Node<V> {
    * @return An optional containing the commitment of the node if available.
    */
   @Override
-  public Optional<Bytes32> getCommitment() {
+  public Optional<Bytes> getCommitment() {
     final Node<V> node = load();
     return node.getCommitment();
   }

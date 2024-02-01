@@ -32,17 +32,31 @@ public class PedersenHasher implements Hasher {
    * Commits an array of Bytes32 using the pedersen commitment - multi scalar multiplication vector
    * commitment algorithm.
    *
-   * @param inputs An array of Bytes32 inputs to be hashed and committed.
-   * @return The resulting hash as a Bytes32.
+   * @param inputs An array of Bytes32 inputs to be committed.
+   * @return The resulting commitment serliazed as uncompressed eliptic curve element (64bytes).
    */
   @Override
-  public Bytes32 commit(Bytes32[] inputs) {
-    return Bytes32.wrap(LibIpaMultipoint.commit(Bytes.concatenate(inputs).toArray()));
+  public Bytes commit(Bytes32[] inputs) {
+    return Bytes.wrap(LibIpaMultipoint.commit(Bytes.concatenate(inputs).toArray()));
   }
 
+  /**
+   * @param inputs An array of Bytes32 inputs to be committed.
+   * @return The result is commitment as compressed eliptic curve element (32bytes). This is needed
+   *     to computing root Commitment.
+   */
   @Override
   public Bytes32 commitRoot(final Bytes32[] inputs) {
     return Bytes32.wrap(LibIpaMultipoint.commitRoot(Bytes.concatenate(inputs).toArray()));
+  }
+
+  /**
+   * @param input Uncompressed serialized commitment (64bytes)
+   * @return return Fr, to be used in pared commitment.
+   */
+  @Override
+  public Bytes32 groupToField(Bytes input) {
+    return Bytes32.wrap(LibIpaMultipoint.groupToField(input.toArray()));
   }
 
   /**

@@ -36,7 +36,7 @@ public interface Node<V> {
   Bytes32 EMPTY_HASH = Bytes32.ZERO;
 
   /** A constant representing a commitment to NullNodes */
-  Bytes32 EMPTY_COMMITMENT = Bytes32.ZERO;
+  Bytes EMPTY_COMMITMENT = Bytes.EMPTY;
 
   /**
    * Accept a visitor to perform operations on the node based on a provided path.
@@ -87,7 +87,7 @@ public interface Node<V> {
    *
    * @return An optional containing the hash of the node if available.
    */
-  default Optional<Bytes32> getCommitment() {
+  default Optional<Bytes> getCommitment() {
     return Optional.empty();
   }
 

@@ -23,6 +23,7 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_S
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.NONCE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERSION_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.MAIN_STORAGE_OFFSET;
 
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 
@@ -41,7 +42,7 @@ import org.apache.tuweni.units.bigints.UInt256;
  */
 public class TrieKeyAdapter {
 
-  private final UInt256 MAIN_STORAGE_OFFSET = UInt256.valueOf(256).shiftLeft(31);
+
 
   private final Hasher hasher;
 

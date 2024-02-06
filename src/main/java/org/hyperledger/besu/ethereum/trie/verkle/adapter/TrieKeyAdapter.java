@@ -20,6 +20,7 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_KEC
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_OFFSET;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_SIZE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_STORAGE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.MAIN_STORAGE_OFFSET;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.NONCE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERSION_LEAF_KEY;
@@ -40,8 +41,6 @@ import org.apache.tuweni.units.bigints.UInt256;
  * code chunk keys, and header keys, used in a Verkle Trie structure.
  */
 public class TrieKeyAdapter {
-
-  private final UInt256 MAIN_STORAGE_OFFSET = UInt256.valueOf(256).shiftLeft(31);
 
   private final Hasher hasher;
 

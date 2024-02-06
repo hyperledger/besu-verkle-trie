@@ -26,8 +26,5 @@ public class Parameters {
   public static final UInt256 HEADER_STORAGE_OFFSET = UInt256.valueOf(64);
   public static final UInt256 CODE_OFFSET = UInt256.valueOf(128);
   public static final UInt256 VERKLE_NODE_WIDTH = UInt256.valueOf(256);
-  // TODO should be UInt256.valueOf(256).pow(31) , but there is currently a bug
-  // in the testnet and instead, the other clients are using a shift left operation.
-  // So we are doing a shift left to follow the testnet,
-  // but this should be fixed later.
+  public static final UInt256 MAIN_STORAGE_OFFSET = UInt256.valueOf(256).pow(31);
 }

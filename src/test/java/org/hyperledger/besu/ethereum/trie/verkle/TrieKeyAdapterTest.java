@@ -50,9 +50,8 @@ public class TrieKeyAdapterTest {
   @Test
   public void testStorageKeyForMainStorage() {
     UInt256 storageKey = UInt256.valueOf(64);
-    // use shift left operation for the moment , should be pow in the future
     Bytes32 expected =
-        Bytes32.fromHexString("0x3d08fd033c8f1e8b95f28b95a854a0e948062cb7ecb87587e54dcd826e577640");
+        Bytes32.fromHexString("0x22f146f007e60a6a8781a35e7181f02a71fddfaec78a4adce111374a5f61af40");
     assertThat(adapter.storageKey(address, storageKey)).isEqualTo(expected);
   }
 

@@ -22,20 +22,35 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.util.HashMap;
+import java.util.stream.Stream;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 public class GenesisTest {
-  @Test
-  public void putGenesis() throws IOException {
+
+  private static Stream<Arguments> provideGenesisAndStateRootExpected() {
+    return Stream.of(
+        Arguments.of(
+            "/gen-devnet-2.csv",
+            "0x5e8519756841faf0b2c28951c451b61a4b407b70a5ce5b57992f4bec973173ff"),
+        Arguments.of(
+            "/gen-devnet-3.csv",
+            "0x382960711d9ccf58b9db20122e2253eb9bfa99d513f8c9d4e85b55971721f4de"));
+  }
+
+  @ParameterizedTest
+  @MethodSource("provideGenesisAndStateRootExpected")
+  public void putGenesis(String genesisCSVFile, String expectedStateRootHash) throws IOException {
     HashMap<Bytes, Bytes> storage = new HashMap<Bytes, Bytes>();
     VerkleTrie<Bytes32, Bytes> trie = new SimpleVerkleTrie<Bytes32, Bytes>();
-    InputStream input = GenesisTest.class.getResourceAsStream("/genesis.csv");
+    InputStream input = GenesisTest.class.getResourceAsStream(genesisCSVFile);
     try (Reader reader = new InputStreamReader(input, "UTF-8");
         CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT); ) {
       for (CSVRecord csvRecord : csvParser) {
@@ -45,8 +60,8 @@ public class GenesisTest {
       }
     }
     trie.commit((location, hash, value) -> storage.put(location, value));
-    Bytes32 expectedRootHash =
-        Bytes32.fromHexString("0x5e8519756841faf0b2c28951c451b61a4b407b70a5ce5b57992f4bec973173ff");
-    assertThat(trie.getRootHash()).isEqualByComparingTo(expectedRootHash);
+
+    assertThat(trie.getRootHash())
+        .isEqualByComparingTo(Bytes32.fromHexString(expectedStateRootHash));
   }
 }

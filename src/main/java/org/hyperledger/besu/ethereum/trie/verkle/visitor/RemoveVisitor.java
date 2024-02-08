@@ -142,7 +142,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     final List<Node<V>> children = branchNode.getChildren();
     Optional<Byte> onlyChildIndex = Optional.empty();
     for (int i = 0; i < children.size(); ++i) {
-      if (children.get(i) != NULL_NODE) {
+      if (children.get(i) != NULL_NODE && !children.get(i).getEncodedValue().isEmpty()) {
         if (onlyChildIndex.isPresent()) {
           return Optional.empty();
         }

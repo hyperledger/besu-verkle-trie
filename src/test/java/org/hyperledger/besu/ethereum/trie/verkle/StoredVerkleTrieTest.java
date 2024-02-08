@@ -269,4 +269,37 @@ public class StoredVerkleTrieTest {
     trie2.remove(key2);
     assertThat(trie2.getRootHash()).isEqualTo(Bytes32.ZERO);
   }
+
+  @Test
+  public void testAddAndRemoveKeysWithMultipleTreeReloads() throws Exception {
+    NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
+    NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
+    StoredNodeFactory<Bytes32> nodeFactory =
+        new StoredNodeFactory<>(nodeLoader, value -> (Bytes32) value);
+
+    StoredVerkleTrie<Bytes32, Bytes32> trie = new StoredVerkleTrie<>(nodeFactory);
+    trie.put(
+        Bytes32.fromHexString("0x1123356d04d4bd662ba38c44cbd79d4108521284d80327fa533e0baab1af9fff"),
+        Bytes32.fromHexString(
+            "0x4ff50e1454f9a9f56871911ad5b785b7f9966cce3cb12eb0e989332ae2279213"));
+    trie.commit(nodeUpdater);
+    Bytes32 expectedRootHash = trie.getRootHash();
+
+    StoredVerkleTrie<Bytes32, Bytes32> trie2 = new StoredVerkleTrie<>(nodeFactory);
+    trie2.put(
+        Bytes32.fromHexString("0x117b67dd491b9e11d9cde84ef3c02f11ddee9e18284969dc7d496d43c300e500"),
+        Bytes32.fromHexString(
+            "0x4ff50e1454f9a9f56871911ad5b785b7f9966cce3cb12eb0e989332ae2279213"));
+
+    trie2.commit(nodeUpdater);
+
+    StoredVerkleTrie<Bytes32, Bytes32> trie3 = new StoredVerkleTrie<>(nodeFactory);
+
+    trie3.remove(
+        Bytes32.fromHexString(
+            "0x117b67dd491b9e11d9cde84ef3c02f11ddee9e18284969dc7d496d43c300e500"));
+    trie3.commit(nodeUpdater);
+
+    assertThat(trie3.getRootHash()).isEqualTo(expectedRootHash);
+  }
 }

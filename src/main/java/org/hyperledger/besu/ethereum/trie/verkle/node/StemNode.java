@@ -39,9 +39,9 @@ public class StemNode<V> extends BranchNode<V> {
 
   private final Bytes stem;
   private final Optional<Bytes32> leftHash;
-  private final Optional<Bytes32> leftCommitment;
+  private final Optional<Bytes> leftCommitment;
   private final Optional<Bytes32> rightHash;
-  private final Optional<Bytes32> rightCommitment;
+  private final Optional<Bytes> rightCommitment;
   private Optional<Bytes> encodedValue = Optional.empty();
 
   /**
@@ -61,11 +61,11 @@ public class StemNode<V> extends BranchNode<V> {
       final Bytes location,
       final Bytes stem,
       final Bytes32 hash,
-      final Bytes32 commitment,
+      final Bytes commitment,
       final Bytes32 leftHash,
-      final Bytes32 leftCommitment,
+      final Bytes leftCommitment,
       final Bytes32 rightHash,
-      final Bytes32 rightCommitment,
+      final Bytes rightCommitment,
       final List<Node<V>> children) {
     super(location, hash, commitment, children);
     this.stem = extractStem(stem);
@@ -92,11 +92,11 @@ public class StemNode<V> extends BranchNode<V> {
       final Optional<Bytes> location,
       final Bytes stem,
       final Optional<Bytes32> hash,
-      final Optional<Bytes32> commitment,
+      final Optional<Bytes> commitment,
       final Optional<Bytes32> leftHash,
-      final Optional<Bytes32> leftCommitment,
+      final Optional<Bytes> leftCommitment,
       final Optional<Bytes32> rightHash,
-      final Optional<Bytes32> rightCommitment,
+      final Optional<Bytes> rightCommitment,
       final List<Node<V>> children) {
     super(location, hash, commitment, children);
     this.stem = extractStem(stem);
@@ -179,7 +179,7 @@ public class StemNode<V> extends BranchNode<V> {
    *
    * @return the stem.
    */
-  public Optional<Bytes32> getLeftCommitment() {
+  public Optional<Bytes> getLeftCommitment() {
     return leftCommitment;
   }
 
@@ -197,7 +197,7 @@ public class StemNode<V> extends BranchNode<V> {
    *
    * @return the stem.
    */
-  public Optional<Bytes32> getRightCommitment() {
+  public Optional<Bytes> getRightCommitment() {
     return rightCommitment;
   }
 
@@ -233,11 +233,11 @@ public class StemNode<V> extends BranchNode<V> {
    */
   public StemNode<V> replaceHash(
       final Bytes32 hash,
-      final Bytes32 commitment,
+      final Bytes commitment,
       final Bytes32 leftHash,
-      final Bytes32 leftCommitment,
+      final Bytes leftCommitment,
       final Bytes32 rightHash,
-      final Bytes32 rightCommitment) {
+      final Bytes rightCommitment) {
     return new StemNode<V>(
         getLocation().get(),
         stem,
@@ -264,11 +264,11 @@ public class StemNode<V> extends BranchNode<V> {
         Arrays.asList(
             getStem(),
             (Bytes) getHash().get(),
-            (Bytes) getCommitment().get(),
+            getCommitment().get(),
             (Bytes) getLeftHash().get(),
-            (Bytes) getLeftCommitment().get(),
+            getLeftCommitment().get(),
             (Bytes) getRightHash().get(),
-            (Bytes) getRightCommitment().get());
+            getRightCommitment().get());
     Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
     this.encodedValue = Optional.of(result);
     return result;

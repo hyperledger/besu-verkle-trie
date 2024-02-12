@@ -34,7 +34,7 @@ import org.apache.tuweni.bytes.Bytes32;
 public abstract class BranchNode<V> implements Node<V> {
   private final Optional<Bytes> location; // Location in the tree
   private final Optional<Bytes32> hash; // Vector commitment's hash
-  private final Optional<Bytes32> commitment; // Vector commitment serialized
+  private final Optional<Bytes> commitment; // Vector commitment serialized
   private final List<Node<V>> children; // List of children nodes
 
   private boolean dirty = true; // not persisted
@@ -50,7 +50,7 @@ public abstract class BranchNode<V> implements Node<V> {
   public BranchNode(
       final Bytes location,
       final Bytes32 hash,
-      final Bytes32 commitment,
+      final Bytes commitment,
       final List<Node<V>> children) {
     assert (children.size() == maxChild());
     this.location = Optional.of(location);
@@ -71,7 +71,7 @@ public abstract class BranchNode<V> implements Node<V> {
   public BranchNode(
       final Optional<Bytes> location,
       final Optional<Bytes32> hash,
-      final Optional<Bytes32> commitment,
+      final Optional<Bytes> commitment,
       final List<Node<V>> children) {
     assert (children.size() == maxChild());
     this.location = location;
@@ -174,7 +174,7 @@ public abstract class BranchNode<V> implements Node<V> {
    * @return An optional containing the vector commitment.
    */
   @Override
-  public Optional<Bytes32> getCommitment() {
+  public Optional<Bytes> getCommitment() {
     return commitment;
   }
 

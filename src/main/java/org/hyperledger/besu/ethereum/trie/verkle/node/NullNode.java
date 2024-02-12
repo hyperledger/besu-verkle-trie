@@ -90,7 +90,7 @@ public class NullNode<V> implements Node<V> {
    * @return An optional containing the empty hash.
    */
   @Override
-  public Optional<Bytes32> getCommitment() {
+  public Optional<Bytes> getCommitment() {
     return Optional.of(EMPTY_COMMITMENT);
   }
 

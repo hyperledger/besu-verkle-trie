@@ -46,7 +46,7 @@ public class InternalNode<V> extends BranchNode<V> {
   public InternalNode(
       final Bytes location,
       final Bytes32 hash,
-      final Bytes32 commitment,
+      final Bytes commitment,
       final List<Node<V>> children) {
     super(location, hash, commitment, children);
   }
@@ -63,7 +63,7 @@ public class InternalNode<V> extends BranchNode<V> {
   public InternalNode(
       final Optional<Bytes> location,
       final Optional<Bytes32> hash,
-      final Optional<Bytes32> commitment,
+      final Optional<Bytes> commitment,
       final List<Node<V>> children) {
     super(location, hash, commitment, children);
   }
@@ -118,7 +118,7 @@ public class InternalNode<V> extends BranchNode<V> {
    * @param commitment The new vector commitment to set.
    * @return A new InternalNode with the updated vector commitment.
    */
-  public Node<V> replaceHash(Bytes32 hash, Bytes32 commitment) {
+  public Node<V> replaceHash(Bytes32 hash, Bytes commitment) {
     return new InternalNode<V>(
         getLocation(), Optional.of(hash), Optional.of(commitment), getChildren());
   }
@@ -133,7 +133,7 @@ public class InternalNode<V> extends BranchNode<V> {
     if (encodedValue.isPresent()) {
       return encodedValue.get();
     }
-    List<Bytes> values = Arrays.asList((Bytes) getHash().get(), (Bytes) getCommitment().get());
+    List<Bytes> values = Arrays.asList((Bytes) getHash().get(), getCommitment().get());
     Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
     this.encodedValue = Optional.of(result);
     return result;

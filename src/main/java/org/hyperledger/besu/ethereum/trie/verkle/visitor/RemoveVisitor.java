@@ -21,6 +21,7 @@ import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.StoredNode;
 
 import java.util.List;
 import java.util.Optional;
@@ -143,10 +144,13 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     Optional<Byte> onlyChildIndex = Optional.empty();
     for (int i = 0; i < children.size(); ++i) {
       if (children.get(i) != NULL_NODE) {
-        if (onlyChildIndex.isPresent()) {
-          return Optional.empty();
+        if (!(children.get(i) instanceof StoredNode)
+            || !children.get(i).getEncodedValue().isEmpty()) {
+          if (onlyChildIndex.isPresent()) {
+            return Optional.empty();
+          }
+          onlyChildIndex = Optional.of((byte) i);
         }
-        onlyChildIndex = Optional.of((byte) i);
       }
     }
     return onlyChildIndex;

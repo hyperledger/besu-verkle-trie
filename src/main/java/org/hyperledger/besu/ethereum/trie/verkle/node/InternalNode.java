@@ -151,9 +151,11 @@ public class InternalNode<V> extends BranchNode<V> {
     for (int i = 0; i < maxChild(); i++) {
       final Node<V> childNode = child((byte) i);
       if (childNode != NullNode.instance()) {
-        final String label = String.format("[%02x] ", i);
-        final String childRep = childNode.print().replaceAll("\n\t", "\n\t\t");
-        builder.append("\n\t").append(label).append(childRep);
+        if (!(childNode instanceof StoredNode) || !childNode.getEncodedValue().isEmpty()) {
+          final String label = String.format("[%02x] ", i);
+          final String childRep = childNode.print().replaceAll("\n\t", "\n\t\t");
+          builder.append("\n\t").append(label).append(childRep);
+        }
       }
     }
     return builder.toString();

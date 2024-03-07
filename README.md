@@ -32,13 +32,13 @@ To build the project, use the `build` task:
 
 
 ```bash
-gradle build
+./gradlew build
 ```
 
 To format the code according to the project's style guide, use the spotlessApply task:
 
 ```bash
-gradle spotlessApply
+./gradlew spotlessApply
 ```
 
 ## Contribute

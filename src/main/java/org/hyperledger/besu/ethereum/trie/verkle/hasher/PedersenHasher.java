@@ -28,6 +28,17 @@ import org.apache.tuweni.bytes.Bytes32;
  * inputs using the pedersen commitment - multi scalar multiplication vector commitment algorithm.
  */
 public class PedersenHasher implements Hasher {
+
+  // The amount of bytes that we will take from the input when `trieKeyHash` is called.
+  final int CHUNK_SIZE = 16;
+
+  // The input will always be 64 bytes and since we are taking 16 bytes at a time
+  // we will create four chunks from the input.
+  // An extra chunk which has a constant value is added as a domain separator and
+  // length encoder,
+  // making the total number of chunks equal to five.
+  final int NUM_CHUNKS = 5;
+
   /**
    * Commits an array of Bytes32 using the pedersen commitment - multi scalar multiplication vector
    * commitment algorithm.
@@ -76,19 +87,10 @@ public class PedersenHasher implements Hasher {
     Bytes32 addr = Bytes32.leftPad(address);
     Bytes input = Bytes.concatenate(addr, indexLE);
 
-    // The amount of bytes that we will take from the input
-    final int CHUNK_SIZE = 16;
-
-    // The input will always be 64 bytes and since we are taking 16 bytes at a time
-    // we will create four chunks from the input.
-    // An extra chunk which has a constant value is added as a domain separator and length encoder,
-    // making the total number of chunks equal to five.
-    final int NUM_CHUNKS = 5;
-
     Bytes32[] chunks = new Bytes32[NUM_CHUNKS];
 
     // Set the first chunk which is always 2 + 256 * 64
-    byte[] firstChunkBytes =
+    final byte[] firstChunkBytes =
         new byte[] {
           2, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
           0, 0
@@ -104,7 +106,8 @@ public class PedersenHasher implements Hasher {
       chunks[i + 1] = Bytes32.rightPad(chunk);
     }
 
-    Bytes hashBE = Bytes.wrap(LibIpaMultipoint.commitRoot(Bytes.concatenate(chunks).toArray()));
+    final Bytes hashBE =
+        Bytes.wrap(LibIpaMultipoint.commitRoot(Bytes.concatenate(chunks).toArray()));
 
     // commitRoot returns the hash in big endian format, so we reverse it to get it in little endian
     // format. When we migrate to using `groupToField`, this reverse will not be needed.

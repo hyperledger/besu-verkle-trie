@@ -33,8 +33,9 @@ public class PedersenHasher implements Hasher {
   // called.
   private static final int CHUNK_SIZE = 16;
 
-  // The input will always be 64 bytes once it is padded in  `trieKeyHash ` and since we are taking 16 bytes at a time
-  // we will create four chunks from the input.
+  // The input will always be 64 bytes once it is padded in `trieKeyHash `
+  // and since we are taking 16 bytes at a time we will create four chunks from
+  // the input.
   // An extra chunk which has a constant value is added as a domain separator and
   // length encoder,
   // making the total number of chunks equal to five.

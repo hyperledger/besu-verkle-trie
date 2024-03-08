@@ -83,21 +83,16 @@ public class PedersenHasher implements Hasher {
   public Bytes32 trieKeyHash(Bytes address, Bytes32 index) {
 
     // Reverse the index so that it is in little endian format
-    Bytes32 indexLE = Bytes32.wrap(index.reverse());
+    final Bytes32 indexLE = Bytes32.wrap(index.reverse());
 
     // Pad the address so that it is 32 bytes
-    Bytes32 addr = Bytes32.leftPad(address);
-    Bytes input = Bytes.concatenate(addr, indexLE);
+    final Bytes32 addr = Bytes32.leftPad(address);
+    final Bytes input = Bytes.concatenate(addr, indexLE);
 
-    Bytes32[] chunks = new Bytes32[NUM_CHUNKS];
+    final Bytes32[] chunks = new Bytes32[NUM_CHUNKS];
 
     // Set the first chunk which is always 2 + 256 * 64
-    final byte[] firstChunkBytes =
-        new byte[] {
-          2, 64, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-          0, 0
-        };
-    chunks[0] = Bytes32.wrap(firstChunkBytes);
+    chunks[0] = Bytes32.rightPad(Bytes.of(2, 64));
 
     // Given input is 64 bytes, we create exactly 4 chunks of 16 bytes each
     // The chunks are then padded to 32 bytes since the commit methods requires 32

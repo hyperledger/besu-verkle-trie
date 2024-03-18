@@ -54,6 +54,29 @@ public class TrieKeyAdapter {
   }
 
   /**
+   * Get base hash from address and index
+   *
+   * @param address An ethereum address
+   * @param index Storage's index.
+   * @return The base trie key.
+   */
+  Bytes32 getBaseKey(Bytes address, UInt256 index) {
+    Bytes32 newStyle = Bytes32.leftPad(address);
+    Bytes[] scalars = new Bytes32[5];
+    scalars[0] = Bytes.fromHexString("0x01");
+    scalars[1] = newStyle.slice(0, 16);
+    scalars[2] = newStyle.slice(16, 16);
+    scalars[3] = index.toBytes().slice(0, 16);
+    scalars[4] = index.toBytes().slice(16, 16);
+    try {
+      return hasher.commitAsCompressed(scalars);
+    } catch (Exception e) {
+      // Should bubble up
+      return Bytes32.ZERO;
+    }
+  }
+
+  /**
    * Swaps the last byte of the base key with a given subIndex.
    *
    * @param base The base key.
@@ -78,7 +101,7 @@ public class TrieKeyAdapter {
     UInt256 offset =
         ((index.compareTo(headerOffset) < 0) ? HEADER_STORAGE_OFFSET : MAIN_STORAGE_OFFSET);
     UInt256 pos = offset.add(index);
-    Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH));
+    Bytes32 base = getBaseKey(address, pos.divide(VERKLE_NODE_WIDTH));
     Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
     return key;
   }
@@ -103,7 +126,7 @@ public class TrieKeyAdapter {
    */
   public Bytes32 codeChunkKey(Bytes address, UInt256 chunkId) {
     UInt256 pos = CODE_OFFSET.add(chunkId);
-    Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH).toBytes());
+    Bytes32 base = getBaseKey(address, pos.divide(VERKLE_NODE_WIDTH));
     Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
     return key;
   }
@@ -116,7 +139,7 @@ public class TrieKeyAdapter {
    * @return The generated header key.
    */
   Bytes32 headerKey(Bytes address, UInt256 leafKey) {
-    Bytes32 base = hasher.trieKeyHash(address, UInt256.valueOf(0).toBytes());
+    Bytes32 base = getBaseKey(address, UInt256.valueOf(0));
     Bytes32 key = swapLastByte(base, leafKey);
     return key;
   }

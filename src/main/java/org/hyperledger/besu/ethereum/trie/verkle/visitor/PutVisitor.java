@@ -117,7 +117,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     LeafNode<V> newNode;
     oldValue = leafNode.getValue();
     if (oldValue != value) {
-      newNode = new LeafNode<V>(leafNode.getLocation(), value);
+      newNode = new LeafNode<V>(leafNode.getLocation(), value, oldValue);
       newNode.markDirty();
     } else {
       newNode = leafNode;

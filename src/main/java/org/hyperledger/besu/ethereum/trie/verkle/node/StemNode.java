@@ -42,6 +42,7 @@ public class StemNode<V> extends BranchNode<V> {
   private final Optional<Bytes> leftCommitment;
   private final Optional<Bytes32> rightHash;
   private final Optional<Bytes> rightCommitment;
+
   private Optional<Bytes> encodedValue = Optional.empty();
 
   /**

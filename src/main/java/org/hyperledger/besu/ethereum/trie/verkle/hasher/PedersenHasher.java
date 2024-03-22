@@ -60,7 +60,7 @@ public class PedersenHasher implements Hasher {
    */
   @Override
   public Bytes32 commitRoot(final Bytes32[] inputs) {
-    return Bytes32.wrap(LibIpaMultipoint.commitRoot(Bytes.concatenate(inputs).toArray()));
+    return Bytes32.wrap(LibIpaMultipoint.commitAsCompressed(Bytes.concatenate(inputs).toArray()));
   }
 
   /**
@@ -69,7 +69,7 @@ public class PedersenHasher implements Hasher {
    */
   @Override
   public Bytes32 groupToField(Bytes input) {
-    return Bytes32.wrap(LibIpaMultipoint.groupToField(input.toArray()));
+    return Bytes32.wrap(LibIpaMultipoint.hash(input.toArray()));
   }
 
   /**
@@ -104,13 +104,14 @@ public class PedersenHasher implements Hasher {
       chunks[i + 1] = Bytes32.rightPad(chunk);
     }
 
-    final Bytes hashBE =
-        Bytes.wrap(LibIpaMultipoint.commitRoot(Bytes.concatenate(chunks).toArray()));
+    final Bytes hash =
+        Bytes.wrap(
+            LibIpaMultipoint.hash(LibIpaMultipoint.commit(Bytes.concatenate(chunks).toArray())));
 
     // commitRoot returns the hash in big endian format, so we reverse it to get it
     // in little endian
     // format. When we migrate to using `groupToField`, this reverse will not be
     // needed.
-    return Bytes32.wrap(hashBE.reverse());
+    return Bytes32.wrap(hash);
   }
 }

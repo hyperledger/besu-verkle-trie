@@ -217,6 +217,7 @@ public abstract class BranchNode<V> implements Node<V> {
   public void markClean() {
     dirty = false;
   }
+
   /**
    * Checks if the node is dirty, indicating that it needs to be persisted.
    *

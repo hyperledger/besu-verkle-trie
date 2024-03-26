@@ -17,8 +17,12 @@ package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
 import org.hyperledger.besu.nativelib.ipamultipoint.LibIpaMultipoint;
 
+import java.util.List;
+import java.util.Optional;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.bytes.MutableBytes;
 
 /**
  * A class responsible for hashing an array of Bytes32 using the pedersen commitment - multi scalar
@@ -27,90 +31,112 @@ import org.apache.tuweni.bytes.Bytes32;
  * <p>This class implements the Hasher interface and provides a method to commit multiple Bytes32
  * inputs using the pedersen commitment - multi scalar multiplication vector commitment algorithm.
  */
+@SuppressWarnings("null")
 public class PedersenHasher implements Hasher {
+  private static final Bytes defaultCommitment;
+  private static final Bytes32 defaultScalar;
 
-  // The amount of bytes that we will take from the input when `trieKeyHash` is
-  // called.
-  private static final int CHUNK_SIZE = 16;
-
-  // The input will always be 64 bytes once it is padded in `trieKeyHash `
-  // and since we are taking 16 bytes at a time we will create four chunks from
-  // the input.
-  // An extra chunk which has a constant value is added as a domain separator and
-  // length encoder,
-  // making the total number of chunks equal to five.
-  private static final int NUM_CHUNKS = 5;
-
-  /**
-   * Commits an array of Bytes32 using the pedersen commitment - multi scalar multiplication vector
-   * commitment algorithm.
-   *
-   * @param inputs An array of Bytes32 inputs to be committed.
-   * @return The resulting commitment serliazed as uncompressed eliptic curve element (64bytes).
-   */
-  @Override
-  public Bytes commit(Bytes32[] inputs) {
-    return Bytes.wrap(LibIpaMultipoint.commit(Bytes.concatenate(inputs).toArray()));
+  static {
+    // TODO: include defaults in LibIpaMultipoint
+    // defaultCommitment = Bytes.wrap(LibIpaMultipoint.defaultCommitment());
+    // defaultScalar = Bytes32.wrap(LibIpaMultipoint.defaultScalar());
+    defaultCommitment =
+        Bytes.concatenate(Bytes32.ZERO, Bytes32.rightPad(Bytes.fromHexString("0x01")));
+    defaultScalar = Bytes32.ZERO;
   }
 
-  /**
-   * @param inputs An array of Bytes32 inputs to be committed.
-   * @return The result is commitment as compressed eliptic curve element (32bytes). This is needed
-   *     to computing root Commitment.
-   */
   @Override
-  public Bytes32 commitRoot(final Bytes32[] inputs) {
-    return Bytes32.wrap(LibIpaMultipoint.commitRoot(Bytes.concatenate(inputs).toArray()));
+  public Bytes getDefaultCommitment() {
+    return defaultCommitment;
   }
 
-  /**
-   * @param input Uncompressed serialized commitment (64bytes)
-   * @return return Fr, to be used in pared commitment.
-   */
   @Override
-  public Bytes32 groupToField(Bytes input) {
-    return Bytes32.wrap(LibIpaMultipoint.groupToField(input.toArray()));
+  public Bytes32 getDefaultScalar() {
+    return defaultScalar;
   }
 
-  /**
-   * Calculates the hash for an address and index.
-   *
-   * @param address Account address.
-   * @param index Index in storage.
-   * @return The trie-key hash
-   */
   @Override
-  public Bytes32 trieKeyHash(Bytes address, Bytes32 index) {
+  public Bytes commit(Bytes[] scalars) throws Exception {
+    return Bytes.wrap(LibIpaMultipoint.commit(prepareScalars(scalars).toArray()));
+  }
 
-    // Reverse the index so that it is in little endian format
-    final Bytes32 indexLE = Bytes32.wrap(index.reverse());
+  @Override
+  public Bytes32 commitAsCompressed(Bytes[] scalars) throws Exception {
+    return Bytes32.wrap(LibIpaMultipoint.commitAsCompressed(prepareScalars(scalars).toArray()));
+  }
 
-    // Pad the address so that it is 32 bytes
-    final Bytes32 addr = Bytes32.leftPad(address);
-    final Bytes input = Bytes.concatenate(addr, indexLE);
-
-    final Bytes32[] chunks = new Bytes32[NUM_CHUNKS];
-
-    // Set the first chunk which is always 2 + 256 * 64
-    chunks[0] = Bytes32.rightPad(Bytes.of(2, 64));
-
-    // Given input is 64 bytes, we create exactly 4 chunks of 16 bytes each
-    // The chunks are then padded to 32 bytes since the commit methods requires 32
-    // byte scalars.
-    for (int i = 0; i < NUM_CHUNKS - 1; i++) {
-      // Slice input into 16 byte segments
-      Bytes chunk = input.slice(i * CHUNK_SIZE, CHUNK_SIZE);
-      // Pad each chunk to make it 32 bytes
-      chunks[i + 1] = Bytes32.rightPad(chunk);
+  @Override
+  public Bytes updateSparse(
+      final Optional<Bytes> commitment,
+      final List<Byte> indices,
+      final List<Bytes> oldScalars,
+      final List<Bytes> newScalars)
+      throws Exception {
+    Bytes cmnt = commitment.orElse(defaultCommitment);
+    byte[] idx = new byte[indices.size()];
+    for (int i = 0; i < indices.size(); i++) {
+      idx[i] = (byte) indices.get(i);
     }
+    return Bytes.wrap(
+        LibIpaMultipoint.updateSparse(
+            cmnt.toArray(),
+            idx,
+            prepareScalars(oldScalars.toArray(new Bytes[oldScalars.size()])).toArray(),
+            prepareScalars(newScalars.toArray(new Bytes[newScalars.size()])).toArray()));
+  }
 
-    final Bytes hashBE =
-        Bytes.wrap(LibIpaMultipoint.commitRoot(Bytes.concatenate(chunks).toArray()));
+  @Override
+  public Bytes32 compress(final Bytes commitment) throws Exception {
+    return Bytes32.wrap(LibIpaMultipoint.compress(commitment.toArray()));
+  }
 
-    // commitRoot returns the hash in big endian format, so we reverse it to get it
-    // in little endian
-    // format. When we migrate to using `groupToField`, this reverse will not be
-    // needed.
-    return Bytes32.wrap(hashBE.reverse());
+  // @Override
+  // public Bytes32 compressMany(final Bytes commitment) throws Exception {
+  //   if ( commitment.size != 64 ) { throw new IllegalArgumentException(); }
+  //   return Bytes32.wrap(LibIpaMultipoint.compressCommitment(commitment.toArray()));
+  // }
+
+  @Override
+  public Bytes32 hash(Bytes commitment) throws Exception {
+    return Bytes32.wrap(LibIpaMultipoint.hash(commitment.toArray()));
+  }
+
+  @Override
+  public Bytes32[] hashMany(List<Bytes> commitments) throws Exception {
+    Bytes input = prepareCommitments(commitments.toArray(new Bytes[commitments.size()]));
+    byte[] rawScalars = LibIpaMultipoint.hashMany(input.toArray());
+    Bytes32[] scalars = new Bytes32[rawScalars.length / 32];
+    for (int i = 0; i < scalars.length; i++) {
+      scalars[i] = Bytes32.wrap(rawScalars, i * 32);
+    }
+    return scalars;
+  }
+
+  // Protected methods
+
+  Bytes rightPadInput(int size, Bytes[] inputs) throws Exception {
+    MutableBytes result = MutableBytes.create(inputs.length * size);
+    for (int i = 0; i < inputs.length; i++) {
+      int offset = i * size;
+      if (inputs[i].size() > size) {
+        throw new IllegalArgumentException();
+      }
+      result.set(offset, inputs[i]);
+    }
+    return result;
+  }
+
+  Bytes prepareScalars(Bytes[] inputs) throws Exception {
+    if (inputs == null || inputs.length == 0) {
+      throw new IllegalArgumentException();
+    }
+    return rightPadInput(32, inputs);
+  }
+
+  Bytes prepareCommitments(Bytes[] inputs) throws Exception {
+    if (inputs == null || inputs.length == 0) {
+      throw new IllegalArgumentException();
+    }
+    return rightPadInput(64, inputs);
   }
 }

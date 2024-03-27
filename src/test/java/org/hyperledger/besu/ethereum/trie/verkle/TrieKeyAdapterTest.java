@@ -137,7 +137,7 @@ public class TrieKeyAdapterTest {
   @MethodSource({"JsonChunkifyData", "JsonContractCodeDataWithPush32On31stByte"})
   public void TestChunkifyCode(TestChunkifyData testData) {
     Bytes bytecode = Bytes.fromHexString(testData.bytecode);
-    List<Bytes32> result = adapter.chunkifyCode(bytecode);
+    List<UInt256> result = adapter.chunkifyCode(bytecode);
     assertThat(testData.chunks.size()).isEqualTo(result.size());
     Bytes32 value;
     // @SuppressWarnings("ModifiedButNotUsed")
@@ -170,7 +170,7 @@ public class TrieKeyAdapterTest {
   public void TestContractCode(TestCodeData testData) {
     Bytes addr = Bytes.fromHexString(testData.address);
     Bytes bytecode = Bytes.fromHexString(testData.bytecode);
-    List<Bytes32> chunks = adapter.chunkifyCode(bytecode);
+    List<UInt256> chunks = adapter.chunkifyCode(bytecode);
     assertThat(chunks.size()).as("Same number of chunks").isEqualTo(testData.chunks.size());
     for (int i = 0; i < chunks.size(); ++i) {
       Bytes32 key = adapter.codeChunkKey(addr, UInt256.valueOf(i));

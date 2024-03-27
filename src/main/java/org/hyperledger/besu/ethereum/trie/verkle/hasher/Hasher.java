@@ -15,6 +15,9 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
+import java.util.List;
+import java.util.Map;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
@@ -27,7 +30,7 @@ public interface Hasher {
    * @param inputs An array of values to be hashed.
    * @return The uncompressed serialized commitment.
    */
-  public Bytes commit(Bytes32[] inputs);
+  Bytes commit(Bytes32[] inputs);
 
   /**
    * Calculates the commitment hash for an array of inputs.
@@ -35,15 +38,25 @@ public interface Hasher {
    * @param inputs An array of values to be hashed.
    * @return The compressed serialized commitment used for calucating root Commitment.
    */
-  public Bytes32 commitRoot(Bytes32[] inputs);
+  Bytes32 commitRoot(Bytes32[] inputs);
+
   /**
    * Calculates the hash for an address and index.
    *
    * @param address Account address.
-   * @param index Index in storage.
-   * @return The trie-key hash
+   * @param index index in storage.
+   * @return trie-key hash
    */
-  public Bytes32 trieKeyHash(Bytes address, Bytes32 index);
+  Bytes32 trieKeyHash(Bytes address, Bytes32 index);
 
-  public Bytes32 groupToField(Bytes commitment);
+  /**
+   * Calculates the hash for an address and indexes.
+   *
+   * @param address Account address.
+   * @param indexes list of indexes in storage.
+   * @return The list of trie-key hashes
+   */
+  Map<Bytes32, Bytes32> manyTrieKeyHashes(Bytes address, List<Bytes32> indexes);
+
+  Bytes32 groupToField(Bytes commitment);
 }

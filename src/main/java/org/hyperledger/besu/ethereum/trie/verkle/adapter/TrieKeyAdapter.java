@@ -53,16 +53,8 @@ public class TrieKeyAdapter {
     this.hasher = hasher;
   }
 
-  /**
-   * Swaps the last byte of the base key with a given subIndex.
-   *
-   * @param base The base key.
-   * @param subIndex The subIndex.
-   * @return The modified key.
-   */
-  Bytes32 swapLastByte(Bytes32 base, UInt256 subIndex) {
-    Bytes lastByte = Bytes.of(subIndex.toBytes().reverse().get(0));
-    return (Bytes32) Bytes.concatenate(base.slice(0, 31), lastByte);
+  public Hasher getHasher() {
+    return hasher;
   }
 
   /**
@@ -73,25 +65,18 @@ public class TrieKeyAdapter {
    * @return The generated storage key.
    */
   public Bytes32 storageKey(Bytes address, Bytes32 storageKey) {
-    UInt256 index = UInt256.fromBytes(storageKey);
-    UInt256 headerOffset = CODE_OFFSET.subtract(HEADER_STORAGE_OFFSET);
-    UInt256 offset =
-        ((index.compareTo(headerOffset) < 0) ? HEADER_STORAGE_OFFSET : MAIN_STORAGE_OFFSET);
-    UInt256 pos = offset.add(index);
+    UInt256 pos = locateStorageKeyOffset(storageKey);
     Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH));
     Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
     return key;
   }
 
-  /**
-   * Generates a code chunk key for a given address and chunkId.
-   *
-   * @param address The address.
-   * @param chunkId The chunk ID.
-   * @return The generated code chunk key.
-   */
-  public Bytes32 codeChunkKey(Bytes address, int chunkId) {
-    return codeChunkKey(address, UInt256.valueOf(chunkId));
+  protected UInt256 locateStorageKeyOffset(Bytes32 storageKey) {
+    UInt256 index = UInt256.fromBytes(storageKey);
+    UInt256 headerOffset = CODE_OFFSET.subtract(HEADER_STORAGE_OFFSET);
+    UInt256 offset =
+        ((index.compareTo(headerOffset) < 0) ? HEADER_STORAGE_OFFSET : MAIN_STORAGE_OFFSET);
+    return offset.add(index);
   }
 
   /**
@@ -102,10 +87,13 @@ public class TrieKeyAdapter {
    * @return The generated code chunk key.
    */
   public Bytes32 codeChunkKey(Bytes address, UInt256 chunkId) {
-    UInt256 pos = CODE_OFFSET.add(chunkId);
-    Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH).toBytes());
-    Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
-    return key;
+    UInt256 pos = locateCodeChunkKeyOffset(chunkId);
+    Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH));
+    return swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
+  }
+
+  protected UInt256 locateCodeChunkKeyOffset(Bytes32 chunkId) {
+    return CODE_OFFSET.add(UInt256.fromBytes(chunkId));
   }
 
   /**
@@ -117,8 +105,19 @@ public class TrieKeyAdapter {
    */
   Bytes32 headerKey(Bytes address, UInt256 leafKey) {
     Bytes32 base = hasher.trieKeyHash(address, UInt256.valueOf(0).toBytes());
-    Bytes32 key = swapLastByte(base, leafKey);
-    return key;
+    return swapLastByte(base, leafKey);
+  }
+
+  /**
+   * Swaps the last byte of the base key with a given subIndex.
+   *
+   * @param base The base key.
+   * @param subIndex The subIndex.
+   * @return The modified key.
+   */
+  Bytes32 swapLastByte(Bytes32 base, Bytes32 subIndex) {
+    Bytes lastByte = Bytes.of(subIndex.reverse().get(0));
+    return (Bytes32) Bytes.concatenate(base.slice(0, 31), lastByte);
   }
 
   /**
@@ -178,9 +177,9 @@ public class TrieKeyAdapter {
    * @param bytecode Code's bytecode
    * @return List of 32-bytes code chunks
    */
-  public List<Bytes32> chunkifyCode(Bytes bytecode) {
+  public List<UInt256> chunkifyCode(Bytes bytecode) {
     if (bytecode.isEmpty()) {
-      return new ArrayList<Bytes32>();
+      return new ArrayList<UInt256>();
     }
 
     // Chunking variables
@@ -188,7 +187,7 @@ public class TrieKeyAdapter {
     int nChunks = 1 + ((bytecode.size() - 1) / CHUNK_SIZE);
     int padSize = nChunks * CHUNK_SIZE - bytecode.size();
     final Bytes code = Bytes.concatenate(bytecode, Bytes.repeat((byte) 0, padSize));
-    final List<Bytes32> chunks = new ArrayList<Bytes32>(nChunks);
+    final List<UInt256> chunks = new ArrayList<UInt256>(nChunks);
 
     // OpCodes for PUSH's
     final int PUSH_OFFSET = 95;
@@ -212,9 +211,9 @@ public class TrieKeyAdapter {
         }
       }
       chunks.add(
-          (Bytes32)
+          UInt256.fromBytes(
               Bytes.concatenate(
-                  Bytes.of(Math.min(nPushData, 31)), code.slice(chunkPos, CHUNK_SIZE)));
+                  Bytes.of(Math.min(nPushData, 31)), code.slice(chunkPos, CHUNK_SIZE))));
       nPushData = posInChunk - CHUNK_SIZE;
     }
 

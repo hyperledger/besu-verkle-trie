@@ -17,15 +17,14 @@ package org.hyperledger.besu.ethereum.trie.verkle.adapter;
 
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH;
 
-import kotlin.Pair;
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -42,53 +41,53 @@ public class TrieKeyBatchAdapter extends TrieKeyAdapter {
     super(hasher);
   }
 
-  public List<Bytes32> manyAccountKeys(final Bytes address,final List<UInt256> headerKeys, final List<UInt256> codeChunkIds, final List<Bytes32> storageKeys) {
+  public Map<Bytes32, Bytes32> manyAccountTrieKeys(
+      final Bytes address,
+      final List<Bytes32> headerKeys,
+      final List<Bytes32> storageKeys,
+      final List<Bytes32> codeChunkIds) {
 
-    final List<Pair<UInt256,UInt256>> offsets = new ArrayList<>();
+    final Set<Bytes32> offsets = new HashSet<>();
 
-    if(headerKeys.size()>0){
-      offsets.add(new Pair<>(UInt256.ZERO,UInt256.ZERO));
+    if (headerKeys.size() > 0) {
+      offsets.add(UInt256.ZERO);
     }
     for (Bytes32 storageKey : storageKeys) {
       final UInt256 storageOffset = locateStorageKeyOffset(storageKey);
-      offsets.add(new Pair<>(storageOffset.divide(VERKLE_NODE_WIDTH),storageOffset.mod(VERKLE_NODE_WIDTH)));
+      offsets.add(storageOffset.divide(VERKLE_NODE_WIDTH));
     }
-    for (UInt256 codeChunkId : codeChunkIds) {
+    for (Bytes32 codeChunkId : codeChunkIds) {
       final UInt256 codeChunkOffset = locateCodeChunkKeyOffset(codeChunkId);
-      offsets.add(new Pair<>(codeChunkOffset.divide(VERKLE_NODE_WIDTH),codeChunkOffset.mod(VERKLE_NODE_WIDTH)));
+      offsets.add(codeChunkOffset.divide(VERKLE_NODE_WIDTH));
     }
 
-    final Iterator<Bytes32> hashes =
-        getHasher()
-            .manyTrieKeyHashes(
-                address,
-                offsets.stream()
-                    .map(Pair::getFirst)
-                    .collect(Collectors.toList())).iterator();
+    final Map<Bytes32, Bytes32> hashes =
+        getHasher().manyTrieKeyHashes(address, new ArrayList<>(offsets));
 
-    final List<Bytes32> trieKeys = new ArrayList<>();
+    final Map<Bytes32, Bytes32> trieKeys = new HashMap<>();
 
-    Bytes32 currentHash = hashes.next();
-
-    //header part
-    for (UInt256 headerKey: headerKeys) {
-      trieKeys.add(swapLastByte(currentHash, headerKey));
+    // header part
+    for (Bytes32 headerKey : headerKeys) {
+      trieKeys.put(headerKey, swapLastByte(hashes.get(UInt256.ZERO), headerKey));
     }
-
-    //storage
-    for (Pair<UInt256, UInt256> storageOffset : offsets) {
-      currentHash = hashes.next();
-      trieKeys.add(swapLastByte(currentHash, storageOffset.getSecond()));
+    // storage
+    for (Bytes32 storageKey : storageKeys) {
+      final UInt256 storageOffset = locateStorageKeyOffset(storageKey);
+      trieKeys.put(
+          storageKey,
+          swapLastByte(
+              hashes.get(storageOffset.divide(VERKLE_NODE_WIDTH)),
+              storageOffset.mod(VERKLE_NODE_WIDTH)));
     }
-
-    //code
-    for (Pair<UInt256, UInt256> chunkOffset : offsets) {
-      currentHash = hashes.next();
-      trieKeys.add(swapLastByte(currentHash, chunkOffset.getSecond()));
+    for (Bytes32 codeChunkId : codeChunkIds) {
+      final UInt256 codeChunkOffset = locateCodeChunkKeyOffset(codeChunkId);
+      trieKeys.put(
+          codeChunkId,
+          swapLastByte(
+              hashes.get(codeChunkOffset.divide(VERKLE_NODE_WIDTH)),
+              codeChunkOffset.mod(VERKLE_NODE_WIDTH)));
     }
 
     return trieKeys;
   }
-
-
 }

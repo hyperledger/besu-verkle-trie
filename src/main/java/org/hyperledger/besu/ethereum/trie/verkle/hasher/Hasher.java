@@ -16,6 +16,7 @@
 package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -55,7 +56,7 @@ public interface Hasher {
    * @param indexes list of indexes in storage.
    * @return The list of trie-key hashes
    */
-  List<Bytes32> manyTrieKeyHashes(Bytes address, List<Bytes32> indexes);
+  Map<Bytes32, Bytes32> manyTrieKeyHashes(Bytes address, List<Bytes32> indexes);
 
   Bytes32 groupToField(Bytes commitment);
 }

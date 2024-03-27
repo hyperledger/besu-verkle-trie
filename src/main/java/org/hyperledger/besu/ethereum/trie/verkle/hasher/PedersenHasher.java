@@ -19,8 +19,9 @@ import org.hyperledger.besu.nativelib.ipamultipoint.LibIpaMultipoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -65,7 +66,7 @@ public class PedersenHasher implements Hasher {
    */
   @Override
   public Bytes32 commitRoot(final Bytes32[] inputs) {
-    return Bytes32.wrap(LibIpaMultipoint.commitRoot(Bytes.concatenate(inputs).toArray()));
+    return Bytes32.wrap(LibIpaMultipoint.commitAsCompressed(Bytes.concatenate(inputs).toArray()));
   }
 
   /**
@@ -74,7 +75,64 @@ public class PedersenHasher implements Hasher {
    */
   @Override
   public Bytes32 groupToField(Bytes input) {
-    return Bytes32.wrap(LibIpaMultipoint.groupToField(input.toArray()));
+    return Bytes32.wrap(LibIpaMultipoint.hash(input.toArray()));
+  }
+
+  /**
+   * Calculates the hash for an address and index.
+   *
+   * @param address Account address.
+   * @param index Index in storage.
+   * @return The trie-key hash
+   */
+  @Override
+  public Bytes32 trieKeyHash(Bytes address, Bytes32 index) {
+
+    // Pad the address so that it is 32 bytes
+    final Bytes32 addr = Bytes32.leftPad(address);
+
+    final Bytes32[] chunks = generateTrieKeyChunks(addr, index);
+    final Bytes hash =
+        Bytes.wrap(
+            LibIpaMultipoint.hash(LibIpaMultipoint.commit(Bytes.concatenate(chunks).toArray())));
+    // commitRoot returns the hash in big endian format, so we reverse it to get it
+    // in little endian
+    // format. When we migrate to using `groupToField`, this reverse will not be
+    // needed.
+    return Bytes32.wrap(hash);
+  }
+
+  /**
+   * Calculates the hash for an address and indexes.
+   *
+   * @param address Account address.
+   * @param indexes list of indexes in storage.
+   * @return The list of trie-key hashes
+   */
+  @Override
+  public Map<Bytes32, Bytes32> manyTrieKeyHashes(Bytes address, List<Bytes32> indexes) {
+
+    // Pad the address so that it is 32 bytes
+    final Bytes32 addr = Bytes32.leftPad(address);
+
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+      for (Bytes32 index : indexes) {
+        outputStream.writeBytes(
+            LibIpaMultipoint.commit(
+                Bytes.concatenate(generateTrieKeyChunks(addr, index)).toArray()));
+      }
+
+      final Bytes hashMany = Bytes.wrap(LibIpaMultipoint.hashMany(outputStream.toByteArray()));
+
+      final Map<Bytes32, Bytes32> hashes = new HashMap<>();
+      for (int i = 0; i < indexes.size(); i++) {
+        // Slice input into 16 byte segments
+        hashes.put(indexes.get(i), Bytes32.wrap(hashMany.slice(i * Bytes32.SIZE, Bytes32.SIZE)));
+      }
+      return hashes;
+    } catch (IOException e) {
+      throw new RuntimeException("unable to generate trie key hash", e);
+    }
   }
 
   private Bytes32[] generateTrieKeyChunks(final Bytes address, final Bytes32 index) {
@@ -99,78 +157,6 @@ public class PedersenHasher implements Hasher {
       // Pad each chunk to make it 32 bytes
       chunks[i + 1] = Bytes32.rightPad(chunk);
     }
-
     return chunks;
-  }
-
-  /**
-   * Calculates the hash for an address and index.
-   *
-   * @param address Account address.
-   * @param index Index in storage.
-   * @return The trie-key hash
-   */
-  @Override
-  public Bytes32 trieKeyHash(Bytes address, Bytes32 index) {
-
-    final Bytes32[] chunks = generateTrieKeyChunks(address, index);
-
-    // Set the first chunk which is always 2 + 256 * 64
-    chunks[0] = Bytes32.rightPad(Bytes.of(2, 64));
-
-    // commitRoot returns the hash in big endian format, so we reverse it to get it
-    // in little endian
-    // format. When we migrate to using `groupToField`, this reverse will not be
-    // needed.
-    return Bytes32.wrap(
-        Bytes.wrap(
-                LibIpaMultipoint.hash(LibIpaMultipoint.commit(Bytes.concatenate(chunks).toArray())))
-            .reverse());
-  }
-
-  /**
-   * Calculates the hash for an address and indexes.
-   *
-   * @param address Account address.
-   * @param indexes list of indexes in storage.
-   * @return The list of trie-key hashes
-   */
-  @Override
-  public List<Bytes32> manyTrieKeyHashes(Bytes address, List<Bytes32> indexes) {
-
-    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
-      for (Bytes32 index : indexes) {
-        final Bytes32[] chunks = generateTrieKeyChunks(address, index);
-        // Set the first chunk which is always 2 + 256 * 64
-        chunks[0] = Bytes32.rightPad(Bytes.of(2, 64));
-
-        outputStream.writeBytes(
-            LibIpaMultipoint.commit(
-                Bytes.concatenate(chunks).toArray()));
-      }
-
-      final Bytes hashBE = Bytes.wrap(LibIpaMultipoint.hashMany(outputStream.toByteArray()));
-
-      final List<Bytes32> hashes = new ArrayList<>();
-      for (int i = 0; i < indexes.size() - 1; i++) {
-        // Slice input into 16 byte segments
-        hashes.add(
-            Bytes32.wrap(
-                hashBE.slice(
-                    i * Bytes32.SIZE,
-                    Bytes32
-                        .SIZE)));
-        // commitRoot returns the hash in big endian format, so we reverse
-        // it to get it
-        // in little endian
-        // format. When we migrate to using `groupToField`, this reverse will not be
-        // needed.
-        // return Bytes32.wrap(hashBE.reverse());
-        // TODO when doing reverse ??
-      }
-      return hashes;
-    } catch (IOException e) {
-      throw new RuntimeException("unable to generate trie key hash", e);
-    }
   }
 }

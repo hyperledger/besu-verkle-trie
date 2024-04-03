@@ -19,6 +19,7 @@ import org.hyperledger.besu.nativelib.ipamultipoint.LibIpaMultipoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -75,7 +76,19 @@ public class PedersenHasher implements Hasher {
    */
   @Override
   public Bytes32 groupToField(Bytes input) {
-    return Bytes32.wrap(LibIpaMultipoint.hash(input.toArray()));
+    return Bytes32.wrap(LibIpaMultipoint.hashMany(input.toArray()));
+  }
+
+  @Override
+  public List<Bytes32> manyGroupToField(final Bytes[] inputs) {
+    final Bytes hashMany =
+        Bytes.wrap(LibIpaMultipoint.hashMany(Bytes.concatenate(inputs).toArray()));
+    final List<Bytes32> hashes = new ArrayList<>();
+    for (int i = 0; i < inputs.length; i++) {
+      // Slice input into 16 byte segments
+      hashes.add(Bytes32.wrap(hashMany.slice(i * Bytes32.SIZE, Bytes32.SIZE)));
+    }
+    return hashes;
   }
 
   /**

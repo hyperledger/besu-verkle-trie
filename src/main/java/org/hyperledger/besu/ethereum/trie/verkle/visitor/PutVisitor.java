@@ -39,15 +39,18 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
   private Bytes visited; // add consumed bytes to visited
   private Optional<V> oldValue;
 
+  private final Optional<BatchProcessor> batchProcessor;
+
   /**
    * Constructs a new PutVisitor with the provided value to insert or update.
    *
    * @param value The value to be inserted or updated in the Verkle Trie.
    */
-  public PutVisitor(V value) {
+  public PutVisitor(final V value, final Optional<BatchProcessor> batchProcessor) {
     this.value = value;
     this.visited = Bytes.EMPTY;
     this.oldValue = Optional.empty();
+    this.batchProcessor = batchProcessor;
   }
 
   /**
@@ -65,6 +68,8 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     final Node<V> updatedChild = internalNode.child(index).accept(this, path.slice(1));
     internalNode.replaceChild(index, updatedChild);
     if (updatedChild.isDirty()) {
+      batchProcessor.ifPresent(
+          processor -> processor.addNodeToBatch(internalNode.getLocation(), internalNode));
       internalNode.markDirty();
     }
     return internalNode;
@@ -91,6 +96,8 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
       final Node<V> updatedChild = stemNode.child(index).accept(this, fullPath);
       stemNode.replaceChild(index, updatedChild);
       if (updatedChild.isDirty()) {
+        batchProcessor.ifPresent(
+            processor -> processor.addNodeToBatch(stemNode.getLocation(), stemNode));
         stemNode.markDirty();
       }
       return stemNode;
@@ -98,7 +105,11 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
       InternalNode<V> newNode = new InternalNode<V>(location);
       final int depth = location.size();
       StemNode<V> updatedStemNode = stemNode.replaceLocation(stem.slice(0, depth + 1));
+      batchProcessor.ifPresent(
+          processor -> processor.addNodeToBatch(updatedStemNode.getLocation(), updatedStemNode));
       newNode.replaceChild(stem.get(depth), updatedStemNode);
+      batchProcessor.ifPresent(
+          processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
       newNode.markDirty();
       return newNode.accept(this, path);
     }
@@ -118,6 +129,8 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     oldValue = leafNode.getValue();
     if (oldValue != value) {
       newNode = new LeafNode<V>(leafNode.getLocation(), value);
+      batchProcessor.ifPresent(
+          processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
       newNode.markDirty();
     } else {
       newNode = leafNode;
@@ -138,8 +151,11 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     assert path.size() < 33;
     // Replace NullNode with a StemNode and visit it
     final Bytes leafKey = Bytes.concatenate(visited, path);
-    StemNode<V> stemNode = new StemNode<V>(visited, leafKey);
-    return stemNode.accept(this, path);
+    final StemNode<V> stemNode = new StemNode<V>(visited, leafKey);
+    final Node<V> updatedNode = stemNode.accept(this, path);
+    batchProcessor.ifPresent(
+        processor -> processor.addNodeToBatch(updatedNode.getLocation(), updatedNode));
+    return updatedNode;
   }
 
   /**
@@ -153,7 +169,8 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
   public Node<V> visit(final NullLeafNode<V> nullLeafNode, final Bytes path) {
     assert path.size() < 33;
     oldValue = Optional.empty();
-    LeafNode<V> newNode = new LeafNode<V>(visited, value);
+    LeafNode<V> newNode = new LeafNode<>(visited, value);
+    batchProcessor.ifPresent(processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
     visited = Bytes.EMPTY;
     return newNode;
   }

@@ -119,8 +119,9 @@ public class InternalNode<V> extends BranchNode<V> {
    * @return A new InternalNode with the updated vector commitment.
    */
   public Node<V> replaceHash(Bytes32 hash, Bytes commitment) {
-    return new InternalNode<V>(
-        getLocation(), Optional.of(hash), Optional.of(commitment), getChildren());
+    this.hash = Optional.of(hash);
+    this.commitment = Optional.of(commitment);
+    return this;
   }
 
   /**

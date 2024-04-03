@@ -39,8 +39,15 @@ import org.apache.tuweni.bytes.Bytes;
 public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   private final Node<V> NULL_NODE = NullNode.instance();
   private final Node<V> NULL_LEAF_NODE = NullLeafNode.instance();
-  private final FlattenVisitor<V> flatten = new FlattenVisitor<>();
   private final GetVisitor<V> getter = new GetVisitor<>();
+
+  private final Optional<BatchProcessor> batchProcessor;
+  private final FlattenVisitor<V> flatten;
+
+  public RemoveVisitor(final Optional<BatchProcessor> batchProcessor) {
+    this.batchProcessor = batchProcessor;
+    this.flatten = new FlattenVisitor<>(batchProcessor);
+  }
 
   /**
    * Visits a internal node to remove a node associated with the provided path and maintain the
@@ -59,6 +66,8 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     final boolean wasChildNullified = (childNode != NULL_NODE && updatedChild == NULL_NODE);
     if (updatedChild.isDirty() || wasChildNullified) {
       internalNode.markDirty();
+      batchProcessor.ifPresent(
+          processor -> processor.addNodeToBatch(internalNode.getLocation(), internalNode));
     }
     final Optional<Byte> onlyChildIndex = findOnlyChild(internalNode);
     if (onlyChildIndex.isEmpty()) {
@@ -87,9 +96,13 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     final Node<V> newChild = child.accept(this, path);
     stemNode.replaceChild(childIndex, newChild);
     if (allLeavesAreNull(stemNode)) {
+      batchProcessor.ifPresent(
+          processor -> processor.addNodeToBatch(stemNode.getLocation(), NULL_NODE));
       return NULL_NODE;
     }
     if (child != NULL_LEAF_NODE) { // Removed a genuine leaf-node
+      batchProcessor.ifPresent(
+          processor -> processor.addNodeToBatch(stemNode.getLocation(), stemNode));
       stemNode.markDirty();
     }
     return stemNode;
@@ -105,6 +118,8 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(LeafNode<V> leafNode, Bytes path) {
+    batchProcessor.ifPresent(
+        processor -> processor.addNodeToBatch(leafNode.getLocation(), NULL_LEAF_NODE));
     return NULL_LEAF_NODE;
   }
 

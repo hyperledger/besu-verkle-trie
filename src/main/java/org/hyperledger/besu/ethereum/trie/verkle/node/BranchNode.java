@@ -33,8 +33,8 @@ import org.apache.tuweni.bytes.Bytes32;
  */
 public abstract class BranchNode<V> implements Node<V> {
   private final Optional<Bytes> location; // Location in the tree
-  private final Optional<Bytes32> hash; // Vector commitment's hash
-  private final Optional<Bytes> commitment; // Vector commitment serialized
+  protected Optional<Bytes32> hash; // Vector commitment's hash
+  protected Optional<Bytes> commitment; // Vector commitment serialized
   private final List<Node<V>> children; // List of children nodes
 
   private boolean dirty = true; // not persisted

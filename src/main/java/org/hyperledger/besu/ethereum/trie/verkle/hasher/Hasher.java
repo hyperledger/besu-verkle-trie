@@ -40,6 +40,8 @@ public interface Hasher {
    */
   Bytes32 commitRoot(Bytes32[] inputs);
 
+  List<Bytes32> manyGroupToField(Bytes[] inputs);
+
   /**
    * Calculates the hash for an address and index.
    *

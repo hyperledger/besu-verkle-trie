@@ -68,11 +68,6 @@ public class SimpleBatchedVerkleTrie<K extends Bytes, V extends Bytes>
     return visitor.getOldValue();
   }
 
-  /**
-   * Removes a key-value pair from the Verkle Trie.
-   *
-   * @param key The key to remove.
-   */
   @Override
   public void remove(final K key) {
     checkNotNull(key);

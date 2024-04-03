@@ -77,7 +77,6 @@ public class SimpleBatchedVerkleTrie<K extends Bytes, V extends Bytes>
   public void remove(final K key) {
     checkNotNull(key);
     this.root = root.accept(new RemoveVisitor<V>(Optional.of(batchProcessor)), key);
-    System.out.println(root);
   }
 
   @Override

@@ -303,10 +303,8 @@ public class SimpleVerkleTrieTest {
     trie.put(key1, value1);
     trie.put(key2, value2);
     final Bytes32 expectedIntermediateRootHash = trie.getRootHash();
-    System.out.println(expectedIntermediateRootHash);
     trie.put(key3, value3);
     final Bytes32 expectedIntermediateRootHash2 = trie.getRootHash();
-    System.out.println(expectedIntermediateRootHash2);
     trie.put(key4, value4);
     trie.put(key5, value5);
     trie.put(key6, value6);

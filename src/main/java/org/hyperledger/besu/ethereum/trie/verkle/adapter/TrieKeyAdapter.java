@@ -43,6 +43,8 @@ import org.apache.tuweni.units.bigints.UInt256;
  */
 public class TrieKeyAdapter {
 
+  private static final int CHUNK_SIZE = 31;
+
   private final Hasher hasher;
 
   /**
@@ -176,7 +178,7 @@ public class TrieKeyAdapter {
   }
 
   public int getNbChunk(Bytes bytecode) {
-    return bytecode.isEmpty() ? 0 : 1 + (bytecode.size() - 1) / 31;
+    return bytecode.isEmpty() ? 0 : (1 + ((bytecode.size() - 1) / CHUNK_SIZE));
   }
   /**
    * Chunk code's bytecode for insertion in the Trie. Each chunk code uses its position in the list
@@ -192,7 +194,7 @@ public class TrieKeyAdapter {
 
     // Chunking variables
     final int CHUNK_SIZE = 31;
-    int nChunks = 1 + ((bytecode.size() - 1) / CHUNK_SIZE);
+    int nChunks = getNbChunk(bytecode);
     int padSize = nChunks * CHUNK_SIZE - bytecode.size();
     final Bytes code = Bytes.concatenate(bytecode, Bytes.repeat((byte) 0, padSize));
     final List<UInt256> chunks = new ArrayList<>(nChunks);

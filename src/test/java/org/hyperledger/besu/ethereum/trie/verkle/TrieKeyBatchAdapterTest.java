@@ -44,23 +44,6 @@ public class TrieKeyBatchAdapterTest {
   TrieKeyBatchAdapter adapter = new TrieKeyBatchAdapter(new PedersenHasher());
 
   @Test
-  public void testAccountKeys2() {
-    final List<Bytes32> expectedIndexesAcxc = new ArrayList<>();
-    expectedIndexesAcxc.add(UInt256.valueOf(0));
-
-    final List<Bytes32> expectedIndexes = new ArrayList<>();
-    expectedIndexes.add(UInt256.valueOf(0));
-    expectedIndexes.add(UInt256.valueOf(257));
-
-    final Map<Bytes32, Bytes32> generatedHashes =
-        adapter.manyTrieKeyHashes(address, expectedIndexesAcxc, new ArrayList<>(), expectedIndexes);
-    generatedHashes.forEach(
-        (bytes32, bytes322) -> {
-          System.out.println(bytes32 + " " + bytes322);
-        });
-  }
-
-  @Test
   public void testAccountKeys() {
     final List<Bytes32> expectedIndexes = new ArrayList<>();
     expectedIndexes.add(Parameters.VERSION_LEAF_KEY);

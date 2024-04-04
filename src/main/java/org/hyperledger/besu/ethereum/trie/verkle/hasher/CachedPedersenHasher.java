@@ -65,4 +65,9 @@ public class CachedPedersenHasher implements Hasher {
   public Bytes32 groupToField(final Bytes bytes) {
     return fallbackHasher.groupToField(bytes);
   }
+
+  @Override
+  public List<Bytes32> manyGroupToField(final Bytes[] inputs) {
+    return fallbackHasher.manyGroupToField(inputs);
+  }
 }

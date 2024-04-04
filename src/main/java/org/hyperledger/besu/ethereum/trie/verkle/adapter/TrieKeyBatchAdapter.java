@@ -20,7 +20,6 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_N
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -41,7 +40,7 @@ public class TrieKeyBatchAdapter extends TrieKeyAdapter {
     super(hasher);
   }
 
-  public Map<Bytes32, Bytes32> manyAccountTrieKeys(
+  public Map<Bytes32, Bytes32> manyTrieKeyHashes(
       final Bytes address,
       final List<Bytes32> headerKeys,
       final List<Bytes32> storageKeys,
@@ -61,33 +60,6 @@ public class TrieKeyBatchAdapter extends TrieKeyAdapter {
       offsets.add(codeChunkOffset.divide(VERKLE_NODE_WIDTH));
     }
 
-    final Map<Bytes32, Bytes32> hashes =
-        getHasher().manyTrieKeyHashes(address, new ArrayList<>(offsets));
-
-    final Map<Bytes32, Bytes32> trieKeys = new HashMap<>();
-
-    // header part
-    for (Bytes32 headerKey : headerKeys) {
-      trieKeys.put(headerKey, swapLastByte(hashes.get(UInt256.ZERO), headerKey));
-    }
-    // storage
-    for (Bytes32 storageKey : storageKeys) {
-      final UInt256 storageOffset = locateStorageKeyOffset(storageKey);
-      trieKeys.put(
-          storageKey,
-          swapLastByte(
-              hashes.get(storageOffset.divide(VERKLE_NODE_WIDTH)),
-              storageOffset.mod(VERKLE_NODE_WIDTH)));
-    }
-    for (Bytes32 codeChunkId : codeChunkIds) {
-      final UInt256 codeChunkOffset = locateCodeChunkKeyOffset(codeChunkId);
-      trieKeys.put(
-          codeChunkId,
-          swapLastByte(
-              hashes.get(codeChunkOffset.divide(VERKLE_NODE_WIDTH)),
-              codeChunkOffset.mod(VERKLE_NODE_WIDTH)));
-    }
-
-    return trieKeys;
+    return getHasher().manyTrieKeyHashes(address, new ArrayList<>(offsets));
   }
 }

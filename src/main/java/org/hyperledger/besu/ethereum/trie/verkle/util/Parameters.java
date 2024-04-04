@@ -23,8 +23,10 @@ public class Parameters {
   public static final UInt256 NONCE_LEAF_KEY = UInt256.valueOf(2);
   public static final UInt256 CODE_KECCAK_LEAF_KEY = UInt256.valueOf(3);
   public static final UInt256 CODE_SIZE_LEAF_KEY = UInt256.valueOf(4);
+
   public static final UInt256 HEADER_STORAGE_OFFSET = UInt256.valueOf(64);
-  public static final UInt256 CODE_OFFSET = UInt256.valueOf(128);
-  public static final UInt256 VERKLE_NODE_WIDTH = UInt256.valueOf(256);
   public static final UInt256 MAIN_STORAGE_OFFSET = UInt256.valueOf(256).pow(31);
+  public static final UInt256 CODE_OFFSET = UInt256.valueOf(128);
+  public static final UInt256 HEADER_STORAGE_SIZE = CODE_OFFSET.subtract(HEADER_STORAGE_OFFSET);
+  public static final UInt256 VERKLE_NODE_WIDTH = UInt256.valueOf(256);
 }

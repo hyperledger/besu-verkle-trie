@@ -20,6 +20,7 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_KEC
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_OFFSET;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_SIZE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_STORAGE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_STORAGE_SIZE;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.MAIN_STORAGE_OFFSET;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.NONCE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH;
@@ -53,6 +54,11 @@ public class TrieKeyAdapter {
     this.hasher = hasher;
   }
 
+  /**
+   * Retrieves the hasher used for key generation
+   *
+   * @return The {@link Hasher} instance used for key generation operations.
+   */
   public Hasher getHasher() {
     return hasher;
   }
@@ -73,9 +79,8 @@ public class TrieKeyAdapter {
 
   protected UInt256 locateStorageKeyOffset(Bytes32 storageKey) {
     UInt256 index = UInt256.fromBytes(storageKey);
-    UInt256 headerOffset = CODE_OFFSET.subtract(HEADER_STORAGE_OFFSET);
     UInt256 offset =
-        ((index.compareTo(headerOffset) < 0) ? HEADER_STORAGE_OFFSET : MAIN_STORAGE_OFFSET);
+        ((index.compareTo(HEADER_STORAGE_SIZE) < 0) ? HEADER_STORAGE_OFFSET : MAIN_STORAGE_OFFSET);
     return offset.add(index);
   }
 
@@ -116,7 +121,7 @@ public class TrieKeyAdapter {
    * @return The modified key.
    */
   Bytes32 swapLastByte(Bytes32 base, Bytes32 subIndex) {
-    Bytes lastByte = Bytes.of(subIndex.reverse().get(0));
+    final Bytes lastByte = subIndex.slice(31, 1);
     return (Bytes32) Bytes.concatenate(base.slice(0, 31), lastByte);
   }
 
@@ -170,6 +175,9 @@ public class TrieKeyAdapter {
     return (headerKey(address, CODE_SIZE_LEAF_KEY));
   }
 
+  public int getNbChunk(Bytes bytecode) {
+    return bytecode.isEmpty() ? 0 : 1 + (bytecode.size() - 1) / 31;
+  }
   /**
    * Chunk code's bytecode for insertion in the Trie. Each chunk code uses its position in the list
    * as chunkId
@@ -179,7 +187,7 @@ public class TrieKeyAdapter {
    */
   public List<UInt256> chunkifyCode(Bytes bytecode) {
     if (bytecode.isEmpty()) {
-      return new ArrayList<UInt256>();
+      return new ArrayList<>();
     }
 
     // Chunking variables
@@ -187,7 +195,7 @@ public class TrieKeyAdapter {
     int nChunks = 1 + ((bytecode.size() - 1) / CHUNK_SIZE);
     int padSize = nChunks * CHUNK_SIZE - bytecode.size();
     final Bytes code = Bytes.concatenate(bytecode, Bytes.repeat((byte) 0, padSize));
-    final List<UInt256> chunks = new ArrayList<UInt256>(nChunks);
+    final List<UInt256> chunks = new ArrayList<>(nChunks);
 
     // OpCodes for PUSH's
     final int PUSH_OFFSET = 95;

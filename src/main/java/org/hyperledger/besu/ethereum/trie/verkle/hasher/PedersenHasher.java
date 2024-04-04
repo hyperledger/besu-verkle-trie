@@ -109,11 +109,6 @@ public class PedersenHasher implements Hasher {
     final Bytes hash =
         Bytes.wrap(
             LibIpaMultipoint.hash(LibIpaMultipoint.commit(Bytes.concatenate(chunks).toArray())));
-
-    // commitRoot returns the hash in big endian format, so we reverse it to get it
-    // in little endian
-    // format. When we migrate to using `groupToField`, this reverse will not be
-    // needed.
     return Bytes32.wrap(hash);
   }
 

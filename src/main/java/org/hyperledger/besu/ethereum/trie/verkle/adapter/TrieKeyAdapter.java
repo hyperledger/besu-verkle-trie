@@ -122,7 +122,7 @@ public class TrieKeyAdapter {
    * @param subIndex The subIndex.
    * @return The modified key.
    */
-  Bytes32 swapLastByte(Bytes32 base, Bytes32 subIndex) {
+  public Bytes32 swapLastByte(Bytes32 base, Bytes32 subIndex) {
     final Bytes lastByte = subIndex.slice(31, 1);
     return (Bytes32) Bytes.concatenate(base.slice(0, 31), lastByte);
   }

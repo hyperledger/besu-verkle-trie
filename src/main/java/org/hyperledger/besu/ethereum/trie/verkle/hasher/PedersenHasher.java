@@ -17,6 +17,12 @@ package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
 import org.hyperledger.besu.nativelib.ipamultipoint.LibIpaMultipoint;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
@@ -82,6 +88,51 @@ public class PedersenHasher implements Hasher {
   @Override
   public Bytes32 trieKeyHash(Bytes address, Bytes32 index) {
 
+    // Pad the address so that it is 32 bytes
+    final Bytes32 addr = Bytes32.leftPad(address);
+
+    final Bytes32[] chunks = generateTrieKeyChunks(addr, index);
+
+    final Bytes hash =
+        Bytes.wrap(
+            LibIpaMultipoint.hash(LibIpaMultipoint.commit(Bytes.concatenate(chunks).toArray())));
+    return Bytes32.wrap(hash);
+  }
+
+  /**
+   * Calculates the hash for an address and indexes.
+   *
+   * @param address Account address.
+   * @param indexes list of indexes in storage.
+   * @return The list of trie-key hashes
+   */
+  @Override
+  public Map<Bytes32, Bytes32> manyTrieKeyHashes(Bytes address, List<Bytes32> indexes) {
+
+    // Pad the address so that it is 32 bytes
+    final Bytes32 addr = Bytes32.leftPad(address);
+
+    try (ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
+      for (Bytes32 index : indexes) {
+        outputStream.writeBytes(
+            LibIpaMultipoint.commit(
+                Bytes.concatenate(generateTrieKeyChunks(addr, index)).toArray()));
+      }
+
+      final Bytes hashMany = Bytes.wrap(LibIpaMultipoint.hashMany(outputStream.toByteArray()));
+
+      final Map<Bytes32, Bytes32> hashes = new HashMap<>();
+      for (int i = 0; i < indexes.size(); i++) {
+        // Slice input into 16 byte segments
+        hashes.put(indexes.get(i), Bytes32.wrap(hashMany.slice(i * Bytes32.SIZE, Bytes32.SIZE)));
+      }
+      return hashes;
+    } catch (IOException e) {
+      throw new RuntimeException("unable to generate trie key hash", e);
+    }
+  }
+
+  private Bytes32[] generateTrieKeyChunks(final Bytes address, final Bytes32 index) {
     // Reverse the index so that it is in little endian format
     final Bytes32 indexLE = Bytes32.wrap(index.reverse());
 
@@ -103,11 +154,6 @@ public class PedersenHasher implements Hasher {
       // Pad each chunk to make it 32 bytes
       chunks[i + 1] = Bytes32.rightPad(chunk);
     }
-
-    final Bytes hash =
-        Bytes.wrap(
-            LibIpaMultipoint.hash(LibIpaMultipoint.commit(Bytes.concatenate(chunks).toArray())));
-
-    return Bytes32.wrap(hash);
+    return chunks;
   }
 }

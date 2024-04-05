@@ -20,6 +20,7 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_KEC
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_OFFSET;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_SIZE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_STORAGE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_STORAGE_SIZE;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.MAIN_STORAGE_OFFSET;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.NONCE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH;
@@ -42,6 +43,8 @@ import org.apache.tuweni.units.bigints.UInt256;
  */
 public class TrieKeyAdapter {
 
+  private static final int CHUNK_SIZE = 31;
+
   private final Hasher hasher;
 
   /**
@@ -54,15 +57,12 @@ public class TrieKeyAdapter {
   }
 
   /**
-   * Swaps the last byte of the base key with a given subIndex.
+   * Retrieves the hasher used for key generation
    *
-   * @param base The base key.
-   * @param subIndex The subIndex.
-   * @return The modified key.
+   * @return The {@link Hasher} instance used for key generation operations.
    */
-  public Bytes32 swapLastByte(Bytes32 base, UInt256 subIndex) {
-    Bytes lastByte = Bytes.of(subIndex.toBytes().reverse().get(0));
-    return (Bytes32) Bytes.concatenate(base.slice(0, 31), lastByte);
+  public Hasher getHasher() {
+    return hasher;
   }
 
   /**
@@ -73,25 +73,17 @@ public class TrieKeyAdapter {
    * @return The generated storage key.
    */
   public Bytes32 storageKey(Bytes address, Bytes32 storageKey) {
-    UInt256 index = UInt256.fromBytes(storageKey);
-    UInt256 headerOffset = CODE_OFFSET.subtract(HEADER_STORAGE_OFFSET);
-    UInt256 offset =
-        ((index.compareTo(headerOffset) < 0) ? HEADER_STORAGE_OFFSET : MAIN_STORAGE_OFFSET);
-    UInt256 pos = offset.add(index);
+    UInt256 pos = locateStorageKeyOffset(storageKey);
     Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH));
     Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
     return key;
   }
 
-  /**
-   * Generates a code chunk key for a given address and chunkId.
-   *
-   * @param address The address.
-   * @param chunkId The chunk ID.
-   * @return The generated code chunk key.
-   */
-  public Bytes32 codeChunkKey(Bytes address, int chunkId) {
-    return codeChunkKey(address, UInt256.valueOf(chunkId));
+  protected UInt256 locateStorageKeyOffset(Bytes32 storageKey) {
+    UInt256 index = UInt256.fromBytes(storageKey);
+    UInt256 offset =
+        ((index.compareTo(HEADER_STORAGE_SIZE) < 0) ? HEADER_STORAGE_OFFSET : MAIN_STORAGE_OFFSET);
+    return offset.add(index);
   }
 
   /**
@@ -102,10 +94,13 @@ public class TrieKeyAdapter {
    * @return The generated code chunk key.
    */
   public Bytes32 codeChunkKey(Bytes address, UInt256 chunkId) {
-    UInt256 pos = CODE_OFFSET.add(chunkId);
-    Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH).toBytes());
-    Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
-    return key;
+    UInt256 pos = locateCodeChunkKeyOffset(chunkId);
+    Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH));
+    return swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
+  }
+
+  protected UInt256 locateCodeChunkKeyOffset(Bytes32 chunkId) {
+    return CODE_OFFSET.add(UInt256.fromBytes(chunkId));
   }
 
   /**
@@ -117,8 +112,19 @@ public class TrieKeyAdapter {
    */
   Bytes32 headerKey(Bytes address, UInt256 leafKey) {
     Bytes32 base = hasher.trieKeyHash(address, UInt256.valueOf(0).toBytes());
-    Bytes32 key = swapLastByte(base, leafKey);
-    return key;
+    return swapLastByte(base, leafKey);
+  }
+
+  /**
+   * Swaps the last byte of the base key with a given subIndex.
+   *
+   * @param base The base key.
+   * @param subIndex The subIndex.
+   * @return The modified key.
+   */
+  public Bytes32 swapLastByte(Bytes32 base, Bytes32 subIndex) {
+    final Bytes lastByte = subIndex.slice(31, 1);
+    return (Bytes32) Bytes.concatenate(base.slice(0, 31), lastByte);
   }
 
   /**
@@ -171,6 +177,9 @@ public class TrieKeyAdapter {
     return (headerKey(address, CODE_SIZE_LEAF_KEY));
   }
 
+  public int getNbChunk(Bytes bytecode) {
+    return bytecode.isEmpty() ? 0 : (1 + ((bytecode.size() - 1) / CHUNK_SIZE));
+  }
   /**
    * Chunk code's bytecode for insertion in the Trie. Each chunk code uses its position in the list
    * as chunkId
@@ -178,17 +187,17 @@ public class TrieKeyAdapter {
    * @param bytecode Code's bytecode
    * @return List of 32-bytes code chunks
    */
-  public List<Bytes32> chunkifyCode(Bytes bytecode) {
+  public List<UInt256> chunkifyCode(Bytes bytecode) {
     if (bytecode.isEmpty()) {
-      return new ArrayList<Bytes32>();
+      return new ArrayList<>();
     }
 
     // Chunking variables
     final int CHUNK_SIZE = 31;
-    int nChunks = 1 + ((bytecode.size() - 1) / CHUNK_SIZE);
+    int nChunks = getNbChunk(bytecode);
     int padSize = nChunks * CHUNK_SIZE - bytecode.size();
     final Bytes code = Bytes.concatenate(bytecode, Bytes.repeat((byte) 0, padSize));
-    final List<Bytes32> chunks = new ArrayList<Bytes32>(nChunks);
+    final List<UInt256> chunks = new ArrayList<>(nChunks);
 
     // OpCodes for PUSH's
     final int PUSH_OFFSET = 95;
@@ -212,9 +221,9 @@ public class TrieKeyAdapter {
         }
       }
       chunks.add(
-          (Bytes32)
+          UInt256.fromBytes(
               Bytes.concatenate(
-                  Bytes.of(Math.min(nPushData, 31)), code.slice(chunkPos, CHUNK_SIZE)));
+                  Bytes.of(Math.min(nPushData, 31)), code.slice(chunkPos, CHUNK_SIZE))));
       nPushData = posInChunk - CHUNK_SIZE;
     }
 

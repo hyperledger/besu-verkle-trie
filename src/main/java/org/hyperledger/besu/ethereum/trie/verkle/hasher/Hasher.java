@@ -25,10 +25,10 @@ import org.apache.tuweni.bytes.Bytes32;
 public interface Hasher {
 
   /**
-   * Calculates the commitment hash for an array of inputs.
+   * Commit to a vector of values.
    *
-   * @param inputs An array of values to be hashed.
-   * @return The uncompressed serialized commitment.
+   * @param inputs vector of serialised scalars to commit to.
+   * @return uncompressed serialised commitment.
    */
   Bytes commit(Bytes32[] inputs);
 
@@ -40,7 +40,24 @@ public interface Hasher {
    */
   Bytes32 commitRoot(Bytes32[] inputs);
 
-  List<Bytes32> hashMany(Bytes[] inputs);
+  /**
+   * Convert a commitment to its corresponding scalar.
+   *
+   * @param commitment uncompressed serialised commitment
+   * @return serialised scalar
+   */
+  Bytes32 hash(Bytes commitment);
+
+  /**
+   * Map a vector of commitments to its corresponding vector of scalars.
+   *
+   * <p>The vectorised version is highly optimised, making use of Montgoméry's batch inversion
+   * trick.
+   *
+   * @param commitments uncompressed serialised commitments
+   * @return serialised scalars
+   */
+  List<Bytes32> hashMany(Bytes[] commitments);
 
   /**
    * Calculates the hash for an address and index.
@@ -59,6 +76,4 @@ public interface Hasher {
    * @return The list of trie-key hashes
    */
   Map<Bytes32, Bytes32> manyTrieKeyHashes(Bytes address, List<Bytes32> indexes);
-
-  Bytes32 hash(Bytes commitment);
 }

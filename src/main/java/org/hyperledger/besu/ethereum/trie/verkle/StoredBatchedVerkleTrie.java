@@ -16,7 +16,6 @@
 package org.hyperledger.besu.ethereum.trie.verkle;
 
 import org.hyperledger.besu.ethereum.trie.verkle.factory.NodeFactory;
-import org.hyperledger.besu.ethereum.trie.verkle.visitor.BatchProcessor;
 
 import org.apache.tuweni.bytes.Bytes;
 
@@ -38,7 +37,7 @@ public class StoredBatchedVerkleTrie<K extends Bytes, V extends Bytes>
    * @param nodeFactory The {@link NodeFactory} to retrieve node.
    */
   public StoredBatchedVerkleTrie(
-      final BatchProcessor batchProcessor, final NodeFactory<V> nodeFactory) {
+      final VerkleTreeBatchHasher batchProcessor, final NodeFactory<V> nodeFactory) {
     super(nodeFactory.retrieve(Bytes.EMPTY, null), batchProcessor);
     this.nodeFactory = nodeFactory;
   }

@@ -19,7 +19,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.hyperledger.besu.ethereum.trie.NodeUpdater;
 import org.hyperledger.besu.ethereum.trie.verkle.factory.StoredNodeFactory;
-import org.hyperledger.besu.ethereum.trie.verkle.visitor.BatchProcessor;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -35,7 +34,7 @@ public class StoredBatchedVerkleTrieTest {
   public void testEmptyTrie() {
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
-    BatchProcessor batchProcessor = new BatchProcessor();
+    VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
     StoredNodeFactory<Bytes32> nodeFactory =
         new StoredNodeFactory<>(nodeLoader, value -> (Bytes32) value);
     StoredBatchedVerkleTrie<Bytes32, Bytes32> trie =
@@ -51,7 +50,7 @@ public class StoredBatchedVerkleTrieTest {
   public void testOneValue() {
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
-    BatchProcessor batchProcessor = new BatchProcessor();
+    VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
     StoredNodeFactory<Bytes32> nodeFactory =
         new StoredNodeFactory<>(nodeLoader, value -> (Bytes32) value);
     StoredBatchedVerkleTrie<Bytes32, Bytes32> trie =
@@ -73,7 +72,7 @@ public class StoredBatchedVerkleTrieTest {
   public void testTwoValuesAtSameStem() throws Exception {
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
-    BatchProcessor batchProcessor = new BatchProcessor();
+    VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
     StoredNodeFactory<Bytes32> nodeFactory =
         new StoredNodeFactory<>(nodeLoader, value -> (Bytes32) value);
     StoredBatchedVerkleTrie<Bytes32, Bytes32> trie =
@@ -101,7 +100,7 @@ public class StoredBatchedVerkleTrieTest {
   public void testTwoValuesAtDifferentIndex() throws Exception {
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
-    BatchProcessor batchProcessor = new BatchProcessor();
+    VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
     StoredNodeFactory<Bytes32> nodeFactory =
         new StoredNodeFactory<>(nodeLoader, value -> (Bytes32) value);
     StoredBatchedVerkleTrie<Bytes32, Bytes32> trie =
@@ -129,7 +128,7 @@ public class StoredBatchedVerkleTrieTest {
   public void testTwoValuesWithDivergentStemsAtDepth2() throws Exception {
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
-    BatchProcessor batchProcessor = new BatchProcessor();
+    VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
     StoredNodeFactory<Bytes32> nodeFactory =
         new StoredNodeFactory<>(nodeLoader, value -> (Bytes32) value);
     StoredBatchedVerkleTrie<Bytes32, Bytes32> trie =
@@ -157,7 +156,7 @@ public class StoredBatchedVerkleTrieTest {
   public void testDeleteThreeValues() throws Exception {
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
-    BatchProcessor batchProcessor = new BatchProcessor();
+    VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
     StoredNodeFactory<Bytes32> nodeFactory =
         new StoredNodeFactory<>(nodeLoader, value -> (Bytes32) value);
     StoredBatchedVerkleTrie<Bytes32, Bytes32> trie =
@@ -191,7 +190,7 @@ public class StoredBatchedVerkleTrieTest {
   public void testDeleteThreeValuesWithFlattening() throws Exception {
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
-    BatchProcessor batchProcessor = new BatchProcessor();
+    VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
     StoredNodeFactory<Bytes32> nodeFactory =
         new StoredNodeFactory<>(nodeLoader, value -> (Bytes32) value);
     StoredBatchedVerkleTrie<Bytes32, Bytes32> trie =
@@ -225,7 +224,7 @@ public class StoredBatchedVerkleTrieTest {
   public void testDeleteManyValuesWithDivergentStemsAtDepth2() throws Exception {
     final Map<Bytes, Bytes> map = new HashMap<>();
 
-    BatchProcessor batchProcessor = new BatchProcessor();
+    VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
     StoredBatchedVerkleTrie<Bytes, Bytes> trie =
         new StoredBatchedVerkleTrie<>(
             batchProcessor,
@@ -293,7 +292,7 @@ public class StoredBatchedVerkleTrieTest {
   public void testAddAndRemoveKeysWithMultipleTreeReloads() throws Exception {
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
-    BatchProcessor batchProcessor = new BatchProcessor();
+    VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
     StoredNodeFactory<Bytes32> nodeFactory =
         new StoredNodeFactory<>(nodeLoader, value -> (Bytes32) value);
     StoredBatchedVerkleTrie<Bytes32, Bytes32> trie =

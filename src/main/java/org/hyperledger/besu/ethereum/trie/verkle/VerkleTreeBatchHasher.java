@@ -13,7 +13,7 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  */
-package org.hyperledger.besu.ethereum.trie.verkle.visitor;
+package org.hyperledger.besu.ethereum.trie.verkle;
 
 import static org.hyperledger.besu.ethereum.trie.verkle.node.Node.getLowValue;
 
@@ -43,14 +43,15 @@ import org.apache.tuweni.bytes.Bytes32;
  *
  * <p>This class manages the batching and hashing of trie nodes to optimize performance.
  */
-public class BatchProcessor {
+public class VerkleTreeBatchHasher {
 
-  private static final Logger LOG = LogManager.getLogger(BatchProcessor.class);
+  private static final Logger LOG = LogManager.getLogger(VerkleTreeBatchHasher.class);
   private static final int MAX_BATCH_SIZE = 1000; // Maximum number of nodes in a batch
 
   private final Hasher hasher = new PedersenHasher(); // Hasher for node hashing
-  private final Map<Bytes, Node<?>> nodeToBatch = new HashMap<>(); // Map to hold nodes for batching
-  private int currentBatchDepth = -1; // Tracks the depth of the current batch
+  private final Map<Bytes, Node<?>> updatedNodes =
+      new HashMap<>(); // Map to hold nodes for batching
+  private int currentDepth = -1; // Tracks the depth of the current batch
 
   /**
    * Adds a node for future batching. If the node is a NullNode or NullLeafNode and the location is
@@ -62,9 +63,9 @@ public class BatchProcessor {
   public void addNodeToBatch(final Optional<Bytes> location, final Node<?> node) {
     if ((node instanceof NullNode<?> || node instanceof NullLeafNode<?>)
         && !location.orElseThrow().isEmpty()) {
-      nodeToBatch.remove(location.orElseThrow());
+      updatedNodes.remove(location.orElseThrow());
     } else {
-      nodeToBatch.put(location.orElseThrow(), node);
+      updatedNodes.put(location.orElseThrow(), node);
     }
   }
 
@@ -74,7 +75,7 @@ public class BatchProcessor {
    * @return Map of nodes to be batched.
    */
   public Map<Bytes, Node<?>> getNodeToBatch() {
-    return nodeToBatch;
+    return updatedNodes;
   }
 
   /**
@@ -82,42 +83,37 @@ public class BatchProcessor {
    * Clears the batch after processing.
    */
   public void processInBatches() {
-    if (nodeToBatch.isEmpty()) {
+    if (updatedNodes.isEmpty()) {
       return;
     }
-    final List<Map.Entry<Bytes, Node<?>>> toSort = new ArrayList<>(nodeToBatch.entrySet());
+    final List<Map.Entry<Bytes, Node<?>>> toSort = new ArrayList<>(updatedNodes.entrySet());
     toSort.sort(
         (entry1, entry2) -> Integer.compare(entry2.getKey().size(), entry1.getKey().size()));
-    final List<Node<?>> currentBatch = new ArrayList<>();
+    final List<Node<?>> nodesInSameLevel = new ArrayList<>();
     for (Map.Entry<Bytes, Node<?>> entry : toSort) {
-      Bytes key = entry.getKey();
+      Bytes location = entry.getKey();
       Node<?> node = entry.getValue();
-      if (!(node instanceof NullNode<?>) && !(node instanceof NullLeafNode<?>)) {
-        if (node.getLocation().orElseThrow().isEmpty()) {
-          if (!currentBatch.isEmpty()) {
-            hashMany(currentBatch);
+      if (node instanceof BranchNode<?>) {
+        if (location.isEmpty()) {
+          if (!nodesInSameLevel.isEmpty()) {
+            hashMany(nodesInSameLevel);
           }
           calculateRootInternalNodeHashes((InternalNode<?>) node);
-          nodeToBatch.clear();
+
+          System.out.println("final time commit : " + timeCommit + " hash : " + timeHash);
+          updatedNodes.clear();
           return;
         } else {
-          if (node instanceof BranchNode<?>) {
-            if (key.size() != currentBatchDepth || currentBatch.size() >= MAX_BATCH_SIZE) {
-              if (!currentBatch.isEmpty()) {
-                hashMany(currentBatch);
-                currentBatch.clear();
-              }
-              currentBatchDepth = key.size();
+          if (location.size() != currentDepth || nodesInSameLevel.size() > MAX_BATCH_SIZE) {
+            if (!nodesInSameLevel.isEmpty()) {
+              hashMany(nodesInSameLevel);
+              nodesInSameLevel.clear();
             }
-            if (node.isDirty() || node.getHash().isEmpty() || node.getCommitment().isEmpty()) {
-              currentBatch.add(node);
-            }
+            currentDepth = location.size();
           }
-        }
-      } else {
-        if (key.isEmpty()) {
-          nodeToBatch.clear();
-          return;
+          if (node.isDirty() || node.getHash().isEmpty() || node.getCommitment().isEmpty()) {
+            nodesInSameLevel.add(node);
+          }
         }
       }
     }
@@ -125,9 +121,13 @@ public class BatchProcessor {
     throw new IllegalStateException("root node not found");
   }
 
+  private static long timeHash = 0;
+  private static long timeCommit = 0;
+
   private void hashMany(List<Node<?>> nodes) {
-    LOG.atTrace().log("Start hashing {} nodes", nodes.size());
+    LOG.atInfo().log("Start hashing {} nodes", nodes.size());
     final List<Bytes> commitmentHashes = new ArrayList<>();
+    long start = System.currentTimeMillis();
     for (final Node<?> node : nodes) {
       if (node instanceof StemNode<?>) {
         commitmentHashes.addAll(getStemNodeLeftRightCommitmentHashes((StemNode<?>) node));
@@ -135,12 +135,17 @@ public class BatchProcessor {
         commitmentHashes.addAll(getInternalNodeCommitmentHashes((InternalNode<?>) node));
       }
     }
-    LOG.atTrace().log("Batching {} nodes", commitmentHashes.size());
+    timeCommit += (System.currentTimeMillis() - start);
+    LOG.atInfo().log("Batching {} commitmentHashes", commitmentHashes.size());
+    start = System.currentTimeMillis();
     Iterator<Bytes32> frs =
         hasher.manyGroupToField(commitmentHashes.toArray(new Bytes[0])).iterator();
+    timeHash += (System.currentTimeMillis() - start);
+    LOG.atInfo().log("Finishing Batching {} commitmentHashes", commitmentHashes.size());
 
     commitmentHashes.clear();
 
+    start = System.currentTimeMillis();
     for (final Node<?> node : nodes) {
       if (node instanceof StemNode<?>) {
         commitmentHashes.add(getStemNodeCommitmentHash((StemNode<?>) node, frs));
@@ -148,15 +153,44 @@ public class BatchProcessor {
         calculateInternalNodeHashes((InternalNode<?>) node, frs);
       }
     }
-
+    timeCommit += (System.currentTimeMillis() - start);
+    LOG.atInfo().log("Batching {} commitmentHashes", commitmentHashes.size());
+    start = System.currentTimeMillis();
     frs = hasher.manyGroupToField(commitmentHashes.toArray(new Bytes[0])).iterator();
-    LOG.atTrace().log("Batching {} nodes", commitmentHashes.size());
+    timeHash += (System.currentTimeMillis() - start);
+    LOG.atInfo().log("Finishing Batching {} commitmentHashes", commitmentHashes.size());
+
+    start = System.currentTimeMillis();
     for (final Node<?> node : nodes) {
       if (node instanceof StemNode<?>) {
         calculateStemNodeHashes((StemNode<?>) node, frs);
       }
     }
+    timeCommit += (System.currentTimeMillis() - start);
+
+    LOG.atInfo().log("Finishing commit {} commitmentHashes", commitmentHashes.size());
   }
+
+  /*public Iterator<Bytes32> parallelHash(final List<Bytes> commitmentHashes) {
+    int numberOfSublists = (commitmentHashes.size() + 19) / 20;
+    List<Bytes32> result =
+        IntStream.range(0, numberOfSublists)
+            .boxed() // Boxe les int en Integer pour pouvoir les utiliser dans un stream
+            .parallel() // Convertit le stream en un stream parallèle
+            .flatMap(
+                i -> {
+                  // Calcule l'indice de début et de fin pour chaque sous-liste
+                  int start = i * 20;
+                  int end = Math.min(commitmentHashes.size(), (i + 1) * 20);
+                  // Sélectionne la sous-liste correspondante
+                  List<Bytes> subList = commitmentHashes.subList(start, end);
+                  // Appelle manyGroupToField pour la sous-liste et convertit le résultat en stream
+                  return hasher.manyGroupToField(subList.toArray(new Bytes[0])).stream();
+                })
+            .toList(); // Collecte les résultats dans une liste
+
+    return result.iterator(); // Retourne un itérateur sur les résultats
+  }*/
 
   private void calculateRootInternalNodeHashes(final InternalNode<?> internalNode) {
     final Bytes32 hash = Bytes32.wrap(getInternalNodeCommitmentHashes(internalNode).get(0));

@@ -15,6 +15,7 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
+import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
@@ -39,14 +40,14 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
   private Bytes visited; // add consumed bytes to visited
   private Optional<V> oldValue;
 
-  private final Optional<BatchProcessor> batchProcessor;
+  private final Optional<VerkleTreeBatchHasher> batchProcessor;
 
   /**
    * Constructs a new PutVisitor with the provided value to insert or update.
    *
    * @param value The value to be inserted or updated in the Verkle Trie.
    */
-  public PutVisitor(final V value, final Optional<BatchProcessor> batchProcessor) {
+  public PutVisitor(final V value, final Optional<VerkleTreeBatchHasher> batchProcessor) {
     this.value = value;
     this.visited = Bytes.EMPTY;
     this.oldValue = Optional.empty();

@@ -76,13 +76,13 @@ public class SimpleBatchedVerkleTrie<K extends Bytes, V extends Bytes>
 
   @Override
   public void commit(final NodeUpdater nodeUpdater) {
-    batchProcessor.processInBatches();
+    batchProcessor.calculateStateRoot();
     root = root.accept(new CommitVisitor<V>(nodeUpdater), Bytes.EMPTY);
   }
 
   @Override
   public Bytes32 getRootHash() {
-    batchProcessor.processInBatches();
+    batchProcessor.calculateStateRoot();
     return root.getHash().get();
   }
 }

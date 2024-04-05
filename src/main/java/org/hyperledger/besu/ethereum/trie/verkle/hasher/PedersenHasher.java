@@ -75,12 +75,12 @@ public class PedersenHasher implements Hasher {
    * @return return Fr, to be used in pared commitment.
    */
   @Override
-  public Bytes32 groupToField(Bytes input) {
+  public Bytes32 hash(Bytes input) {
     return Bytes32.wrap(LibIpaMultipoint.hashMany(input.toArray()));
   }
 
   @Override
-  public List<Bytes32> manyGroupToField(final Bytes[] inputs) {
+  public List<Bytes32> hashMany(final Bytes[] inputs) {
     final Bytes hashMany =
         Bytes.wrap(LibIpaMultipoint.hashMany(Bytes.concatenate(inputs).toArray()));
     final List<Bytes32> hashes = new ArrayList<>();

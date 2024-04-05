@@ -64,7 +64,7 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     if (location.isEmpty()) {
       hash = hasher.commitRoot(hashes);
     } else {
-      hash = hasher.groupToField(hasher.commit(hashes));
+      hash = hasher.hash(hasher.commit(hashes));
     }
     return internalNode.replaceHash(hash, hash); // commitment should be different
   }
@@ -101,9 +101,9 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     }
     hashes[0] = Bytes32.rightPad(Bytes.of(1)); // extension marker
     hashes[1] = Bytes32.rightPad(stemNode.getStem());
-    hashes[2] = hasher.groupToField(hasher.commit(leftValues));
-    hashes[3] = hasher.groupToField(hasher.commit(rightValues));
-    final Bytes32 hash = hasher.groupToField(hasher.commit(hashes));
+    hashes[2] = hasher.hash(hasher.commit(leftValues));
+    hashes[3] = hasher.hash(hasher.commit(rightValues));
+    final Bytes32 hash = hasher.hash(hasher.commit(hashes));
     return stemNode.replaceHash(
         hash, hash, hashes[2], hashes[2], hashes[3], hashes[3]); // commitment should be different
   }

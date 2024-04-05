@@ -51,7 +51,6 @@ public class VerkleTreeBatchHasher {
   private final Hasher hasher = new PedersenHasher(); // Hasher for node hashing
   private final Map<Bytes, Node<?>> updatedNodes =
       new HashMap<>(); // Map to hold nodes for batching
-  private int currentDepth = -1; // Tracks the depth of the current batch
 
   /**
    * Adds a node for future batching. If the node is a NullNode or NullLeafNode and the location is
@@ -74,7 +73,7 @@ public class VerkleTreeBatchHasher {
    *
    * @return Map of nodes to be batched.
    */
-  public Map<Bytes, Node<?>> getNodeToBatch() {
+  public Map<Bytes, Node<?>> getNodesToBatch() {
     return updatedNodes;
   }
 
@@ -82,38 +81,37 @@ public class VerkleTreeBatchHasher {
    * Processes the nodes in batches. Sorts the nodes by their location and hashes them in batches.
    * Clears the batch after processing.
    */
-  public void processInBatches() {
+  public void calculateStateRoot() {
     if (updatedNodes.isEmpty()) {
       return;
     }
-    final List<Map.Entry<Bytes, Node<?>>> toSort = new ArrayList<>(updatedNodes.entrySet());
-    toSort.sort(
-        (entry1, entry2) -> Integer.compare(entry2.getKey().size(), entry1.getKey().size()));
-    final List<Node<?>> nodesInSameLevel = new ArrayList<>();
-    for (Map.Entry<Bytes, Node<?>> entry : toSort) {
-      Bytes location = entry.getKey();
-      Node<?> node = entry.getValue();
-      if (node instanceof BranchNode<?>) {
-        if (location.isEmpty()) {
-          if (!nodesInSameLevel.isEmpty()) {
-            hashMany(nodesInSameLevel);
-          }
-          calculateRootInternalNodeHashes((InternalNode<?>) node);
 
-          System.out.println("final time commit : " + timeCommit + " hash : " + timeHash);
-          updatedNodes.clear();
-          return;
-        } else {
-          if (location.size() != currentDepth || nodesInSameLevel.size() > MAX_BATCH_SIZE) {
-            if (!nodesInSameLevel.isEmpty()) {
-              hashMany(nodesInSameLevel);
-              nodesInSameLevel.clear();
-            }
-            currentDepth = location.size();
+    final List<Map.Entry<Bytes, Node<?>>> sortedNodesByLocation =
+        new ArrayList<>(updatedNodes.entrySet());
+    sortedNodesByLocation.sort(
+        (entry1, entry2) -> Integer.compare(entry2.getKey().size(), entry1.getKey().size()));
+
+    int currentDepth = -1; // Tracks the depth of the current batch
+
+    final List<Node<?>> nodesInSameLevel = new ArrayList<>();
+    for (Map.Entry<Bytes, Node<?>> entry : sortedNodesByLocation) {
+      final Bytes location = entry.getKey();
+      final Node<?> node = entry.getValue();
+      if (node instanceof BranchNode<?>) {
+        if (location.size() != currentDepth || nodesInSameLevel.size() > MAX_BATCH_SIZE) {
+          if (!nodesInSameLevel.isEmpty()) {
+            processBatch(nodesInSameLevel);
+            nodesInSameLevel.clear();
           }
-          if (node.isDirty() || node.getHash().isEmpty() || node.getCommitment().isEmpty()) {
-            nodesInSameLevel.add(node);
+          if (location.isEmpty()) {
+            calculateRootInternalNodeHash((InternalNode<?>) node);
+            updatedNodes.clear();
+            return;
           }
+          currentDepth = location.size();
+        }
+        if (node.isDirty() || node.getHash().isEmpty() || node.getCommitment().isEmpty()) {
+          nodesInSameLevel.add(node);
         }
       }
     }
@@ -121,79 +119,50 @@ public class VerkleTreeBatchHasher {
     throw new IllegalStateException("root node not found");
   }
 
-  private static long timeHash = 0;
-  private static long timeCommit = 0;
+  private void processBatch(List<Node<?>> nodes) {
+    LOG.atInfo().log("Start hashing {} batch of nodes", nodes.size());
+    final List<Bytes> commitments = new ArrayList<>();
 
-  private void hashMany(List<Node<?>> nodes) {
-    LOG.atInfo().log("Start hashing {} nodes", nodes.size());
-    final List<Bytes> commitmentHashes = new ArrayList<>();
-    long start = System.currentTimeMillis();
+    LOG.atTrace().log("Creating commitments for stem nodes and internal nodes");
     for (final Node<?> node : nodes) {
       if (node instanceof StemNode<?>) {
-        commitmentHashes.addAll(getStemNodeLeftRightCommitmentHashes((StemNode<?>) node));
+        commitments.addAll(getStemNodeLeftRightCommitments((StemNode<?>) node));
       } else if (node instanceof InternalNode<?>) {
-        commitmentHashes.addAll(getInternalNodeCommitmentHashes((InternalNode<?>) node));
+        commitments.addAll(getInternalNodeCommitments((InternalNode<?>) node));
       }
     }
-    timeCommit += (System.currentTimeMillis() - start);
-    LOG.atInfo().log("Batching {} commitmentHashes", commitmentHashes.size());
-    start = System.currentTimeMillis();
-    Iterator<Bytes32> frs =
-        hasher.manyGroupToField(commitmentHashes.toArray(new Bytes[0])).iterator();
-    timeHash += (System.currentTimeMillis() - start);
-    LOG.atInfo().log("Finishing Batching {} commitmentHashes", commitmentHashes.size());
 
-    commitmentHashes.clear();
+    LOG.atTrace()
+        .log(
+            "Executing batch hashing for {} commitments of stem (left/right) and internal nodes.",
+            commitments.size());
+    Iterator<Bytes32> frs = hasher.hashMany(commitments.toArray(new Bytes[0])).iterator();
 
-    start = System.currentTimeMillis();
+    commitments.clear();
+
+    LOG.atTrace()
+        .log("Creating commitments for stem nodes and refreshing hashes of internal nodes");
     for (final Node<?> node : nodes) {
       if (node instanceof StemNode<?>) {
-        commitmentHashes.add(getStemNodeCommitmentHash((StemNode<?>) node, frs));
+        commitments.add(getStemNodeCommitment((StemNode<?>) node, frs));
       } else if (node instanceof InternalNode<?>) {
         calculateInternalNodeHashes((InternalNode<?>) node, frs);
       }
     }
-    timeCommit += (System.currentTimeMillis() - start);
-    LOG.atInfo().log("Batching {} commitmentHashes", commitmentHashes.size());
-    start = System.currentTimeMillis();
-    frs = hasher.manyGroupToField(commitmentHashes.toArray(new Bytes[0])).iterator();
-    timeHash += (System.currentTimeMillis() - start);
-    LOG.atInfo().log("Finishing Batching {} commitmentHashes", commitmentHashes.size());
+    LOG.atTrace()
+        .log("Executing batch hashing for {} commitments of stem nodes.", commitments.size());
+    frs = hasher.hashMany(commitments.toArray(new Bytes[0])).iterator();
 
-    start = System.currentTimeMillis();
+    LOG.atTrace().log("Refreshing hashes of stem nodes");
     for (final Node<?> node : nodes) {
       if (node instanceof StemNode<?>) {
         calculateStemNodeHashes((StemNode<?>) node, frs);
       }
     }
-    timeCommit += (System.currentTimeMillis() - start);
-
-    LOG.atInfo().log("Finishing commit {} commitmentHashes", commitmentHashes.size());
   }
 
-  /*public Iterator<Bytes32> parallelHash(final List<Bytes> commitmentHashes) {
-    int numberOfSublists = (commitmentHashes.size() + 19) / 20;
-    List<Bytes32> result =
-        IntStream.range(0, numberOfSublists)
-            .boxed() // Boxe les int en Integer pour pouvoir les utiliser dans un stream
-            .parallel() // Convertit le stream en un stream parallèle
-            .flatMap(
-                i -> {
-                  // Calcule l'indice de début et de fin pour chaque sous-liste
-                  int start = i * 20;
-                  int end = Math.min(commitmentHashes.size(), (i + 1) * 20);
-                  // Sélectionne la sous-liste correspondante
-                  List<Bytes> subList = commitmentHashes.subList(start, end);
-                  // Appelle manyGroupToField pour la sous-liste et convertit le résultat en stream
-                  return hasher.manyGroupToField(subList.toArray(new Bytes[0])).stream();
-                })
-            .toList(); // Collecte les résultats dans une liste
-
-    return result.iterator(); // Retourne un itérateur sur les résultats
-  }*/
-
-  private void calculateRootInternalNodeHashes(final InternalNode<?> internalNode) {
-    final Bytes32 hash = Bytes32.wrap(getInternalNodeCommitmentHashes(internalNode).get(0));
+  private void calculateRootInternalNodeHash(final InternalNode<?> internalNode) {
+    final Bytes32 hash = Bytes32.wrap(getInternalNodeCommitments(internalNode).get(0));
     internalNode.replaceHash(hash, hash);
   }
 
@@ -215,7 +184,7 @@ public class VerkleTreeBatchHasher {
     internalNode.replaceHash(hash, hash);
   }
 
-  private List<Bytes> getStemNodeLeftRightCommitmentHashes(StemNode<?> stemNode) {
+  private List<Bytes> getStemNodeLeftRightCommitments(StemNode<?> stemNode) {
     int size = StemNode.maxChild();
     List<Bytes> commitmentsHashes = new ArrayList<>();
     Bytes32[] leftValues = new Bytes32[size];
@@ -237,7 +206,7 @@ public class VerkleTreeBatchHasher {
     return commitmentsHashes;
   }
 
-  private Bytes getStemNodeCommitmentHash(
+  private Bytes getStemNodeCommitment(
       final StemNode<?> stemNode, final Iterator<Bytes32> iterator) {
     Bytes32[] hashes = new Bytes32[4];
     hashes[0] = Bytes32.rightPad(Bytes.of(1)); // extension marker
@@ -248,7 +217,7 @@ public class VerkleTreeBatchHasher {
     return hasher.commit(hashes);
   }
 
-  private List<Bytes> getInternalNodeCommitmentHashes(InternalNode<?> internalNode) {
+  private List<Bytes> getInternalNodeCommitments(InternalNode<?> internalNode) {
     int size = InternalNode.maxChild();
     List<Bytes> commitmentsHashes = new ArrayList<>();
     Bytes32[] hashes = new Bytes32[size];

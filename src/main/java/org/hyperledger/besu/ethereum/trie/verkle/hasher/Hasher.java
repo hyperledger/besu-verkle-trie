@@ -40,7 +40,7 @@ public interface Hasher {
    */
   Bytes32 commitRoot(Bytes32[] inputs);
 
-  List<Bytes32> manyGroupToField(Bytes[] inputs);
+  List<Bytes32> hashMany(Bytes[] inputs);
 
   /**
    * Calculates the hash for an address and index.
@@ -60,5 +60,5 @@ public interface Hasher {
    */
   Map<Bytes32, Bytes32> manyTrieKeyHashes(Bytes address, List<Bytes32> indexes);
 
-  Bytes32 groupToField(Bytes commitment);
+  Bytes32 hash(Bytes commitment);
 }

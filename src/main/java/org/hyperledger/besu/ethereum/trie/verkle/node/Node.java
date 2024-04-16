@@ -148,4 +148,32 @@ public interface Node<V> {
   default String toDot() {
     return toDot(false);
   }
+
+  /**
+   * Retrieves the low value part of a given optional value.
+   *
+   * @param value The optional value.
+   * @return The low value.
+   */
+  static Bytes32 getLowValue(Optional<?> value) {
+    // Low values have a flag at bit 128.
+    return value
+        .map(
+            (v) ->
+                Bytes32.rightPad(
+                    Bytes.concatenate(Bytes32.rightPad((Bytes) v).slice(0, 16), Bytes.of(1))))
+        .orElse(Bytes32.ZERO);
+  }
+
+  /**
+   * Retrieves the high value part of a given optional value.
+   *
+   * @param value The optional value.
+   * @return The high value.
+   */
+  static Bytes32 getHighValue(Optional<?> value) {
+    return value
+        .map((v) -> Bytes32.rightPad(Bytes32.rightPad((Bytes) v).slice(16, 16)))
+        .orElse(Bytes32.ZERO);
+  }
 }

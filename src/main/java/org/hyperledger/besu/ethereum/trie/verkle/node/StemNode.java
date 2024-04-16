@@ -38,10 +38,10 @@ public class StemNode<V> extends BranchNode<V> {
   private final Node<V> NULL_LEAF_NODE = NullLeafNode.instance();
 
   private final Bytes stem;
-  private final Optional<Bytes32> leftHash;
-  private final Optional<Bytes> leftCommitment;
-  private final Optional<Bytes32> rightHash;
-  private final Optional<Bytes> rightCommitment;
+  private Optional<Bytes32> leftHash;
+  private Optional<Bytes> leftCommitment;
+  private Optional<Bytes32> rightHash;
+  private Optional<Bytes> rightCommitment;
   private Optional<Bytes> encodedValue = Optional.empty();
 
   /**
@@ -238,16 +238,13 @@ public class StemNode<V> extends BranchNode<V> {
       final Bytes leftCommitment,
       final Bytes32 rightHash,
       final Bytes rightCommitment) {
-    return new StemNode<V>(
-        getLocation().get(),
-        stem,
-        hash,
-        commitment,
-        leftHash,
-        leftCommitment,
-        rightHash,
-        rightCommitment,
-        getChildren());
+    this.hash = Optional.ofNullable(hash);
+    this.commitment = Optional.ofNullable(commitment);
+    this.leftHash = Optional.ofNullable(leftHash);
+    this.leftCommitment = Optional.ofNullable(leftCommitment);
+    this.rightHash = Optional.ofNullable(rightHash);
+    this.rightCommitment = Optional.ofNullable(rightCommitment);
+    return this;
   }
 
   /**

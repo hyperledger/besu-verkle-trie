@@ -15,13 +15,14 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
+import static org.hyperledger.besu.ethereum.trie.verkle.node.Node.getHighValue;
+import static org.hyperledger.besu.ethereum.trie.verkle.node.Node.getLowValue;
+
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.PedersenHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
-
-import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -63,7 +64,7 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     if (location.isEmpty()) {
       hash = hasher.commitRoot(hashes);
     } else {
-      hash = hasher.groupToField(hasher.commit(hashes));
+      hash = hasher.hash(hasher.commit(hashes));
     }
     return internalNode.replaceHash(hash, hash); // commitment should be different
   }
@@ -100,37 +101,10 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     }
     hashes[0] = Bytes32.rightPad(Bytes.of(1)); // extension marker
     hashes[1] = Bytes32.rightPad(stemNode.getStem());
-    hashes[2] = hasher.groupToField(hasher.commit(leftValues));
-    hashes[3] = hasher.groupToField(hasher.commit(rightValues));
-    final Bytes32 hash = hasher.groupToField(hasher.commit(hashes));
+    hashes[2] = hasher.hash(hasher.commit(leftValues));
+    hashes[3] = hasher.hash(hasher.commit(rightValues));
+    final Bytes32 hash = hasher.hash(hasher.commit(hashes));
     return stemNode.replaceHash(
         hash, hash, hashes[2], hashes[2], hashes[3], hashes[3]); // commitment should be different
-  }
-
-  /**
-   * Retrieves the low value part of a given optional value.
-   *
-   * @param value The optional value.
-   * @return The low value.
-   */
-  Bytes32 getLowValue(Optional<V> value) {
-    // Low values have a flag at bit 128.
-    return value
-        .map(
-            (v) ->
-                Bytes32.rightPad(Bytes.concatenate(Bytes32.rightPad(v).slice(0, 16), Bytes.of(1))))
-        .orElse(Bytes32.ZERO);
-  }
-
-  /**
-   * Retrieves the high value part of a given optional value.
-   *
-   * @param value The optional value.
-   * @return The high value.
-   */
-  Bytes32 getHighValue(Optional<V> value) {
-    return value
-        .map((v) -> Bytes32.rightPad(Bytes32.rightPad(v).slice(16, 16)))
-        .orElse(Bytes32.ZERO);
   }
 }

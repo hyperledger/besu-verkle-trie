@@ -19,6 +19,7 @@ import org.hyperledger.besu.nativelib.ipamultipoint.LibIpaMultipoint;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,11 +49,10 @@ public class PedersenHasher implements Hasher {
   private static final int NUM_CHUNKS = 5;
 
   /**
-   * Commits an array of Bytes32 using the pedersen commitment - multi scalar multiplication vector
-   * commitment algorithm.
+   * Commit to a vector of values.
    *
-   * @param inputs An array of Bytes32 inputs to be committed.
-   * @return The resulting commitment serliazed as uncompressed eliptic curve element (64bytes).
+   * @param inputs vector of serialised scalars to commit to.
+   * @return uncompressed serialised commitment.
    */
   @Override
   public Bytes commit(Bytes32[] inputs) {
@@ -70,12 +70,35 @@ public class PedersenHasher implements Hasher {
   }
 
   /**
-   * @param input Uncompressed serialized commitment (64bytes)
-   * @return return Fr, to be used in pared commitment.
+   * Convert a commitment to its corresponding scalar.
+   *
+   * @param commitment uncompressed serialised commitment
+   * @return serialised scalar
    */
   @Override
-  public Bytes32 groupToField(Bytes input) {
-    return Bytes32.wrap(LibIpaMultipoint.hash(input.toArray()));
+  public Bytes32 hash(Bytes commitment) {
+    return Bytes32.wrap(LibIpaMultipoint.hashMany(commitment.toArray()));
+  }
+
+  /**
+   * Map a vector of commitments to its corresponding vector of scalars.
+   *
+   * <p>The vectorised version is highly optimised, making use of Montgoméry's batch inversion
+   * trick.
+   *
+   * @param commitments uncompressed serialised commitments
+   * @return serialised scalars
+   */
+  @Override
+  public List<Bytes32> hashMany(final Bytes[] commitments) {
+    final Bytes hashMany =
+        Bytes.wrap(LibIpaMultipoint.hashMany(Bytes.concatenate(commitments).toArray()));
+    final List<Bytes32> hashes = new ArrayList<>();
+    for (int i = 0; i < commitments.length; i++) {
+      // Slice input into 16 byte segments
+      hashes.add(Bytes32.wrap(hashMany.slice(i * Bytes32.SIZE, Bytes32.SIZE)));
+    }
+    return hashes;
   }
 
   /**

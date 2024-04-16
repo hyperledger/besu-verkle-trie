@@ -15,10 +15,13 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
+import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
+
+import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 
@@ -34,6 +37,12 @@ import org.apache.tuweni.bytes.Bytes;
 public class FlattenVisitor<V> implements NodeVisitor<V> {
   private final Node<V> NULL_NODE = NullNode.instance();
 
+  private final Optional<VerkleTreeBatchHasher> batchProcessor;
+
+  public FlattenVisitor(final Optional<VerkleTreeBatchHasher> batchProcessor) {
+    this.batchProcessor = batchProcessor;
+  }
+
   @Override
   public Node<V> visit(InternalNode<V> internalNode) {
     return NULL_NODE;
@@ -44,6 +53,16 @@ public class FlattenVisitor<V> implements NodeVisitor<V> {
     final Bytes location = stemNode.getLocation().get();
     final Bytes newLocation = location.slice(0, location.size() - 1);
     // Should not flatten root node
-    return (!newLocation.isEmpty() ? stemNode.replaceLocation(newLocation) : NULL_NODE);
+    if (!newLocation.isEmpty()) {
+      final StemNode<V> updateStemNode = stemNode.replaceLocation(newLocation);
+      batchProcessor.ifPresent(
+          processor -> {
+            processor.addNodeToBatch(stemNode.getLocation(), NULL_NODE);
+            processor.addNodeToBatch(updateStemNode.getLocation(), updateStemNode);
+          });
+      return updateStemNode;
+    } else {
+      return NULL_NODE;
+    }
   }
 }

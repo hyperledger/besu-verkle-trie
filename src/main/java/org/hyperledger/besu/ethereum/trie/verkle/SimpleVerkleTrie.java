@@ -40,7 +40,7 @@ import org.apache.tuweni.bytes.Bytes32;
  * @param <V> The type of values in the Verkle Trie.
  */
 public class SimpleVerkleTrie<K extends Bytes, V extends Bytes> implements VerkleTrie<K, V> {
-  private Node<V> root;
+  protected Node<V> root;
 
   /** Creates a new Verkle Trie with a null node as the root. */
   public SimpleVerkleTrie() {
@@ -96,7 +96,7 @@ public class SimpleVerkleTrie<K extends Bytes, V extends Bytes> implements Verkl
   public Optional<V> put(final K key, final V value) {
     checkNotNull(key);
     checkNotNull(value);
-    PutVisitor<V> visitor = new PutVisitor<V>(value);
+    final PutVisitor<V> visitor = new PutVisitor<V>(value, Optional.empty());
     this.root = root.accept(visitor, key);
     return visitor.getOldValue();
   }
@@ -109,7 +109,7 @@ public class SimpleVerkleTrie<K extends Bytes, V extends Bytes> implements Verkl
   @Override
   public void remove(final K key) {
     checkNotNull(key);
-    this.root = root.accept(new RemoveVisitor<V>(), key);
+    this.root = root.accept(new RemoveVisitor<V>(Optional.empty()), key);
   }
 
   /**

@@ -37,6 +37,8 @@ public abstract class BranchNode<V> implements Node<V> {
   protected Optional<Bytes> commitment; // Vector commitment serialized
   private final List<Node<V>> children; // List of children nodes
 
+  private Optional<Bytes32> committed_hash;  // Hash value committed into parent 
+
   private boolean dirty = true; // not persisted
 
   /**
@@ -57,6 +59,7 @@ public abstract class BranchNode<V> implements Node<V> {
     this.hash = Optional.of(hash);
     this.commitment = Optional.of(commitment);
     this.children = children;
+    this.committed_hash = Optional.empty();
   }
 
   /**
@@ -78,6 +81,7 @@ public abstract class BranchNode<V> implements Node<V> {
     this.hash = hash;
     this.commitment = commitment;
     this.children = children;
+    this.committed_hash = Optional.empty();
   }
 
   /**
@@ -92,6 +96,7 @@ public abstract class BranchNode<V> implements Node<V> {
     this.children = children;
     hash = Optional.empty();
     commitment = Optional.empty();
+    this.committed_hash = Optional.empty();
   }
 
   /**
@@ -108,6 +113,7 @@ public abstract class BranchNode<V> implements Node<V> {
     }
     hash = Optional.of(EMPTY_HASH);
     commitment = Optional.of(EMPTY_COMMITMENT);
+    this.committed_hash = Optional.empty();
   }
 
   /**
@@ -186,6 +192,15 @@ public abstract class BranchNode<V> implements Node<V> {
   @Override
   public Optional<Bytes> getLocation() {
     return location;
+  }
+
+  /**
+   * Get the value associated with the node.
+   *
+   * @return An optional containing the value of the node if available.
+   */
+  public Optional<Bytes32> getCommittedHash() {
+    return committed_hash;
   }
 
   /**

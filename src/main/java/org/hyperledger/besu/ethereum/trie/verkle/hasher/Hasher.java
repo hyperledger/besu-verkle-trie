@@ -32,13 +32,41 @@ public interface Hasher {
    */
   Bytes commit(Bytes32[] inputs);
 
-  /**
-   * Calculates the commitment hash for an array of inputs.
+   /**
+   * Compute and serialise compress commitment to a dense vector of scalar values.
    *
-   * @param inputs An array of values to be hashed.
+   * @param scalars Serialised scalar values to commit to, up to 32-bytes-le.
    * @return The compressed serialized commitment used for calucating root Commitment.
+   * @throws Exception Problem with native invocation
    */
-  Bytes32 commitRoot(Bytes32[] inputs);
+  public Bytes32 commitAsCompressed(Bytes[] scalars) throws Exception;
+
+  /**
+   * Update a commitment with a sparse vector of values.
+   *
+   * @param commitment Actual commitment value.
+   * @param indices List of vector's indices where values are updated.
+   * @param oldScalars List of previous scalar values.
+   * @param newScalars List of new scalar values.
+   * @return The uncompressed serialized updated commitment.
+   * @throws Exception Problem with native invocation
+   */
+  public Bytes updateSparse(
+      Optional<Bytes> commitment,
+      List<Byte> indices,
+      List<Bytes> oldScalars,
+      List<Bytes> newScalars)
+      throws Exception;
+
+  /**
+   * Computes the compressed serialised form of an uncompressed commitment.
+   *
+   * @param commitment Uncompressed serialised commitment to compress
+   * @return compressed commitment
+   * @throws Exception Problem with native invocation
+   */
+  public Bytes32 compress(Bytes commitment) throws Exception;
+  // public List<Bytes32> compressMany(List<Bytes> commitments) throws Exception;
 
   /**
    * Convert a commitment to its corresponding scalar.

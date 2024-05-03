@@ -47,6 +47,18 @@ public class PedersenHasher implements Hasher {
   // length encoder,
   // making the total number of chunks equal to five.
   private static final int NUM_CHUNKS = 5;
+  
+  private static final Bytes defaultCommitment;
+  private static final Bytes32 defaultScalar;
+
+  static {
+    // TODO: include defaults in LibIpaMultipoint
+    // defaultCommitment = Bytes.wrap(LibIpaMultipoint.defaultCommitment());
+    // defaultScalar = Bytes32.wrap(LibIpaMultipoint.defaultScalar());
+    defaultCommitment =
+        Bytes.concatenate(Bytes32.ZERO, Bytes32.rightPad(Bytes.fromHexString("0x01")));
+    defaultScalar = Bytes32.ZERO;
+  }
 
   /**
    * Commit to a vector of values.
@@ -65,10 +77,29 @@ public class PedersenHasher implements Hasher {
    *     to computing root Commitment.
    */
   @Override
-  public Bytes32 commitRoot(final Bytes32[] inputs) {
+  public Bytes32 commitRoot(final Bytes[] inputs) {
     return Bytes32.wrap(LibIpaMultipoint.commitAsCompressed(Bytes.concatenate(inputs).toArray()));
   }
 
+  @Override
+  public Bytes commitUpdate(
+      final Optional<Bytes> commitment,
+      final List<Byte> indices,
+      final List<Bytes> oldScalars,
+      final List<Bytes> newScalars)
+      throws Exception {
+    Bytes cmnt = commitment.orElse(defaultCommitment);
+    byte[] idx = new byte[indices.size()];
+    for (int i = 0; i < indices.size(); i++) {
+      idx[i] = (byte) indices.get(i);
+    }
+    return Bytes.wrap(
+        LibIpaMultipoint.updateSparse(
+            cmnt.toArray(),
+            idx,
+            prepareScalars(oldScalars.toArray(new Bytes[oldScalars.size()])).toArray(),
+            prepareScalars(newScalars.toArray(new Bytes[newScalars.size()])).toArray()));
+  }
   /**
    * Convert a commitment to its corresponding scalar.
    *

@@ -16,6 +16,7 @@
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
 import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchHasher;
+import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchUpdateHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
@@ -40,14 +41,14 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
   private Bytes visited; // add consumed bytes to visited
   private Optional<V> oldValue;
 
-  private final Optional<VerkleTreeBatchHasher> batchProcessor;
+  private final Optional<VerkleTreeBatchUpdateHasher> batchProcessor;
 
   /**
    * Constructs a new PutVisitor with the provided value to insert or update.
    *
    * @param value The value to be inserted or updated in the Verkle Trie.
    */
-  public PutVisitor(final V value, final Optional<VerkleTreeBatchHasher> batchProcessor) {
+  public PutVisitor(final V value, final Optional<VerkleTreeBatchUpdateHasher> batchProcessor) {
     this.value = value;
     this.visited = Bytes.EMPTY;
     this.oldValue = Optional.empty();
@@ -70,7 +71,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     internalNode.replaceChild(index, updatedChild);
     if (updatedChild.isDirty()) {
       batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(internalNode.getLocation(), internalNode));
+          processor -> processor.accept(internalNode));
       internalNode.markDirty();
     }
     return internalNode;
@@ -98,7 +99,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
       stemNode.replaceChild(index, updatedChild);
       if (updatedChild.isDirty()) {
         batchProcessor.ifPresent(
-            processor -> processor.addNodeToBatch(stemNode.getLocation(), stemNode));
+            processor -> processor.accept(stemNode));
         stemNode.markDirty();
       }
       return stemNode;

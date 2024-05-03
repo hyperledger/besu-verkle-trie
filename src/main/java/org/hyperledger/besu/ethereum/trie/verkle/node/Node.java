@@ -83,6 +83,15 @@ public interface Node<V> {
   }
 
   /**
+   * Get the value associated with the node.
+   *
+   * @return An optional containing the value of the node if available.
+   */
+  default Optional<V> getCommittedValue() {
+    return Optional.empty();
+  }
+
+  /**
    * Get the commitment associated with the node.
    *
    * @return An optional containing the hash of the node if available.

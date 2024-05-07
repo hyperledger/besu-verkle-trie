@@ -15,6 +15,7 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.node;
 
+import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
@@ -36,7 +37,7 @@ public interface Node<V> {
   Bytes32 EMPTY_HASH = Bytes32.ZERO;
 
   /** A constant representing a commitment to NullNodes */
-  Bytes EMPTY_COMMITMENT = Bytes.EMPTY;
+  Bytes EMPTY_COMMITMENT = Hasher.defaultCommitment;
 
   /**
    * Accept a visitor to perform operations on the node based on a provided path.

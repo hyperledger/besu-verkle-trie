@@ -15,7 +15,7 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
-import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchHasher;
+import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchUpdateHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
@@ -38,16 +38,16 @@ import org.apache.tuweni.bytes.Bytes;
  * @param <V> The type of values associated with the nodes.
  */
 public class RemoveVisitor<V> implements PathNodeVisitor<V> {
-  private final Node<V> NULL_NODE = NullNode.instance();
-  private final Node<V> NULL_LEAF_NODE = NullLeafNode.instance();
+  private final NullNode<V> NULL_NODE = NullNode.instance();
+  private final NullLeafNode<V> NULL_LEAF_NODE = NullLeafNode.instance();
   private final GetVisitor<V> getter = new GetVisitor<>();
 
-  private final Optional<VerkleTreeBatchHasher> batchProcessor;
+  private final Optional<VerkleTreeBatchUpdateHasher> batchProcessor;
   private final FlattenVisitor<V> flatten;
 
-  public RemoveVisitor(final Optional<VerkleTreeBatchHasher> batchProcessor) {
+  public RemoveVisitor(final Optional<VerkleTreeBatchUpdateHasher> batchProcessor) {
     this.batchProcessor = batchProcessor;
-    this.flatten = new FlattenVisitor<>(batchProcessor);
+    this.flatten = new FlattenVisitor<V>(batchProcessor);
   }
 
   /**
@@ -67,8 +67,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     final boolean wasChildNullified = (childNode != NULL_NODE && updatedChild == NULL_NODE);
     if (updatedChild.isDirty() || wasChildNullified) {
       internalNode.markDirty();
-      batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(internalNode.getLocation(), internalNode));
+      batchProcessor.ifPresent(processor -> processor.accept(internalNode));
     }
     final Optional<Byte> onlyChildIndex = findOnlyChild(internalNode);
     if (onlyChildIndex.isEmpty()) {
@@ -97,13 +96,11 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     final Node<V> newChild = child.accept(this, path);
     stemNode.replaceChild(childIndex, newChild);
     if (allLeavesAreNull(stemNode)) {
-      batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(stemNode.getLocation(), NULL_NODE));
+      batchProcessor.ifPresent(processor -> processor.accept(NULL_NODE, stemNode.getLocation()));
       return NULL_NODE;
     }
     if (child != NULL_LEAF_NODE) { // Removed a genuine leaf-node
-      batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(stemNode.getLocation(), stemNode));
+      batchProcessor.ifPresent(processor -> processor.accept(stemNode));
       stemNode.markDirty();
     }
     return stemNode;
@@ -119,8 +116,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(LeafNode<V> leafNode, Bytes path) {
-    batchProcessor.ifPresent(
-        processor -> processor.addNodeToBatch(leafNode.getLocation(), NULL_LEAF_NODE));
+    batchProcessor.ifPresent(processor -> processor.accept(NULL_LEAF_NODE, leafNode.getLocation()));
     return NULL_LEAF_NODE;
   }
 

@@ -17,12 +17,16 @@ package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /** Defines an interface for a Verkle Trie node hashing strategy. */
 public interface Hasher {
+
+  public static Bytes defaultCommitment = 
+    Bytes.concatenate(Bytes32.ZERO, Bytes32.rightPad(Bytes.fromHexString("0x01")));
 
   /**
    * Commit to a vector of values.
@@ -32,14 +36,13 @@ public interface Hasher {
    */
   Bytes commit(Bytes32[] inputs);
 
-   /**
+  /**
    * Compute and serialise compress commitment to a dense vector of scalar values.
    *
    * @param scalars Serialised scalar values to commit to, up to 32-bytes-le.
    * @return The compressed serialized commitment used for calucating root Commitment.
-   * @throws Exception Problem with native invocation
    */
-  public Bytes32 commitAsCompressed(Bytes[] scalars) throws Exception;
+  public Bytes32 commitRoot(Bytes[] scalars);
 
   /**
    * Update a commitment with a sparse vector of values.
@@ -49,24 +52,20 @@ public interface Hasher {
    * @param oldScalars List of previous scalar values.
    * @param newScalars List of new scalar values.
    * @return The uncompressed serialized updated commitment.
-   * @throws Exception Problem with native invocation
    */
-  public Bytes updateSparse(
+  public Bytes commitUpdate(
       Optional<Bytes> commitment,
       List<Byte> indices,
       List<Bytes> oldScalars,
-      List<Bytes> newScalars)
-      throws Exception;
+      List<Bytes> newScalars);
 
   /**
-   * Computes the compressed serialised form of an uncompressed commitment.
+   * Convert a commitment to its serialised compressed form.
    *
-   * @param commitment Uncompressed serialised commitment to compress
-   * @return compressed commitment
-   * @throws Exception Problem with native invocation
+   * @param commitment uncompressed serialised commitment
+   * @return serialised scalar
    */
-  public Bytes32 compress(Bytes commitment) throws Exception;
-  // public List<Bytes32> compressMany(List<Bytes> commitments) throws Exception;
+  public Bytes32 compress(Bytes commitment);
 
   /**
    * Convert a commitment to its corresponding scalar.

@@ -18,7 +18,9 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import org.hyperledger.besu.ethereum.trie.NodeUpdater;
+import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
+import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.CommitVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PutVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.RemoveVisitor;
@@ -35,28 +37,44 @@ import org.apache.tuweni.bytes.Bytes32;
  * @param <V> The type of values in the Verkle Trie.
  */
 public class SimpleBatchedVerkleTrie<K extends Bytes, V extends Bytes>
-    extends SimpleVerkleTrie<K, V> implements VerkleTrie<K, V> {
+    extends SimpleVerkleTrie<K, V> {
 
-  private final VerkleTreeBatchHasher batchProcessor;
+  private final VerkleTreeBatchUpdateHasher batchProcessor;
 
-  public SimpleBatchedVerkleTrie(final VerkleTreeBatchHasher batchProcessor) {
+  public SimpleBatchedVerkleTrie(final VerkleTreeBatchUpdateHasher batchProcessor) {
     super();
     this.batchProcessor = batchProcessor;
-    this.batchProcessor.addNodeToBatch(Optional.of(Bytes.EMPTY), this.root);
+    this.batchProcessor.accept((InternalNode<V>) this.root);
   }
 
   public SimpleBatchedVerkleTrie(
-      final Node<V> providedRoot, final VerkleTreeBatchHasher batchProcessor) {
+      final Node<V> providedRoot, final VerkleTreeBatchUpdateHasher batchProcessor) {
     super(providedRoot);
     this.batchProcessor = batchProcessor;
-    this.batchProcessor.addNodeToBatch(root.getLocation(), root);
+    if (providedRoot instanceof InternalNode<V>) {
+      this.batchProcessor.accept((InternalNode<V>) providedRoot);
+    } else if (providedRoot instanceof StemNode<V>) {
+      this.batchProcessor.accept((StemNode<V>) providedRoot);
+    } else {
+      throw new RuntimeException();
+    }
   }
 
   public SimpleBatchedVerkleTrie(
-      final Optional<Node<V>> maybeRoot, final VerkleTreeBatchHasher batchProcessor) {
+      final Optional<Node<V>> maybeRoot, final VerkleTreeBatchUpdateHasher batchProcessor) {
     super(maybeRoot);
     this.batchProcessor = batchProcessor;
-    this.batchProcessor.addNodeToBatch(root.getLocation(), root);
+    if (maybeRoot.isEmpty()) {
+      return;
+    }
+    Node<V> providedRoot = maybeRoot.get();
+    if (providedRoot instanceof InternalNode<V>) {
+      this.batchProcessor.accept((InternalNode<V>) providedRoot);
+    } else if (providedRoot instanceof StemNode<V>) {
+      this.batchProcessor.accept((StemNode<V>) providedRoot);
+    } else {
+      throw new RuntimeException();
+    }
   }
 
   @Override

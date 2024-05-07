@@ -221,7 +221,20 @@ public class StemNode<V> extends BranchNode<V> {
   }
 
   /**
-   * Creates a new node by replacing all its commitments
+   * Updates this node by replacing its commitments
+   *
+   * @param hash Node's vector commitment hash
+   * @param commitment Node's vector commitment
+   * @return StemNode with new commitments.
+   */
+  public StemNode<V> replaceHash(final Bytes32 hash, final Bytes commitment) {
+    this.hash = Optional.ofNullable(hash);
+    this.commitment = Optional.ofNullable(commitment);
+    return this;
+  }
+
+  /**
+   * Updates this node by replacing all its commitments
    *
    * @param hash Node's vector commitment hash
    * @param commitment Node's vector commitment
@@ -242,6 +255,32 @@ public class StemNode<V> extends BranchNode<V> {
     this.commitment = Optional.ofNullable(commitment);
     this.leftHash = Optional.ofNullable(leftHash);
     this.leftCommitment = Optional.ofNullable(leftCommitment);
+    this.rightHash = Optional.ofNullable(rightHash);
+    this.rightCommitment = Optional.ofNullable(rightCommitment);
+    return this;
+  }
+
+  /**
+   * Updates this node by replacing all its left commitments
+   *
+   * @param leftHash Node's left vector commitment hash
+   * @param leftCommitment Node's left vector commitment
+   * @return StemNode with new commitments.
+   */
+  public StemNode<V> replaceLeftHash(final Bytes32 leftHash, final Bytes leftCommitment) {
+    this.leftHash = Optional.ofNullable(leftHash);
+    this.leftCommitment = Optional.ofNullable(leftCommitment);
+    return this;
+  }
+
+  /**
+   * Updates this node by replacing all its right commitments
+   *
+   * @param rightHash Node's right vector commitment hash
+   * @param rightCommitment Node's right vector commitment
+   * @return StemNode with new commitments.
+   */
+  public StemNode<V> replaceRightHash(final Bytes32 rightHash, final Bytes rightCommitment) {
     this.rightHash = Optional.ofNullable(rightHash);
     this.rightCommitment = Optional.ofNullable(rightCommitment);
     return this;

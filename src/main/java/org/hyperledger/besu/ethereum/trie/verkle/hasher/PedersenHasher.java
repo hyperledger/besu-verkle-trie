@@ -23,9 +23,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.bytes.MutableBytes;
 
 /**
  * A class responsible for hashing an array of Bytes32 using the pedersen commitment - multi scalar
@@ -47,18 +49,6 @@ public class PedersenHasher implements Hasher {
   // length encoder,
   // making the total number of chunks equal to five.
   private static final int NUM_CHUNKS = 5;
-  
-  private static final Bytes defaultCommitment;
-  private static final Bytes32 defaultScalar;
-
-  static {
-    // TODO: include defaults in LibIpaMultipoint
-    // defaultCommitment = Bytes.wrap(LibIpaMultipoint.defaultCommitment());
-    // defaultScalar = Bytes32.wrap(LibIpaMultipoint.defaultScalar());
-    defaultCommitment =
-        Bytes.concatenate(Bytes32.ZERO, Bytes32.rightPad(Bytes.fromHexString("0x01")));
-    defaultScalar = Bytes32.ZERO;
-  }
 
   /**
    * Commit to a vector of values.
@@ -86,8 +76,7 @@ public class PedersenHasher implements Hasher {
       final Optional<Bytes> commitment,
       final List<Byte> indices,
       final List<Bytes> oldScalars,
-      final List<Bytes> newScalars)
-      throws Exception {
+      final List<Bytes> newScalars) {
     Bytes cmnt = commitment.orElse(defaultCommitment);
     byte[] idx = new byte[indices.size()];
     for (int i = 0; i < indices.size(); i++) {
@@ -100,6 +89,18 @@ public class PedersenHasher implements Hasher {
             prepareScalars(oldScalars.toArray(new Bytes[oldScalars.size()])).toArray(),
             prepareScalars(newScalars.toArray(new Bytes[newScalars.size()])).toArray()));
   }
+
+  /**
+   * Convert a commitment to its serialised compressed form.
+   *
+   * @param commitment uncompressed serialised commitment
+   * @return serialised scalar
+   */
+  @Override
+  public Bytes32 compress(Bytes commitment) {
+    return Bytes32.wrap(LibIpaMultipoint.compress(commitment.toArray()));
+  }
+
   /**
    * Convert a commitment to its corresponding scalar.
    *
@@ -209,5 +210,27 @@ public class PedersenHasher implements Hasher {
       chunks[i + 1] = Bytes32.rightPad(chunk);
     }
     return chunks;
+  }
+
+  // Protected methods
+
+  Bytes rightPadInput(int size, Bytes[] inputs) {
+    MutableBytes result = MutableBytes.create(inputs.length * size);
+    for (int i = 0; i < inputs.length; i++) {
+      int offset = i * size;
+      if (inputs[i].size() > size) {
+        throw new RuntimeException();
+      }
+      result.set(offset, inputs[i]);
+    }
+    return result;
+  }
+
+  Bytes prepareScalars(Bytes[] inputs) {
+    return rightPadInput(32, inputs);
+  }
+
+  Bytes prepareCommitments(Bytes[] inputs) {
+    return rightPadInput(64, inputs);
   }
 }

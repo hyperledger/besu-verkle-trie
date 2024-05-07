@@ -33,11 +33,13 @@ import org.apache.tuweni.rlp.RLPWriter;
  * @param <V> The type of the node's value.
  */
 public class LeafNode<V> implements Node<V> {
-  private final Optional<Bytes> location; // Location in the tree, or the key
+  private final Optional<Bytes> location; // Location in the tree
   private final V value; // Value associated with the node
   private Optional<Bytes> encodedValue = Optional.empty(); // Encoded value
   private final Function<V, Bytes> valueSerializer; // Serializer function for the value
   private boolean dirty = true; // not persisted
+  // For commitment updates, we need previously committed values.
+  private final Optional<V> committedValue;
 
   /**
    * Constructs a new LeafNode with location, value.
@@ -48,6 +50,7 @@ public class LeafNode<V> implements Node<V> {
   public LeafNode(final Bytes location, final V value) {
     this.location = Optional.of(location);
     this.value = value;
+    this.committedValue = Optional.empty();
     this.valueSerializer = val -> (Bytes) val;
   }
 
@@ -60,6 +63,20 @@ public class LeafNode<V> implements Node<V> {
   public LeafNode(final Optional<Bytes> location, final V value) {
     this.location = location;
     this.value = value;
+    this.committedValue = Optional.empty();
+    this.valueSerializer = val -> (Bytes) val;
+  }
+
+  /**
+   * Constructs a new LeafNode with optional location, value.
+   *
+   * @param location The location of the node in the tree (Optional).
+   * @param value The value associated with the node.
+   */
+  public LeafNode(final Optional<Bytes> location, final V value, final Optional<V> committedValue) {
+    this.location = location;
+    this.value = value;
+    this.committedValue = committedValue;
     this.valueSerializer = val -> (Bytes) val;
   }
 
@@ -94,6 +111,16 @@ public class LeafNode<V> implements Node<V> {
   @Override
   public Optional<V> getValue() {
     return Optional.ofNullable(value);
+  }
+
+  /**
+   * Get the value associated with the node.
+   *
+   * @return An optional containing the value of the node if available.
+   */
+  @Override
+  public Optional<V> getCommittedValue() {
+    return committedValue;
   }
 
   /**
@@ -146,6 +173,15 @@ public class LeafNode<V> implements Node<V> {
   @Override
   public void markClean() {
     dirty = false;
+  }
+
+  /**
+   * Checks if the node is dirty, indicating that it needs to be persisted.
+   *
+   * @return `true` if the node is marked as dirty, `false` otherwise.
+   */
+  public boolean isCommitted() {
+    return committedValue.isPresent();
   }
 
   /**

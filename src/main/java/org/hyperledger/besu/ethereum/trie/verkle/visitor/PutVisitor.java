@@ -15,7 +15,6 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
-import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchUpdateHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
@@ -70,8 +69,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     final Node<V> updatedChild = internalNode.child(index).accept(this, path.slice(1));
     internalNode.replaceChild(index, updatedChild);
     if (updatedChild.isDirty()) {
-      batchProcessor.ifPresent(
-          processor -> processor.accept(internalNode));
+      batchProcessor.ifPresent(processor -> processor.accept(internalNode));
       internalNode.markDirty();
     }
     return internalNode;
@@ -98,8 +96,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
       final Node<V> updatedChild = stemNode.child(index).accept(this, fullPath);
       stemNode.replaceChild(index, updatedChild);
       if (updatedChild.isDirty()) {
-        batchProcessor.ifPresent(
-            processor -> processor.accept(stemNode));
+        batchProcessor.ifPresent(processor -> processor.accept(stemNode));
         stemNode.markDirty();
       }
       return stemNode;
@@ -107,11 +104,9 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
       InternalNode<V> newNode = new InternalNode<V>(location);
       final int depth = location.size();
       StemNode<V> updatedStemNode = stemNode.replaceLocation(stem.slice(0, depth + 1));
-      batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(updatedStemNode.getLocation(), updatedStemNode));
+      batchProcessor.ifPresent(processor -> processor.accept(updatedStemNode));
       newNode.replaceChild(stem.get(depth), updatedStemNode);
-      batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
+      batchProcessor.ifPresent(processor -> processor.accept(newNode));
       newNode.markDirty();
       return newNode.accept(this, path);
     }
@@ -129,10 +124,10 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     assert path.size() < 33;
     LeafNode<V> newNode;
     oldValue = leafNode.getValue();
-    if (oldValue != value) {
-      newNode = new LeafNode<V>(leafNode.getLocation(), value);
-      batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
+    if (!oldValue.equals(value)) {
+      Optional<V> committedValue = leafNode.getCommittedValue();
+      newNode = new LeafNode<V>(leafNode.getLocation(), value, committedValue);
+      batchProcessor.ifPresent(processor -> processor.accept(newNode));
       newNode.markDirty();
     } else {
       newNode = leafNode;
@@ -155,8 +150,8 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     final Bytes leafKey = Bytes.concatenate(visited, path);
     final StemNode<V> stemNode = new StemNode<V>(visited, leafKey);
     final Node<V> updatedNode = stemNode.accept(this, path);
-    batchProcessor.ifPresent(
-        processor -> processor.addNodeToBatch(updatedNode.getLocation(), updatedNode));
+    // updatedNode will be a stemNode as inserting into the new stem cannot diverge.
+    batchProcessor.ifPresent(processor -> processor.accept((StemNode<V>) updatedNode));
     return updatedNode;
   }
 
@@ -172,7 +167,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     assert path.size() < 33;
     oldValue = Optional.empty();
     LeafNode<V> newNode = new LeafNode<>(visited, value);
-    batchProcessor.ifPresent(processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
+    batchProcessor.ifPresent(processor -> processor.accept(newNode));
     visited = Bytes.EMPTY;
     return newNode;
   }

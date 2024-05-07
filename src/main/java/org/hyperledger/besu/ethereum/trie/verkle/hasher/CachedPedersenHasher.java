@@ -17,6 +17,7 @@ package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -42,8 +43,22 @@ public class CachedPedersenHasher implements Hasher {
   }
 
   @Override
-  public Bytes32 commitRoot(final Bytes32[] bytes32s) {
+  public Bytes32 commitRoot(final Bytes[] bytes32s) {
     return fallbackHasher.commitRoot(bytes32s);
+  }
+
+  @Override
+  public Bytes commitUpdate(
+      Optional<Bytes> commitment,
+      List<Byte> indices,
+      List<Bytes> oldScalars,
+      List<Bytes> newScalars) {
+    return fallbackHasher.commitUpdate(commitment, indices, oldScalars, newScalars);
+  }
+
+  @Override
+  public Bytes32 compress(Bytes commitment) {
+    return fallbackHasher.compress(commitment);
   }
 
   @Override

@@ -88,7 +88,6 @@ public class VerkleTreeBatchHasher {
    * Processes the nodes in batches. Sorts the nodes by their location and hashes them in batches.
    * Clears the batch after processing.
    */
-  @SuppressWarnings("unchecked")
   public void calculateStateRoot() {
     if (updatedNodes.isEmpty()) {
       return;
@@ -262,7 +261,6 @@ public class VerkleTreeBatchHasher {
       rightOldValues.clear();
       rightNewValues.clear();
     }
-
     return commitmentsHashes;
   }
 

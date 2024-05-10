@@ -105,7 +105,7 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
       children.add(new StoredNode<>(this, Bytes.concatenate(location, Bytes.of(i))));
     }
     final Bytes32 hash = (Bytes32) values.get(0);
-    final Bytes32 commitment = (Bytes32) values.get(1);
+    final Bytes commitment = values.get(1);
     return new InternalNode<V>(location, hash, commitment, children);
   }
 
@@ -120,11 +120,11 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
     final int nChild = StemNode.maxChild();
     final Bytes stem = values.get(0);
     final Bytes32 hash = (Bytes32) values.get(1);
-    final Bytes32 commitment = (Bytes32) values.get(2);
+    final Bytes commitment = values.get(2);
     final Bytes32 leftHash = (Bytes32) values.get(3);
-    final Bytes32 leftCommitment = (Bytes32) values.get(4);
+    final Bytes leftCommitment = values.get(4);
     final Bytes32 rightHash = (Bytes32) values.get(5);
-    final Bytes32 rightCommitment = (Bytes32) values.get(6);
+    final Bytes rightCommitment = values.get(6);
     ArrayList<Node<V>> children = new ArrayList<Node<V>>(nChild);
     for (int i = 0; i < nChild; i++) {
       children.add(new StoredNode<>(this, Bytes.concatenate(stem, Bytes.of(i))));

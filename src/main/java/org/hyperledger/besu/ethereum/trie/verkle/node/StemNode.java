@@ -224,11 +224,8 @@ public class StemNode<V> extends BranchNode<V> {
    * Creates a new node by replacing all its commitments
    *
    * @param hash Node's vector commitment hash
-   * @param commitment Node's vector commitment
    * @param leftHash Node's left vector commitment hash
-   * @param leftCommitment Node's left vector commitment
    * @param rightHash Node's right vector commitment hash
-   * @param rightCommitment Node's right vector commitment
    * @return StemNode with new commitments.
    */
   public StemNode<V> replaceHash(

@@ -148,6 +148,7 @@ public class VerkleTreeBatchHasher {
         .log(
             "Executing batch hashing for {} commitments of stem (left/right) and internal nodes.",
             commitments.size());
+    Iterator<Bytes> commitmentsIterator = new ArrayList<>(commitments).iterator();
     Iterator<Bytes32> frs = hasher.hashMany(commitments.toArray(new Bytes[0])).iterator();
 
     commitments.clear();
@@ -157,9 +158,11 @@ public class VerkleTreeBatchHasher {
     for (final UpdatedNodeData<?> foundUpdatedNode : updatedNodeDataList) {
       if (foundUpdatedNode.node instanceof StemNode<?>) {
         commitments.add(
-            getStemNodeCommitment((UpdatedNodeData<StemNode<?>>) foundUpdatedNode, frs));
+            getStemNodeCommitment(
+                (UpdatedNodeData<StemNode<?>>) foundUpdatedNode, commitmentsIterator, frs));
       } else if (foundUpdatedNode.node instanceof InternalNode<?>) {
-        calculateInternalNodeHashes((UpdatedNodeData<InternalNode<?>>) foundUpdatedNode, frs);
+        calculateInternalNodeHashes(
+            (UpdatedNodeData<InternalNode<?>>) foundUpdatedNode, commitmentsIterator, frs);
       }
     }
     LOG.atTrace()
@@ -192,9 +195,11 @@ public class VerkleTreeBatchHasher {
   }
 
   private void calculateInternalNodeHashes(
-      final UpdatedNodeData<InternalNode<?>> foundUpdatedNode, final Iterator<Bytes32> iterator) {
+      final UpdatedNodeData<InternalNode<?>> foundUpdatedNode,
+      final Iterator<Bytes> commitmentsIterator,
+      final Iterator<Bytes32> iterator) {
     final Bytes32 hash = iterator.next();
-    foundUpdatedNode.node.replaceHash(hash, hash);
+    foundUpdatedNode.node.replaceHash(hash, commitmentsIterator.next());
   }
 
   private List<Bytes> getStemNodeLeftRightCommitments(
@@ -262,13 +267,16 @@ public class VerkleTreeBatchHasher {
   }
 
   private Bytes getStemNodeCommitment(
-      final UpdatedNodeData<StemNode<?>> foundUpdatedNode, final Iterator<Bytes32> iterator) {
+      final UpdatedNodeData<StemNode<?>> foundUpdatedNode,
+      final Iterator<Bytes> commitmentsIterator,
+      final Iterator<Bytes32> iterator) {
     Bytes32[] hashes = new Bytes32[4];
     hashes[0] = Bytes32.rightPad(Bytes.of(1)); // extension marker
     hashes[1] = Bytes32.rightPad(foundUpdatedNode.node.getStem());
     hashes[2] = iterator.next();
     hashes[3] = iterator.next();
-    foundUpdatedNode.node.replaceHash(null, null, hashes[2], hashes[2], hashes[3], hashes[3]);
+    foundUpdatedNode.node.replaceHash(
+        null, null, hashes[2], commitmentsIterator.next(), hashes[3], commitmentsIterator.next());
     return hasher.commit(hashes);
   }
 

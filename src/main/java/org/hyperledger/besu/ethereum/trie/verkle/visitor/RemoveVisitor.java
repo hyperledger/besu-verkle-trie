@@ -68,7 +68,11 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     if (updatedChild.isDirty() || wasChildNullified) {
       internalNode.markDirty();
       batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(internalNode.getLocation(), internalNode));
+          processor ->
+              processor.addNodeToBatch(
+                  internalNode.getLocation(),
+                  internalNode,
+                  internalNode.getHash().map(Bytes::wrap)));
     }
     final Optional<Byte> onlyChildIndex = findOnlyChild(internalNode);
     if (onlyChildIndex.isEmpty()) {
@@ -98,12 +102,16 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     stemNode.replaceChild(childIndex, newChild);
     if (allLeavesAreNull(stemNode)) {
       batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(stemNode.getLocation(), NULL_NODE));
+          processor ->
+              processor.addNodeToBatch(
+                  stemNode.getLocation(), NULL_NODE, stemNode.getHash().map(Bytes::wrap)));
       return NULL_NODE;
     }
     if (child != NULL_LEAF_NODE) { // Removed a genuine leaf-node
       batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(stemNode.getLocation(), stemNode));
+          processor ->
+              processor.addNodeToBatch(
+                  stemNode.getLocation(), stemNode, stemNode.getHash().map(Bytes::wrap)));
       stemNode.markDirty();
     }
     return stemNode;
@@ -120,7 +128,11 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   @Override
   public Node<V> visit(LeafNode<V> leafNode, Bytes path) {
     batchProcessor.ifPresent(
-        processor -> processor.addNodeToBatch(leafNode.getLocation(), NULL_LEAF_NODE));
+        processor ->
+            processor.addNodeToBatch(
+                leafNode.getLocation(),
+                NULL_LEAF_NODE,
+                leafNode.getValue().map(Bytes.class::cast)));
     return NULL_LEAF_NODE;
   }
 

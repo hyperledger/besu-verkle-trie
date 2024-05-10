@@ -49,7 +49,7 @@ public class GenesisTest {
   @MethodSource("provideGenesisAndStateRootExpected")
   public void putGenesis(String genesisCSVFile, String expectedStateRootHash) throws IOException {
     HashMap<Bytes, Bytes> storage = new HashMap<Bytes, Bytes>();
-    VerkleTrie<Bytes32, Bytes> trie = new SimpleVerkleTrie<Bytes32, Bytes>();
+    VerkleTrie<Bytes32, Bytes> trie = new SimpleBatchedVerkleTrie<>(new VerkleTreeBatchHasher());
     InputStream input = GenesisTest.class.getResourceAsStream(genesisCSVFile);
     try (Reader reader = new InputStreamReader(input, "UTF-8");
         CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT); ) {

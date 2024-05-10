@@ -70,7 +70,11 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     internalNode.replaceChild(index, updatedChild);
     if (updatedChild.isDirty()) {
       batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(internalNode.getLocation(), internalNode));
+          processor ->
+              processor.addNodeToBatch(
+                  internalNode.getLocation(),
+                  internalNode,
+                  internalNode.getHash().map(Bytes::wrap)));
       internalNode.markDirty();
     }
     return internalNode;
@@ -98,7 +102,9 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
       stemNode.replaceChild(index, updatedChild);
       if (updatedChild.isDirty()) {
         batchProcessor.ifPresent(
-            processor -> processor.addNodeToBatch(stemNode.getLocation(), stemNode));
+            processor ->
+                processor.addNodeToBatch(
+                    stemNode.getLocation(), stemNode, stemNode.getHash().map(Bytes::wrap)));
         stemNode.markDirty();
       }
       return stemNode;
@@ -107,7 +113,11 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
       final int depth = location.size();
       StemNode<V> updatedStemNode = stemNode.replaceLocation(stem.slice(0, depth + 1));
       batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(updatedStemNode.getLocation(), updatedStemNode));
+          processor ->
+              processor.addNodeToBatch(
+                  updatedStemNode.getLocation(),
+                  updatedStemNode,
+                  stemNode.getHash().map(Bytes::wrap)));
       newNode.replaceChild(stem.get(depth), updatedStemNode);
       batchProcessor.ifPresent(
           processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
@@ -131,7 +141,9 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     if (oldValue != value) {
       newNode = new LeafNode<V>(leafNode.getLocation(), value);
       batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
+          processor ->
+              processor.addNodeToBatch(
+                  newNode.getLocation(), newNode, leafNode.getValue().map(Bytes.class::cast)));
       newNode.markDirty();
     } else {
       newNode = leafNode;
@@ -155,7 +167,9 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     final StemNode<V> stemNode = new StemNode<V>(visited, leafKey);
     final Node<V> updatedNode = stemNode.accept(this, path);
     batchProcessor.ifPresent(
-        processor -> processor.addNodeToBatch(updatedNode.getLocation(), updatedNode));
+        processor ->
+            processor.addNodeToBatch(
+                updatedNode.getLocation(), updatedNode, stemNode.getHash().map(Bytes::wrap)));
     return updatedNode;
   }
 
@@ -171,7 +185,10 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     assert path.size() < 33;
     oldValue = Optional.empty();
     LeafNode<V> newNode = new LeafNode<>(visited, value);
-    batchProcessor.ifPresent(processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
+    batchProcessor.ifPresent(
+        processor ->
+            processor.addNodeToBatch(
+                newNode.getLocation(), newNode, nullLeafNode.getValue().map(Bytes.class::cast)));
     visited = Bytes.EMPTY;
     return newNode;
   }

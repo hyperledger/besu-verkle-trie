@@ -39,6 +39,8 @@ public class LeafNode<V> implements Node<V> {
   private final Function<V, Bytes> valueSerializer; // Serializer function for the value
   private boolean dirty = true; // not persisted
 
+  // For commitment updates, we need previously committed values.
+
   /**
    * Constructs a new LeafNode with location, value.
    *

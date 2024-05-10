@@ -17,12 +17,16 @@ package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /** Defines an interface for a Verkle Trie node hashing strategy. */
 public interface Hasher {
+
+  public static Bytes defaultCommitment =
+      Bytes.concatenate(Bytes32.ZERO, Bytes32.rightPad(Bytes.fromHexString("0x01")));
 
   /**
    * Commit to a vector of values.
@@ -33,12 +37,35 @@ public interface Hasher {
   Bytes commit(Bytes32[] inputs);
 
   /**
-   * Calculates the commitment hash for an array of inputs.
+   * Compute and serialise compress commitment to a dense vector of scalar values.
    *
-   * @param inputs An array of values to be hashed.
+   * @param scalars Serialised scalar values to commit to, up to 32-bytes-le.
    * @return The compressed serialized commitment used for calucating root Commitment.
    */
-  Bytes32 commitRoot(Bytes32[] inputs);
+  public Bytes32 commitRoot(Bytes[] scalars);
+
+  /**
+   * Update a commitment with a sparse vector of values.
+   *
+   * @param commitment Actual commitment value.
+   * @param indices List of vector's indices where values are updated.
+   * @param oldScalars List of previous scalar values.
+   * @param newScalars List of new scalar values.
+   * @return The uncompressed serialized updated commitment.
+   */
+  public Bytes commitUpdate(
+      Optional<Bytes> commitment,
+      List<Byte> indices,
+      List<Bytes> oldScalars,
+      List<Bytes> newScalars);
+
+  /**
+   * Convert a commitment to its serialised compressed form.
+   *
+   * @param commitment uncompressed serialised commitment
+   * @return serialised scalar
+   */
+  public Bytes32 compress(Bytes commitment);
 
   /**
    * Convert a commitment to its corresponding scalar.

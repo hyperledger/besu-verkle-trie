@@ -15,6 +15,7 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle;
 
+import static org.hyperledger.besu.ethereum.trie.verkle.node.Node.getHighValue;
 import static org.hyperledger.besu.ethereum.trie.verkle.node.Node.getLowValue;
 
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
@@ -43,13 +44,14 @@ import org.apache.tuweni.bytes.Bytes32;
  *
  * <p>This class manages the batching and hashing of trie nodes to optimize performance.
  */
+@SuppressWarnings("unchecked")
 public class VerkleTreeBatchHasher {
 
   private static final Logger LOG = LogManager.getLogger(VerkleTreeBatchHasher.class);
   private static final int MAX_BATCH_SIZE = 1000; // Maximum number of nodes in a batch
 
   private final Hasher hasher = new PedersenHasher(); // Hasher for node hashing
-  private final Map<Bytes, Node<?>> updatedNodes =
+  private final Map<Bytes, UpdatedNodeData<?>> updatedNodes =
       new HashMap<>(); // Map to hold nodes for batching
 
   /**
@@ -59,13 +61,18 @@ public class VerkleTreeBatchHasher {
    * @param location The location of the node.
    * @param node The node to add.
    */
-  public void addNodeToBatch(final Optional<Bytes> location, final Node<?> node) {
+  public void addNodeToBatch(
+      final Optional<Bytes> location, final Node<?> node, final Optional<Bytes> previous) {
     if ((node instanceof NullNode<?> || node instanceof NullLeafNode<?>)
         && !location.orElseThrow().isEmpty()) {
       updatedNodes.remove(location.orElseThrow());
     } else {
-      updatedNodes.put(location.orElseThrow(), node);
+      updatedNodes.put(location.orElseThrow(), new UpdatedNodeData<>(node, previous));
     }
+  }
+
+  public void addNodeToBatch(final Optional<Bytes> location, final Node<?> node) {
+    addNodeToBatch(location, node, Optional.empty());
   }
 
   /**
@@ -73,7 +80,7 @@ public class VerkleTreeBatchHasher {
    *
    * @return Map of nodes to be batched.
    */
-  public Map<Bytes, Node<?>> getNodesToBatch() {
+  public Map<Bytes, UpdatedNodeData<?>> getNodesToBatch() {
     return updatedNodes;
   }
 
@@ -81,37 +88,40 @@ public class VerkleTreeBatchHasher {
    * Processes the nodes in batches. Sorts the nodes by their location and hashes them in batches.
    * Clears the batch after processing.
    */
+  @SuppressWarnings("unchecked")
   public void calculateStateRoot() {
     if (updatedNodes.isEmpty()) {
       return;
     }
 
-    final List<Map.Entry<Bytes, Node<?>>> sortedNodesByLocation =
+    final List<Map.Entry<Bytes, UpdatedNodeData<?>>> sortedNodesByLocation =
         new ArrayList<>(updatedNodes.entrySet());
     sortedNodesByLocation.sort(
         (entry1, entry2) -> Integer.compare(entry2.getKey().size(), entry1.getKey().size()));
 
     int currentDepth = -1; // Tracks the depth of the current batch
 
-    final List<Node<?>> nodesInSameLevel = new ArrayList<>();
-    for (Map.Entry<Bytes, Node<?>> entry : sortedNodesByLocation) {
+    final List<UpdatedNodeData<?>> nodesInSameLevel = new ArrayList<>();
+    for (Map.Entry<Bytes, UpdatedNodeData<?>> entry : sortedNodesByLocation) {
       final Bytes location = entry.getKey();
-      final Node<?> node = entry.getValue();
-      if (node instanceof BranchNode<?>) {
+      final UpdatedNodeData<?> foundUpdatedNode = entry.getValue();
+      if (foundUpdatedNode.node instanceof BranchNode<?>) {
         if (location.size() != currentDepth || nodesInSameLevel.size() > MAX_BATCH_SIZE) {
           if (!nodesInSameLevel.isEmpty()) {
             processBatch(nodesInSameLevel);
             nodesInSameLevel.clear();
           }
           if (location.isEmpty()) {
-            calculateRootInternalNodeHash((InternalNode<?>) node);
+            calculateRootInternalNodeHash((UpdatedNodeData<InternalNode<?>>) foundUpdatedNode);
             updatedNodes.clear();
             return;
           }
           currentDepth = location.size();
         }
-        if (node.isDirty() || node.getHash().isEmpty() || node.getCommitment().isEmpty()) {
-          nodesInSameLevel.add(node);
+        if (foundUpdatedNode.node.isDirty()
+            || foundUpdatedNode.node.getHash().isEmpty()
+            || foundUpdatedNode.node.getCommitment().isEmpty()) {
+          nodesInSameLevel.add(foundUpdatedNode);
         }
       }
     }
@@ -119,16 +129,18 @@ public class VerkleTreeBatchHasher {
     throw new IllegalStateException("root node not found");
   }
 
-  private void processBatch(List<Node<?>> nodes) {
-    LOG.atInfo().log("Start hashing {} batch of nodes", nodes.size());
+  private void processBatch(List<UpdatedNodeData<?>> updatedNodeDataList) {
+    LOG.atInfo().log("Start hashing {} batch of nodes", updatedNodeDataList.size());
     final List<Bytes> commitments = new ArrayList<>();
 
     LOG.atTrace().log("Creating commitments for stem nodes and internal nodes");
-    for (final Node<?> node : nodes) {
-      if (node instanceof StemNode<?>) {
-        commitments.addAll(getStemNodeLeftRightCommitments((StemNode<?>) node));
-      } else if (node instanceof InternalNode<?>) {
-        commitments.addAll(getInternalNodeCommitments((InternalNode<?>) node));
+    for (final UpdatedNodeData<?> foundUpdatedNode : updatedNodeDataList) {
+      if (foundUpdatedNode.node instanceof StemNode<?>) {
+        commitments.addAll(
+            getStemNodeLeftRightCommitments((UpdatedNodeData<StemNode<?>>) foundUpdatedNode));
+      } else if (foundUpdatedNode.node instanceof InternalNode<?>) {
+        commitments.addAll(
+            getInternalNodeCommitments((UpdatedNodeData<InternalNode<?>>) foundUpdatedNode));
       }
     }
 
@@ -142,11 +154,12 @@ public class VerkleTreeBatchHasher {
 
     LOG.atTrace()
         .log("Creating commitments for stem nodes and refreshing hashes of internal nodes");
-    for (final Node<?> node : nodes) {
-      if (node instanceof StemNode<?>) {
-        commitments.add(getStemNodeCommitment((StemNode<?>) node, frs));
-      } else if (node instanceof InternalNode<?>) {
-        calculateInternalNodeHashes((InternalNode<?>) node, frs);
+    for (final UpdatedNodeData<?> foundUpdatedNode : updatedNodeDataList) {
+      if (foundUpdatedNode.node instanceof StemNode<?>) {
+        commitments.add(
+            getStemNodeCommitment((UpdatedNodeData<StemNode<?>>) foundUpdatedNode, frs));
+      } else if (foundUpdatedNode.node instanceof InternalNode<?>) {
+        calculateInternalNodeHashes((UpdatedNodeData<InternalNode<?>>) foundUpdatedNode, frs);
       }
     }
     LOG.atTrace()
@@ -154,83 +167,140 @@ public class VerkleTreeBatchHasher {
     frs = hasher.hashMany(commitments.toArray(new Bytes[0])).iterator();
 
     LOG.atTrace().log("Refreshing hashes of stem nodes");
-    for (final Node<?> node : nodes) {
-      if (node instanceof StemNode<?>) {
-        calculateStemNodeHashes((StemNode<?>) node, frs);
+    for (final UpdatedNodeData<?> foundUpdatedNode : updatedNodeDataList) {
+      if (foundUpdatedNode.node instanceof StemNode<?>) {
+        calculateStemNodeHashes((UpdatedNodeData<StemNode<?>>) foundUpdatedNode, frs);
       }
     }
   }
 
-  private void calculateRootInternalNodeHash(final InternalNode<?> internalNode) {
+  private void calculateRootInternalNodeHash(final UpdatedNodeData<InternalNode<?>> internalNode) {
     final Bytes32 hash = Bytes32.wrap(getInternalNodeCommitments(internalNode).get(0));
-    internalNode.replaceHash(hash, hash);
+    internalNode.node.replaceHash(hash, hash);
   }
 
   private void calculateStemNodeHashes(
-      final StemNode<?> stemNode, final Iterator<Bytes32> iterator) {
+      final UpdatedNodeData<StemNode<?>> foundUpdatedNode, final Iterator<Bytes32> iterator) {
     final Bytes32 hash = iterator.next();
-    stemNode.replaceHash(
+    foundUpdatedNode.node.replaceHash(
         hash,
         hash,
-        stemNode.getLeftHash().orElseThrow(),
-        stemNode.getLeftCommitment().orElseThrow(),
-        stemNode.getRightHash().orElseThrow(),
-        stemNode.getRightCommitment().orElseThrow());
+        foundUpdatedNode.node.getLeftHash().orElseThrow(),
+        foundUpdatedNode.node.getLeftCommitment().orElseThrow(),
+        foundUpdatedNode.node.getRightHash().orElseThrow(),
+        foundUpdatedNode.node.getRightCommitment().orElseThrow());
   }
 
   private void calculateInternalNodeHashes(
-      final InternalNode<?> internalNode, final Iterator<Bytes32> iterator) {
+      final UpdatedNodeData<InternalNode<?>> foundUpdatedNode, final Iterator<Bytes32> iterator) {
     final Bytes32 hash = iterator.next();
-    internalNode.replaceHash(hash, hash);
+    foundUpdatedNode.node.replaceHash(hash, hash);
   }
 
-  private List<Bytes> getStemNodeLeftRightCommitments(StemNode<?> stemNode) {
+  private List<Bytes> getStemNodeLeftRightCommitments(
+      UpdatedNodeData<StemNode<?>> foundUpdatedNode) {
     int size = StemNode.maxChild();
     List<Bytes> commitmentsHashes = new ArrayList<>();
-    Bytes32[] leftValues = new Bytes32[size];
-    Bytes32[] rightValues = new Bytes32[size];
-    for (int i = 0; i < size / 2; i++) {
-      byte index = (byte) i;
-      Node<?> child = stemNode.child(index);
-      leftValues[2 * i] = getLowValue(child.getValue());
-      leftValues[2 * i + 1] = Node.getHighValue(child.getValue());
+
+    final List<Byte> leftIndices = new ArrayList<>();
+    final List<Bytes> leftOldValues = new ArrayList<>();
+    final List<Bytes> leftNewValues = new ArrayList<>();
+
+    final List<Byte> rightIndices = new ArrayList<>();
+    final List<Bytes> rightOldValues = new ArrayList<>();
+    final List<Bytes> rightNewValues = new ArrayList<>();
+
+    int halfSize = size / 2;
+    for (int i = 0; i < size; i++) {
+      Node<?> node = foundUpdatedNode.node.child((byte) i);
+      int idx = Byte.toUnsignedInt((byte) i);
+      Optional<Bytes> previousValue =
+          node.getLocation()
+              .map(updatedNodes::get)
+              .flatMap(updatedNodeData -> updatedNodeData.previous);
+      if (idx < halfSize) {
+        leftIndices.add((byte) (2 * idx));
+        leftIndices.add((byte) (2 * idx + 1));
+        leftOldValues.add(getLowValue(previousValue));
+        leftOldValues.add(getHighValue(previousValue));
+        leftNewValues.add(getLowValue(node.getValue()));
+        leftNewValues.add(getHighValue(node.getValue()));
+      } else {
+        rightIndices.add((byte) (2 * idx));
+        rightIndices.add((byte) (2 * idx + 1));
+        rightOldValues.add(getLowValue(previousValue));
+        rightOldValues.add(getHighValue(previousValue));
+        rightNewValues.add(getLowValue(node.getValue()));
+        rightNewValues.add(getHighValue(node.getValue()));
+      }
     }
-    for (int i = size / 2; i < size; i++) {
-      byte index = (byte) i;
-      Node<?> child = stemNode.child(index);
-      rightValues[2 * i - size] = getLowValue(child.getValue());
-      rightValues[2 * i + 1 - size] = Node.getHighValue(child.getValue());
+
+    if (!leftIndices.isEmpty()) {
+      commitmentsHashes.add(
+          hasher.commitUpdate(
+              foundUpdatedNode.node.getLeftCommitment(),
+              leftIndices,
+              leftOldValues,
+              leftNewValues));
+      leftIndices.clear();
+      leftOldValues.clear();
+      leftNewValues.clear();
     }
-    commitmentsHashes.add(hasher.commit(leftValues));
-    commitmentsHashes.add(hasher.commit(rightValues));
+    if (!rightIndices.isEmpty()) {
+      commitmentsHashes.add(
+          hasher.commitUpdate(
+              foundUpdatedNode.node.getRightCommitment(),
+              rightIndices,
+              rightOldValues,
+              rightNewValues));
+      rightIndices.clear();
+      rightOldValues.clear();
+      rightNewValues.clear();
+    }
+
     return commitmentsHashes;
   }
 
   private Bytes getStemNodeCommitment(
-      final StemNode<?> stemNode, final Iterator<Bytes32> iterator) {
+      final UpdatedNodeData<StemNode<?>> foundUpdatedNode, final Iterator<Bytes32> iterator) {
     Bytes32[] hashes = new Bytes32[4];
     hashes[0] = Bytes32.rightPad(Bytes.of(1)); // extension marker
-    hashes[1] = Bytes32.rightPad(stemNode.getStem());
+    hashes[1] = Bytes32.rightPad(foundUpdatedNode.node.getStem());
     hashes[2] = iterator.next();
     hashes[3] = iterator.next();
-    stemNode.replaceHash(null, null, hashes[2], hashes[2], hashes[3], hashes[3]);
+    foundUpdatedNode.node.replaceHash(null, null, hashes[2], hashes[2], hashes[3], hashes[3]);
     return hasher.commit(hashes);
   }
 
-  private List<Bytes> getInternalNodeCommitments(InternalNode<?> internalNode) {
+  private List<Bytes> getInternalNodeCommitments(
+      UpdatedNodeData<InternalNode<?>> foundUpdatedNode) {
     int size = InternalNode.maxChild();
     List<Bytes> commitmentsHashes = new ArrayList<>();
-    Bytes32[] hashes = new Bytes32[size];
+
+    final List<Byte> indices = new ArrayList<>();
+    final List<Bytes> oldValues = new ArrayList<>();
+    final List<Bytes> newValues = new ArrayList<>();
+
     for (int i = 0; i < size; i++) {
-      byte index = (byte) i;
-      Node<?> child = internalNode.child(index);
-      hashes[i] = child.getHash().get();
+      Node<?> node = foundUpdatedNode.node.child((byte) i);
+      indices.add((byte) i);
+      oldValues.add(
+          node.getLocation()
+              .map(updatedNodes::get)
+              .flatMap(updatedNodeData -> updatedNodeData.previous)
+              .orElse(Bytes.EMPTY));
+      newValues.add(node.getHash().get());
     }
-    if (internalNode.getLocation().orElseThrow().isEmpty()) {
-      commitmentsHashes.add(hasher.commitRoot(hashes));
+    if (foundUpdatedNode.node.getLocation().orElseThrow().isEmpty()) {
+      commitmentsHashes.add(hasher.commitRoot(newValues.toArray(new Bytes[] {})));
     } else {
-      commitmentsHashes.add(hasher.commit(hashes));
+      System.out.println(foundUpdatedNode.node.getLocation());
+      commitmentsHashes.add(
+          hasher.commitUpdate(
+              foundUpdatedNode.node.getCommitment(), indices, oldValues, newValues));
     }
     return commitmentsHashes;
   }
+
+  public record UpdatedNodeData<V extends Node<?>>(V node, Optional<Bytes> previous) {}
 }

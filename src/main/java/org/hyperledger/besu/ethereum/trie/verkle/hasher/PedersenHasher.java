@@ -23,9 +23,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.bytes.MutableBytes;
 
 /**
  * A class responsible for hashing an array of Bytes32 using the pedersen commitment - multi scalar
@@ -65,8 +67,39 @@ public class PedersenHasher implements Hasher {
    *     to computing root Commitment.
    */
   @Override
-  public Bytes32 commitRoot(final Bytes32[] inputs) {
+  public Bytes32 commitRoot(final Bytes[] inputs) {
     return Bytes32.wrap(LibIpaMultipoint.commitAsCompressed(Bytes.concatenate(inputs).toArray()));
+  }
+
+  @Override
+  public Bytes commitUpdate(
+      final Optional<Bytes> commitment,
+      final List<Byte> indices,
+      final List<Bytes> oldScalars,
+      final List<Bytes> newScalars) {
+    Bytes cmnt = commitment.orElse(defaultCommitment);
+    byte[] idx = new byte[indices.size()];
+    for (int i = 0; i < indices.size(); i++) {
+      idx[i] = (byte) indices.get(i);
+    }
+    System.out.println("commit " + cmnt);
+    return Bytes.wrap(
+        LibIpaMultipoint.updateSparse(
+            cmnt.toArray(),
+            idx,
+            prepareScalars(oldScalars.toArray(new Bytes[oldScalars.size()])).toArray(),
+            prepareScalars(newScalars.toArray(new Bytes[newScalars.size()])).toArray()));
+  }
+
+  /**
+   * Convert a commitment to its serialised compressed form.
+   *
+   * @param commitment uncompressed serialised commitment
+   * @return serialised scalar
+   */
+  @Override
+  public Bytes32 compress(Bytes commitment) {
+    return Bytes32.wrap(LibIpaMultipoint.compress(commitment.toArray()));
   }
 
   /**
@@ -178,5 +211,27 @@ public class PedersenHasher implements Hasher {
       chunks[i + 1] = Bytes32.rightPad(chunk);
     }
     return chunks;
+  }
+
+  // Protected methods
+
+  Bytes rightPadInput(int size, Bytes[] inputs) {
+    MutableBytes result = MutableBytes.create(inputs.length * size);
+    for (int i = 0; i < inputs.length; i++) {
+      int offset = i * size;
+      if (inputs[i].size() > size) {
+        throw new RuntimeException();
+      }
+      result.set(offset, inputs[i]);
+    }
+    return result;
+  }
+
+  Bytes prepareScalars(Bytes[] inputs) {
+    return rightPadInput(32, inputs);
+  }
+
+  Bytes prepareCommitments(Bytes[] inputs) {
+    return rightPadInput(64, inputs);
   }
 }

@@ -107,7 +107,7 @@ public abstract class BranchNode<V> implements Node<V> {
       children.add(NullNode.instance());
     }
     hash = Optional.of(EMPTY_HASH);
-    commitment = Optional.of(EMPTY_COMMITMENT);
+    commitment = Optional.empty();
   }
 
   /**

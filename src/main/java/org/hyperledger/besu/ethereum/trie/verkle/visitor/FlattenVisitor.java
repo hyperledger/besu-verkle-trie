@@ -35,7 +35,6 @@ import org.apache.tuweni.bytes.Bytes;
  * @param <V> The type of node values.
  */
 public class FlattenVisitor<V> implements NodeVisitor<V> {
-  private final Node<V> NULL_NODE = NullNode.instance();
 
   private final Optional<VerkleTreeBatchHasher> batchProcessor;
 
@@ -45,7 +44,7 @@ public class FlattenVisitor<V> implements NodeVisitor<V> {
 
   @Override
   public Node<V> visit(InternalNode<V> internalNode) {
-    return NULL_NODE;
+    return new NullNode<>();
   }
 
   @Override
@@ -57,12 +56,15 @@ public class FlattenVisitor<V> implements NodeVisitor<V> {
       final StemNode<V> updateStemNode = stemNode.replaceLocation(newLocation);
       batchProcessor.ifPresent(
           processor -> {
-            processor.addNodeToBatch(stemNode.getLocation(), NULL_NODE);
+            final NullNode<V> nullNode = new NullNode<>();
+            nullNode.markDirty();
+            processor.addNodeToBatch(stemNode.getLocation(), nullNode);
+            updateStemNode.markDirty();
             processor.addNodeToBatch(updateStemNode.getLocation(), updateStemNode);
           });
       return updateStemNode;
     } else {
-      return NULL_NODE;
+      return new NullNode<>();
     }
   }
 }

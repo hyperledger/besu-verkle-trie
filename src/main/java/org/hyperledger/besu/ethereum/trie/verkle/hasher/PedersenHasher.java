@@ -80,9 +80,8 @@ public class PedersenHasher implements Hasher {
     Bytes cmnt = commitment.orElse(defaultCommitment);
     byte[] idx = new byte[indices.size()];
     for (int i = 0; i < indices.size(); i++) {
-      idx[i] = (byte) indices.get(i);
+      idx[i] = indices.get(i);
     }
-    System.out.println("commit " + cmnt);
     return Bytes.wrap(
         LibIpaMultipoint.updateSparse(
             cmnt.toArray(),

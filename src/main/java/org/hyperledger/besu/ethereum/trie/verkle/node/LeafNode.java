@@ -32,12 +32,11 @@ import org.apache.tuweni.rlp.RLPWriter;
  *
  * @param <V> The type of the node's value.
  */
-public class LeafNode<V> implements Node<V> {
+public class LeafNode<V> extends Node<V> {
   private final Optional<Bytes> location; // Location in the tree, or the key
   private final V value; // Value associated with the node
   private Optional<Bytes> encodedValue = Optional.empty(); // Encoded value
   private final Function<V, Bytes> valueSerializer; // Serializer function for the value
-  private boolean dirty = true; // not persisted
 
   // For commitment updates, we need previously committed values.
 
@@ -48,6 +47,7 @@ public class LeafNode<V> implements Node<V> {
    * @param value The value associated with the node.
    */
   public LeafNode(final Bytes location, final V value) {
+    super(false, false);
     this.location = Optional.of(location);
     this.value = value;
     this.valueSerializer = val -> (Bytes) val;
@@ -60,8 +60,15 @@ public class LeafNode<V> implements Node<V> {
    * @param value The value associated with the node.
    */
   public LeafNode(final Optional<Bytes> location, final V value) {
+    this(location, value, Optional.of(value));
+    this.previous = Optional.of(value);
+  }
+
+  public LeafNode(final Optional<Bytes> location, final V value, final Optional<V> previousValue) {
+    super(false, false);
     this.location = location;
     this.value = value;
+    this.previous = previousValue;
     this.valueSerializer = val -> (Bytes) val;
   }
 
@@ -136,28 +143,6 @@ public class LeafNode<V> implements Node<V> {
     Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
     this.encodedValue = Optional.of(result);
     return result;
-  }
-
-  /** Marks the node as needing to be persisted. */
-  @Override
-  public void markDirty() {
-    dirty = true;
-  }
-
-  /** Marks the node as clean, indicating that it no longer needs to be persisted. */
-  @Override
-  public void markClean() {
-    dirty = false;
-  }
-
-  /**
-   * Checks if the node needs to be persisted.
-   *
-   * @return True if the node needs to be persisted.
-   */
-  @Override
-  public boolean isDirty() {
-    return dirty;
   }
 
   /**

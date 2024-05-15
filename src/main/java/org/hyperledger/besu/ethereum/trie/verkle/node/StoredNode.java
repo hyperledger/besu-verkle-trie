@@ -32,12 +32,10 @@ import org.apache.tuweni.bytes.Bytes32;
  *
  * @param <V> The type of the node's value.
  */
-public class StoredNode<V> implements Node<V> {
+public class StoredNode<V> extends Node<V> {
   private final Bytes location;
   private final NodeFactory<V> nodeFactory;
   private Optional<Node<V>> loadedNode;
-
-  private boolean dirty = true; // not persisted
 
   /**
    * Constructs a new StoredNode at location.
@@ -46,6 +44,7 @@ public class StoredNode<V> implements Node<V> {
    * @param location The location in the tree.
    */
   public StoredNode(final NodeFactory<V> nodeFactory, final Bytes location) {
+    super(false, true);
     this.location = location;
     this.nodeFactory = nodeFactory;
     loadedNode = Optional.empty();
@@ -119,6 +118,11 @@ public class StoredNode<V> implements Node<V> {
     return node.getCommitment();
   }
 
+  @Override
+  public void markDirty() {
+    // no op
+  }
+
   /**
    * Get the encoded value of the node.
    *
@@ -139,28 +143,6 @@ public class StoredNode<V> implements Node<V> {
   public List<Node<V>> getChildren() {
     final Node<V> node = load();
     return node.getChildren();
-  }
-
-  /** Marks the node as needs to be persisted */
-  @Override
-  public void markDirty() {
-    dirty = true;
-  }
-
-  /** Marks the node as no longer needs to be persisted */
-  @Override
-  public void markClean() {
-    dirty = false;
-  }
-
-  /**
-   * Is this node not persisted and needs to be?
-   *
-   * @return True if the node needs to be persisted.
-   */
-  @Override
-  public boolean isDirty() {
-    return dirty;
   }
 
   /**
@@ -197,9 +179,9 @@ public class StoredNode<V> implements Node<V> {
     if (loadedNode.isPresent()) {
       return loadedNode.get();
     } else if (location.size() == 32) {
-      return NullLeafNode.instance();
+      return new NullLeafNode<>();
     } else {
-      return NullNode.instance();
+      return new NullNode<>();
     }
   }
 }

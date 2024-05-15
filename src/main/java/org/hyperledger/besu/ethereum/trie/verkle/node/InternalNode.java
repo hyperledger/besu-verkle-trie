@@ -49,33 +49,7 @@ public class InternalNode<V> extends BranchNode<V> {
       final Bytes commitment,
       final List<Node<V>> children) {
     super(location, hash, commitment, children);
-  }
-
-  /**
-   * Constructs a new InternalNode with optional location, optional hash, optional commitment and
-   * children.
-   *
-   * @param location The optional location in the tree.
-   * @param hash The optional vector commitment of children's commitments.
-   * @param commitment Node's optional vector commitment.
-   * @param children The list of children nodes.
-   */
-  public InternalNode(
-      final Optional<Bytes> location,
-      final Optional<Bytes32> hash,
-      final Optional<Bytes> commitment,
-      final List<Node<V>> children) {
-    super(location, hash, commitment, children);
-  }
-
-  /**
-   * Constructs a new InternalNode with optional location, path, and children.
-   *
-   * @param location The optional location in the tree.
-   * @param children The list of children nodes.
-   */
-  public InternalNode(final Optional<Bytes> location, final List<Node<V>> children) {
-    super(location, children);
+    this.previous = Optional.of(hash);
   }
 
   /**
@@ -150,11 +124,11 @@ public class InternalNode<V> extends BranchNode<V> {
     final StringBuilder builder = new StringBuilder();
     builder.append("Internal:");
     for (int i = 0; i < maxChild(); i++) {
-      final Node<V> childNode = child((byte) i);
-      if (childNode != NullNode.instance()) {
-        if (!(childNode instanceof StoredNode) || !childNode.getEncodedValue().isEmpty()) {
+      final Node<V> child = child((byte) i);
+      if (!(child instanceof NullNode)) {
+        if (!(child instanceof StoredNode) || !child.getEncodedValue().isEmpty()) {
           final String label = String.format("[%02x] ", i);
-          final String childRep = childNode.print().replaceAll("\n\t", "\n\t\t");
+          final String childRep = child.print().replaceAll("\n\t", "\n\t\t");
           builder.append("\n\t").append(label).append(childRep);
         }
       }

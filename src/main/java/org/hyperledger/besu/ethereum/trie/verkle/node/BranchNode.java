@@ -20,7 +20,6 @@ import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -31,13 +30,11 @@ import org.apache.tuweni.bytes.Bytes32;
  *
  * @param <V> The type of the node's value.
  */
-public abstract class BranchNode<V> implements Node<V> {
+public abstract class BranchNode<V> extends Node<V> {
   private final Optional<Bytes> location; // Location in the tree
   protected Optional<Bytes32> hash; // Vector commitment's hash
   protected Optional<Bytes> commitment; // Vector commitment serialized
   private final List<Node<V>> children; // List of children nodes
-
-  private boolean dirty = true; // not persisted
 
   /**
    * Constructs a new BranchNode with location, hash, path, and children.
@@ -52,6 +49,7 @@ public abstract class BranchNode<V> implements Node<V> {
       final Bytes32 hash,
       final Bytes commitment,
       final List<Node<V>> children) {
+    super(false, false);
     assert (children.size() == maxChild());
     this.location = Optional.of(location);
     this.hash = Optional.of(hash);
@@ -73,6 +71,7 @@ public abstract class BranchNode<V> implements Node<V> {
       final Optional<Bytes32> hash,
       final Optional<Bytes> commitment,
       final List<Node<V>> children) {
+    super(false, false);
     assert (children.size() == maxChild());
     this.location = location;
     this.hash = hash;
@@ -87,6 +86,7 @@ public abstract class BranchNode<V> implements Node<V> {
    * @param children The list of children nodes.
    */
   public BranchNode(final Optional<Bytes> location, final List<Node<V>> children) {
+    super(false, false);
     assert (children.size() == maxChild());
     this.location = location;
     this.children = children;
@@ -101,10 +101,13 @@ public abstract class BranchNode<V> implements Node<V> {
    * @param location The optional location in the tree.
    */
   public BranchNode(final Bytes location) {
+    super(false, false);
     this.location = Optional.of(location);
     this.children = new ArrayList<>();
     for (int i = 0; i < maxChild(); i++) {
-      children.add(NullNode.instance());
+      final NullNode<V> nullNode = new NullNode<V>();
+      nullNode.markDirty();
+      children.add(nullNode);
     }
     hash = Optional.of(EMPTY_HASH);
     commitment = Optional.empty();
@@ -117,6 +120,12 @@ public abstract class BranchNode<V> implements Node<V> {
    */
   public static int maxChild() {
     return 256;
+  }
+
+  @Override
+  public void markClean() {
+    super.markClean();
+    getChildren().forEach(Node::markClean);
   }
 
   /**
@@ -206,27 +215,10 @@ public abstract class BranchNode<V> implements Node<V> {
     return children;
   }
 
-  /** Marks the node as dirty, indicating that it needs to be persisted. */
   @Override
-  public void markDirty() {
-    dirty = true;
+  public Optional<Bytes32> getPrevious() {
+    return previous.map(Bytes32.class::cast);
   }
-
-  /** Marks the node as clean, indicating that it no longer needs to be persisted. */
-  @Override
-  public void markClean() {
-    dirty = false;
-  }
-  /**
-   * Checks if the node is dirty, indicating that it needs to be persisted.
-   *
-   * @return `true` if the node is marked as dirty, `false` otherwise.
-   */
-  @Override
-  public boolean isDirty() {
-    return dirty;
-  }
-
   /**
    * Generates a string representation of the branch node and its children.
    *
@@ -238,7 +230,7 @@ public abstract class BranchNode<V> implements Node<V> {
     builder.append("Branch:");
     for (int i = 0; i < maxChild(); i++) {
       final Node<V> child = child((byte) i);
-      if (!Objects.equals(child, NullNode.instance())) {
+      if (!(child instanceof NullNode)) {
         final String branchLabel = "[" + Integer.toHexString(i) + "] ";
         final String childRep = child.print().replaceAll("\n\t", "\n\t\t");
         builder.append("\n\t").append(branchLabel).append(childRep);

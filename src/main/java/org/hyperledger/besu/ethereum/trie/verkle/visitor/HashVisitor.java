@@ -21,7 +21,10 @@ import static org.hyperledger.besu.ethereum.trie.verkle.node.Node.getLowValue;
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.PedersenHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
+import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -66,7 +69,9 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     } else {
       hash = hasher.hash(hasher.commit(hashes));
     }
-    return internalNode.replaceHash(hash, hash); // commitment should be different
+    final Node<V> vNode = internalNode.replaceHash(hash, hash); // commitment should be different
+    vNode.markClean();
+    return vNode;
   }
 
   /**
@@ -90,12 +95,14 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     for (int i = 0; i < size / 2; i++) {
       byte index = (byte) i;
       Node<V> child = stemNode.child(index);
+      child.markClean();
       leftValues[2 * i] = getLowValue(child.getValue());
       leftValues[2 * i + 1] = getHighValue(child.getValue());
     }
     for (int i = size / 2; i < size; i++) {
       byte index = (byte) i;
       Node<V> child = stemNode.child(index);
+      child.markClean();
       rightValues[2 * i - size] = getLowValue(child.getValue());
       rightValues[2 * i + 1 - size] = getHighValue(child.getValue());
     }
@@ -104,7 +111,29 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     hashes[2] = hasher.hash(hasher.commit(leftValues));
     hashes[3] = hasher.hash(hasher.commit(rightValues));
     final Bytes32 hash = hasher.hash(hasher.commit(hashes));
-    return stemNode.replaceHash(
-        hash, hash, hashes[2], hashes[2], hashes[3], hashes[3]); // commitment should be different
+    StemNode<V> vStemNode =
+        stemNode.replaceHash(
+            hash, hash, hashes[2], hashes[2], hashes[3],
+            hashes[3]); // commitment should be different
+    vStemNode.markClean();
+    return vStemNode;
+  }
+
+  @Override
+  public Node<V> visit(final LeafNode<V> leafNode, final Bytes path) {
+    leafNode.markClean();
+    return leafNode;
+  }
+
+  @Override
+  public Node<V> visit(final NullNode<V> nullNode, final Bytes path) {
+    nullNode.markClean();
+    return nullNode;
+  }
+
+  @Override
+  public Node<V> visit(final NullLeafNode<V> nullLeafNode, final Bytes path) {
+    nullLeafNode.markClean();
+    return nullLeafNode;
   }
 }

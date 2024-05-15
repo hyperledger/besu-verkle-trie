@@ -43,7 +43,7 @@ To format the code according to the project's style guide, use the spotlessApply
 
 ## Contribute
 
-Contributions are welcome! Please see - [CONTRIBUTING.md](CONTRIBUTING.md) for details.
+Contributions are welcome! Please see - [CONTRIBUTING.md](CONTRIBUTING.md) for details. 
 
 ## LICENSE
 

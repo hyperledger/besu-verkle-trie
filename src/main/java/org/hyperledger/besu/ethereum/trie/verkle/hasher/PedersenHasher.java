@@ -77,7 +77,7 @@ public class PedersenHasher implements Hasher {
       final List<Byte> indices,
       final List<Bytes> oldScalars,
       final List<Bytes> newScalars) {
-    Bytes cmnt = commitment.orElse(defaultCommitment);
+    Bytes cmnt = commitment.orElse(DEFAULT_COMMITMENT);
     byte[] idx = new byte[indices.size()];
     for (int i = 0; i < indices.size(); i++) {
       idx[i] = indices.get(i);
@@ -212,8 +212,6 @@ public class PedersenHasher implements Hasher {
     return chunks;
   }
 
-  // Protected methods
-
   Bytes rightPadInput(int size, Bytes[] inputs) {
     MutableBytes result = MutableBytes.create(inputs.length * size);
     for (int i = 0; i < inputs.length; i++) {
@@ -228,9 +226,5 @@ public class PedersenHasher implements Hasher {
 
   Bytes prepareScalars(Bytes[] inputs) {
     return rightPadInput(32, inputs);
-  }
-
-  Bytes prepareCommitments(Bytes[] inputs) {
-    return rightPadInput(64, inputs);
   }
 }

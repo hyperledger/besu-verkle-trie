@@ -25,7 +25,7 @@ import org.apache.tuweni.bytes.Bytes32;
 /** Defines an interface for a Verkle Trie node hashing strategy. */
 public interface Hasher {
 
-  public static Bytes defaultCommitment =
+  Bytes DEFAULT_COMMITMENT =
       Bytes.concatenate(Bytes32.ZERO, Bytes32.rightPad(Bytes.fromHexString("0x01")));
 
   /**
@@ -42,7 +42,7 @@ public interface Hasher {
    * @param scalars Serialised scalar values to commit to, up to 32-bytes-le.
    * @return The compressed serialized commitment used for calucating root Commitment.
    */
-  public Bytes32 commitRoot(Bytes[] scalars);
+  Bytes32 commitRoot(Bytes[] scalars);
 
   /**
    * Update a commitment with a sparse vector of values.
@@ -53,7 +53,7 @@ public interface Hasher {
    * @param newScalars List of new scalar values.
    * @return The uncompressed serialized updated commitment.
    */
-  public Bytes commitUpdate(
+  Bytes commitUpdate(
       Optional<Bytes> commitment,
       List<Byte> indices,
       List<Bytes> oldScalars,
@@ -65,7 +65,7 @@ public interface Hasher {
    * @param commitment uncompressed serialised commitment
    * @return serialised scalar
    */
-  public Bytes32 compress(Bytes commitment);
+  Bytes32 compress(Bytes commitment);
 
   /**
    * Convert a commitment to its corresponding scalar.

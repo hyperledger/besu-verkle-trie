@@ -38,8 +38,6 @@ public class LeafNode<V> extends Node<V> {
   private Optional<Bytes> encodedValue = Optional.empty(); // Encoded value
   private final Function<V, Bytes> valueSerializer; // Serializer function for the value
 
-  // For commitment updates, we need previously committed values.
-
   /**
    * Constructs a new LeafNode with location, value.
    *

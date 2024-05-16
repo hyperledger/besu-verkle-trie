@@ -46,7 +46,6 @@ import org.apache.tuweni.bytes.Bytes32;
  *
  * <p>This class manages the batching and hashing of trie nodes to optimize performance.
  */
-@SuppressWarnings("unchecked")
 public class VerkleTreeBatchHasher {
 
   private static final Logger LOG = LogManager.getLogger(VerkleTreeBatchHasher.class);

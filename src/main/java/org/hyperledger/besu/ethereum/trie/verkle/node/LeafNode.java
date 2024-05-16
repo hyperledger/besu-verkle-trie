@@ -127,6 +127,12 @@ public class LeafNode<V> extends Node<V> {
     throw new UnsupportedOperationException("LeafNode does not have children.");
   }
 
+  @SuppressWarnings("unchecked")
+  @Override
+  public Optional<V> getPrevious() {
+    return previous.map(o -> (V) o);
+  }
+
   /**
    * Get the RLP-encoded value of the node.
    *

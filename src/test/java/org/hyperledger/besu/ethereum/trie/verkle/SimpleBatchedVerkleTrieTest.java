@@ -139,7 +139,7 @@ public class SimpleBatchedVerkleTrieTest {
     assertThat(trie.get(key1)).as("Make sure value is deleted").isEqualTo(Optional.empty());
     trie.remove(key2);
     assertThat(trie.get(key2)).as("Make sure value is deleted").isEqualTo(Optional.empty());
-    assertThat(batchProcessor.getNodesToBatch()).hasSize(1);
+    assertThat(batchProcessor.getNodesToBatch()).hasSize(4);
     assertThat(trie.getRootHash()).as("Retrieve root hash").isEqualByComparingTo(Bytes32.ZERO);
   }
 
@@ -162,7 +162,7 @@ public class SimpleBatchedVerkleTrieTest {
     assertThat(trie.get(key1)).as("Make sure value is deleted").isEqualTo(Optional.empty());
     trie.remove(key2);
     assertThat(trie.get(key2)).as("Make sure value is deleted").isEqualTo(Optional.empty());
-    assertThat(batchProcessor.getNodesToBatch()).hasSize(1);
+    assertThat(batchProcessor.getNodesToBatch()).hasSize(5);
     assertThat(trie.getRootHash()).as("Retrieve root hash").isEqualByComparingTo(Bytes32.ZERO);
   }
 
@@ -185,7 +185,7 @@ public class SimpleBatchedVerkleTrieTest {
     assertThat(trie.get(key1)).as("Make sure value is deleted").isEqualTo(Optional.empty());
     trie.remove(key2);
     assertThat(trie.get(key2)).as("Make sure value is deleted").isEqualTo(Optional.empty());
-    assertThat(batchProcessor.getNodesToBatch()).hasSize(1);
+    assertThat(batchProcessor.getNodesToBatch()).hasSize(6);
     assertThat(trie.getRootHash()).as("Retrieve root hash").isEqualByComparingTo(Bytes32.ZERO);
   }
 
@@ -217,7 +217,7 @@ public class SimpleBatchedVerkleTrieTest {
     assertThat(trie.get(key1)).as("Retrieve first value").isEqualTo(Optional.of(value1));
     trie.remove(key1);
     assertThat(trie.get(key1)).as("Make sure value is deleted").isEqualTo(Optional.empty());
-    assertThat(batchProcessor.getNodesToBatch()).hasSize(1);
+    assertThat(batchProcessor.getNodesToBatch()).hasSize(7);
     assertThat(trie.getRootHash()).as("Retrieve root hash").isEqualByComparingTo(Bytes32.ZERO);
   }
 
@@ -249,7 +249,7 @@ public class SimpleBatchedVerkleTrieTest {
     assertThat(trie.get(key3)).as("Third value").isEqualTo(Optional.of(value3));
     trie.remove(key3);
     assertThat(trie.get(key3)).as("Third value has been deleted").isEqualTo(Optional.empty());
-    assertThat(batchProcessor.getNodesToBatch()).hasSize(1);
+    assertThat(batchProcessor.getNodesToBatch()).hasSize(7);
     assertThat(trie.getRootHash()).as("Retrieve root hash").isEqualByComparingTo(Bytes32.ZERO);
   }
 

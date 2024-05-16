@@ -128,7 +128,7 @@ public class VerkleTreeBatchHasher {
   }
 
   private void processBatch(List<Node<?>> updatedNodeList) {
-    LOG.atInfo().log("Start hashing {} batch of nodes", updatedNodeList.size());
+    LOG.atTrace().log("Start hashing {} batch of nodes", updatedNodeList.size());
     List<Bytes> commitments = new ArrayList<>();
 
     LOG.atTrace().log("Creating commitments for stem nodes and internal nodes");
@@ -165,12 +165,13 @@ public class VerkleTreeBatchHasher {
     commitmentsIterator = commitments.iterator();
     frs = hasher.hashMany(commitments.toArray(new Bytes[0])).iterator();
 
-    LOG.atTrace().log("Refreshing hashes of stem nodes");
+    LOG.atInfo().log("Refreshing hashes of stem nodes");
     for (final Node<?> foundUpdatedNode : updatedNodeList) {
       if (foundUpdatedNode instanceof StemNode<?>) {
         calculateStemNodeHashes((StemNode<?>) foundUpdatedNode, commitmentsIterator, frs);
       }
     }
+    LOG.atTrace().log("Finished refreshing hashes of stem nodes");
   }
 
   private void calculateRootInternalNodeHash(final InternalNode<?> internalNode) {

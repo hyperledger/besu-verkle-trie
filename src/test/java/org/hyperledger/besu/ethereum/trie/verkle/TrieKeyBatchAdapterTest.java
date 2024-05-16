@@ -78,10 +78,6 @@ public class TrieKeyBatchAdapterTest {
                 "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034404"));
   }
 
-  public static void main(String[] args) {
-    System.out.println(UInt256.valueOf(128).mod(Parameters.VERKLE_NODE_WIDTH));
-  }
-
   @Test
   public void testAccountKeysWithStorage() {
     final List<Bytes32> expectedIndexes = new ArrayList<>();

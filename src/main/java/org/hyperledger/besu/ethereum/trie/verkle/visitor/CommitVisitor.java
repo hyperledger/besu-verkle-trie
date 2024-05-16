@@ -64,7 +64,9 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
     for (int i = 0; i < InternalNode.maxChild(); ++i) {
       Bytes index = Bytes.of(i);
       final Node<V> child = internalNode.child((byte) i);
-      child.accept(this, Bytes.concatenate(location, index));
+      if (!child.isPersisted()) {
+        child.accept(this, Bytes.concatenate(location, index));
+      }
     }
     nodeUpdater.store(location, null, internalNode.getEncodedValue());
     internalNode.markPersisted();
@@ -90,7 +92,9 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
     for (int i = 0; i < StemNode.maxChild(); ++i) {
       Bytes index = Bytes.of(i);
       final Node<V> child = stemNode.child((byte) i);
-      child.accept(this, Bytes.concatenate(stem, index));
+      if (!child.isPersisted()) {
+        child.accept(this, Bytes.concatenate(stem, index));
+      }
     }
     nodeUpdater.store(location, null, stemNode.getEncodedValue());
     stemNode.markPersisted();

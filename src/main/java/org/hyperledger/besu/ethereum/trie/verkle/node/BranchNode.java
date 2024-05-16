@@ -215,6 +215,11 @@ public abstract class BranchNode<V> extends Node<V> {
     return children;
   }
 
+  /**
+   * Allows returning the previous hash of this node.
+   *
+   * @return previous hash of this node
+   */
   @Override
   public Optional<Bytes32> getPrevious() {
     return previous.map(Bytes32.class::cast);

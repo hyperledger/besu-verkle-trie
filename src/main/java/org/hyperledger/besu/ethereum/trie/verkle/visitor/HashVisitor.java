@@ -31,8 +31,10 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /**
- * A visitor class for hashing operations on Verkle Trie nodes.
+ * A visitor class for hashing operations on Verkle Trie nodes. The batched version is recommended
+ * for better performance
  *
+ * @see org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchHasher
  * @param <V> The type of the node's value.
  */
 public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {

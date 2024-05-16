@@ -125,6 +125,11 @@ public class LeafNode<V> extends Node<V> {
     throw new UnsupportedOperationException("LeafNode does not have children.");
   }
 
+  /**
+   * Allows returning the previous value of this node.
+   *
+   * @return previous value of this node
+   */
   @SuppressWarnings("unchecked")
   @Override
   public Optional<V> getPrevious() {

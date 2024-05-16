@@ -127,10 +127,26 @@ public abstract class Node<V> {
     return Collections.emptyList();
   }
 
+  /**
+   * Retrieves the previous state of this node, if it exists.
+   *
+   * <p>This method is used to obtain the state of the node before the current one.
+   *
+   * @return An {@link Optional} containing the previous state of this node if it exists; otherwise,
+   *     an empty {@link Optional}.
+   */
   public Optional<?> getPrevious() {
     return previous;
   }
 
+  /**
+   * Sets the previous state of this node.
+   *
+   * <p>This method allows updating the node's previous state. It is typically used during the
+   * process of node modification to keep a record of the node's state prior to the current changes.
+   *
+   * @param previous An {@link Optional} containing the new previous state to be set for this node.
+   */
   public void setPrevious(final Optional<?> previous) {
     this.previous = previous;
   }
@@ -141,6 +157,7 @@ public abstract class Node<V> {
     persisted = false;
   }
 
+  /** Marks this node as needing an update of its scalar and commitment. */
   public void markClean() {
     dirty = false;
   }
@@ -150,6 +167,11 @@ public abstract class Node<V> {
     persisted = true;
   }
 
+  /**
+   * Is this node needing an update of its scalar and commitment?
+   *
+   * @return True if the node needs to be updated.
+   */
   public boolean isDirty() {
     return dirty;
   }

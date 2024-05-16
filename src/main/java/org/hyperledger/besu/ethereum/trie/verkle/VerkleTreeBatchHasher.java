@@ -108,6 +108,8 @@ public class VerkleTreeBatchHasher {
             nodesInSameLevel.clear();
           }
           if (location.isEmpty()) {
+            // We will end up updating the root node. Once all the batching is finished,
+            // we will update the previous states of the nodes by setting them to the new ones.
             calculateRootInternalNodeHash((InternalNode<?>) node);
             updatedNodes.forEach(
                 (__, n) -> {
@@ -228,6 +230,10 @@ public class VerkleTreeBatchHasher {
       Node<?> node = stemNode.child((byte) i);
 
       Optional<Bytes> oldValue = node.getPrevious().map(Bytes.class::cast);
+      // We should not recalculate a node if it is persisted and has not undergone an update since
+      // its last save.
+      // If a child does not have a previous value, it means that it is a new node and we must
+      // therefore recalculate it.
       if (!(node instanceof StoredNode<?>) && (oldValue.isEmpty() || node.isDirty())) {
         int idx = Byte.toUnsignedInt((byte) i);
         if (idx < halfSize) {
@@ -296,6 +302,10 @@ public class VerkleTreeBatchHasher {
     for (int i = 0; i < size; i++) {
       final Node<?> node = internalNode.child((byte) i);
       Optional<Bytes> oldValue = node.getPrevious().map(Bytes.class::cast);
+      // We should not recalculate a node if it is persisted and has not undergone an update since
+      // its last save.
+      // If a child does not have a previous value, it means that it is a new node and we must
+      // therefore recalculate it.
       if (!(node instanceof StoredNode<?>) && (oldValue.isEmpty() || node.isDirty())) {
         indices.add((byte) i);
         oldValues.add(oldValue.orElse(Bytes.EMPTY));

@@ -89,7 +89,8 @@ public class TrieKeyBatchAdapterTest {
 
     final UInt256 storage = UInt256.valueOf(64);
     final UInt256 storage2 =
-        UInt256.fromHexString("0xff0d54412868ab2569622781556c0b41264d9dae313826adad7b60da4b441e67");
+        UInt256.fromHexString(
+            "0xff0d54412868ab2569622781556c0b41264d9dae313826adad7b60da4b441e67"); // test overflow
     expectedIndexes.add(storage);
     expectedIndexes.add(storage2);
 

@@ -159,14 +159,12 @@ public class VerkleTreeBatchHasher {
 
     LOG.atTrace()
         .log("Creating commitments for stem nodes and refreshing hashes of internal nodes");
-    for (final Node<?> foundUpdatedNode : nodes) {
-      if (foundUpdatedNode instanceof StemNode<?>) {
+    for (final Node<?> node : nodes) {
+      if (node instanceof StemNode<?>) {
         commitments.add(
-            getStemNodeCommitment(
-                (StemNode<?>) foundUpdatedNode, commitmentsIterator, hashesIterator));
-      } else if (foundUpdatedNode instanceof InternalNode<?>) {
-        calculateInternalNodeHashes(
-            (InternalNode<?>) foundUpdatedNode, commitmentsIterator, hashesIterator);
+            getStemNodeCommitment((StemNode<?>) node, commitmentsIterator, hashesIterator));
+      } else if (node instanceof InternalNode<?>) {
+        calculateInternalNodeHashes((InternalNode<?>) node, commitmentsIterator, hashesIterator);
       }
     }
     LOG.atTrace()
@@ -175,10 +173,9 @@ public class VerkleTreeBatchHasher {
     hashesIterator = hasher.hashMany(commitments.toArray(new Bytes[0])).iterator();
 
     LOG.atTrace().log("Refreshing hashes of stem nodes");
-    for (final Node<?> foundUpdatedNode : nodes) {
-      if (foundUpdatedNode instanceof StemNode<?>) {
-        calculateStemNodeHashes(
-            (StemNode<?>) foundUpdatedNode, commitmentsIterator, hashesIterator);
+    for (final Node<?> node : nodes) {
+      if (node instanceof StemNode<?>) {
+        calculateStemNodeHashes((StemNode<?>) node, commitmentsIterator, hashesIterator);
       }
     }
     LOG.atTrace().log("Finished refreshing hashes of stem nodes");
@@ -190,25 +187,25 @@ public class VerkleTreeBatchHasher {
   }
 
   private void calculateStemNodeHashes(
-      final StemNode<?> foundUpdatedNode,
+      final StemNode<?> stemNode,
       final Iterator<Bytes> commitmentsIterator,
       final Iterator<Bytes32> iterator) {
     final Bytes32 hash = iterator.next();
     final Bytes commitment = commitmentsIterator.next();
-    foundUpdatedNode.replaceHash(
+    stemNode.replaceHash(
         hash,
         commitment,
-        foundUpdatedNode.getLeftHash().orElseThrow(),
-        foundUpdatedNode.getLeftCommitment().orElseThrow(),
-        foundUpdatedNode.getRightHash().orElseThrow(),
-        foundUpdatedNode.getRightCommitment().orElseThrow());
+        stemNode.getLeftHash().orElseThrow(),
+        stemNode.getLeftCommitment().orElseThrow(),
+        stemNode.getRightHash().orElseThrow(),
+        stemNode.getRightCommitment().orElseThrow());
   }
 
   private void calculateInternalNodeHashes(
-      final InternalNode<?> foundUpdatedNode,
+      final InternalNode<?> internalNode,
       final Iterator<Bytes> commitmentsIterator,
       final Iterator<Bytes32> hashesIterator) {
-    foundUpdatedNode.replaceHash(hashesIterator.next(), commitmentsIterator.next());
+    internalNode.replaceHash(hashesIterator.next(), commitmentsIterator.next());
   }
 
   private List<Bytes> getStemNodeLeftRightCommitments(StemNode<?> stemNode) {
@@ -225,8 +222,8 @@ public class VerkleTreeBatchHasher {
 
     int halfSize = size / 2;
 
-    for (int i = 0; i < size; i++) {
-      Node<?> node = stemNode.child((byte) i);
+    for (int idx = 0; idx < size; idx++) {
+      Node<?> node = stemNode.child((byte) idx);
 
       Optional<Bytes> oldValue = node.getPrevious().map(Bytes.class::cast);
       // We should not recalculate a node if it is persisted and has not undergone an update since
@@ -234,7 +231,6 @@ public class VerkleTreeBatchHasher {
       // If a child does not have a previous value, it means that it is a new node and we must
       // therefore recalculate it.
       if (!(node instanceof StoredNode<?>) && (oldValue.isEmpty() || node.isDirty())) {
-        int idx = Byte.toUnsignedInt((byte) i);
         if (idx < halfSize) {
           leftIndices.add((byte) (2 * idx));
           leftIndices.add((byte) (2 * idx + 1));

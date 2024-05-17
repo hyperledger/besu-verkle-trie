@@ -48,10 +48,19 @@ public class TrieKeyAdapterTest {
   }
 
   @Test
-  public void testStorageKeyForMainStorage() {
+  public void testStorageKeyMainStorage() {
     UInt256 storageKey = UInt256.valueOf(64);
     Bytes32 expected =
         Bytes32.fromHexString("0x6127e4b0c266bee72914ce7261d0e4595c414c1ef439d9b0eb7d13cda5dc7640");
+    assertThat(adapter.storageKey(address, storageKey)).isEqualTo(expected);
+  }
+
+  @Test
+  public void testStorageKeyForMainStorageWithOverflow() {
+    Bytes32 storageKey =
+        Bytes32.fromHexString("0xff0d54412868ab2569622781556c0b41264d9dae313826adad7b60da4b441e67");
+    Bytes32 expected =
+        Bytes32.fromHexString("0xe4674a8f2ed2b61006311280d5bf4bccb24c69ed5c2c7c4fe71133748e28a267");
     assertThat(adapter.storageKey(address, storageKey)).isEqualTo(expected);
   }
 

@@ -46,11 +46,11 @@ import org.apache.tuweni.bytes.Bytes32;
  *
  * <p>This class manages the batching and hashing of trie nodes to optimize performance.
  */
-public class VerkleTreeBatchHasher {
+public class VerkleTrieBatchHasher {
 
-  private static final Logger LOG = LogManager.getLogger(VerkleTreeBatchHasher.class);
+  private static final Logger LOG = LogManager.getLogger(VerkleTrieBatchHasher.class);
   private static final int MAX_BATCH_SIZE = 1000; // Maximum number of nodes in a batch
-
+  private static final Bytes[] EMPTY_ARRAY_TEMPLATE = new Bytes[0];
   private final Hasher hasher = new PedersenHasher(); // Hasher for node hashing
   private final Map<Bytes, Node<?>> updatedNodes =
       new HashMap<>(); // Map to hold nodes for batching
@@ -152,7 +152,7 @@ public class VerkleTreeBatchHasher {
             commitments.size());
     Iterator<Bytes> commitmentsIterator = new ArrayList<>(commitments).iterator();
     Iterator<Bytes32> hashesIterator =
-        hasher.hashMany(commitments.toArray(new Bytes[0])).iterator();
+        hasher.hashMany(commitments.toArray(EMPTY_ARRAY_TEMPLATE)).iterator();
 
     // reset commitments list for stem
     commitments.clear();
@@ -170,7 +170,7 @@ public class VerkleTreeBatchHasher {
     LOG.atTrace()
         .log("Executing batch hashing for {} commitments of stem nodes.", commitments.size());
     commitmentsIterator = commitments.iterator();
-    hashesIterator = hasher.hashMany(commitments.toArray(new Bytes[0])).iterator();
+    hashesIterator = hasher.hashMany(commitments.toArray(EMPTY_ARRAY_TEMPLATE)).iterator();
 
     LOG.atTrace().log("Refreshing hashes of stem nodes");
     for (final Node<?> node : nodes) {
@@ -189,8 +189,8 @@ public class VerkleTreeBatchHasher {
   private void calculateStemNodeHashes(
       final StemNode<?> stemNode,
       final Iterator<Bytes> commitmentsIterator,
-      final Iterator<Bytes32> iterator) {
-    final Bytes32 hash = iterator.next();
+      final Iterator<Bytes32> hashesIterator) {
+    final Bytes32 hash = hashesIterator.next();
     final Bytes commitment = commitmentsIterator.next();
     stemNode.replaceHash(
         hash,

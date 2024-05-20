@@ -15,7 +15,7 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
-import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchHasher;
+import org.hyperledger.besu.ethereum.trie.verkle.VerkleTrieBatchHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
@@ -40,10 +40,10 @@ import org.apache.tuweni.bytes.Bytes;
 public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   private final GetVisitor<V> getter = new GetVisitor<>();
 
-  private final Optional<VerkleTreeBatchHasher> batchProcessor;
+  private final Optional<VerkleTrieBatchHasher> batchProcessor;
   private final FlattenVisitor<V> flatten;
 
-  public RemoveVisitor(final Optional<VerkleTreeBatchHasher> batchProcessor) {
+  public RemoveVisitor(final Optional<VerkleTrieBatchHasher> batchProcessor) {
     this.batchProcessor = batchProcessor;
     this.flatten = new FlattenVisitor<>(batchProcessor);
   }

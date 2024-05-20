@@ -18,6 +18,7 @@ package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 import static org.hyperledger.besu.ethereum.trie.verkle.node.Node.getHighValue;
 import static org.hyperledger.besu.ethereum.trie.verkle.node.Node.getLowValue;
 
+import org.hyperledger.besu.ethereum.trie.verkle.VerkleTrieBatchHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.PedersenHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
@@ -34,7 +35,7 @@ import org.apache.tuweni.bytes.Bytes32;
  * A visitor class for hashing operations on Verkle Trie nodes. The batched version is recommended
  * for better performance
  *
- * @see org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchHasher
+ * @see VerkleTrieBatchHasher
  * @param <V> The type of the node's value.
  */
 public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {

@@ -37,7 +37,7 @@ public class StoredBatchedVerkleTrie<K extends Bytes, V extends Bytes>
    * @param nodeFactory The {@link NodeFactory} to retrieve node.
    */
   public StoredBatchedVerkleTrie(
-      final VerkleTreeBatchHasher batchProcessor, final NodeFactory<V> nodeFactory) {
+      final VerkleTrieBatchHasher batchProcessor, final NodeFactory<V> nodeFactory) {
     super(nodeFactory.retrieve(Bytes.EMPTY, null), batchProcessor);
     this.nodeFactory = nodeFactory;
   }

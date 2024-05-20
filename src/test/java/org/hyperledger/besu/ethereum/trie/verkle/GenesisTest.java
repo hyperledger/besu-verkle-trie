@@ -56,7 +56,7 @@ public class GenesisTest {
   public void putGenesis(String genesisCSVFile, String expectedStateRootHash) throws IOException {
     HashMap<Bytes, Bytes> storage = new HashMap<Bytes, Bytes>();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(storage);
-    VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     StoredNodeFactory<Bytes> nodeFactory = new StoredNodeFactory<>(nodeLoader, value -> value);
     StoredBatchedVerkleTrie<Bytes32, Bytes> trie =
         new StoredBatchedVerkleTrie<>(batchProcessor, nodeFactory);

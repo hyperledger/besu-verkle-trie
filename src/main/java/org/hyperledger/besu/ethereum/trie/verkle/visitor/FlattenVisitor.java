@@ -15,7 +15,7 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
-import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchHasher;
+import org.hyperledger.besu.ethereum.trie.verkle.VerkleTrieBatchHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
@@ -36,9 +36,9 @@ import org.apache.tuweni.bytes.Bytes;
  */
 public class FlattenVisitor<V> implements NodeVisitor<V> {
 
-  private final Optional<VerkleTreeBatchHasher> batchProcessor;
+  private final Optional<VerkleTrieBatchHasher> batchProcessor;
 
-  public FlattenVisitor(final Optional<VerkleTreeBatchHasher> batchProcessor) {
+  public FlattenVisitor(final Optional<VerkleTrieBatchHasher> batchProcessor) {
     this.batchProcessor = batchProcessor;
   }
 

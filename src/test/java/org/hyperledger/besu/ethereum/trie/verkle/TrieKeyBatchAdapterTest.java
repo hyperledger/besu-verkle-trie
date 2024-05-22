@@ -78,10 +78,6 @@ public class TrieKeyBatchAdapterTest {
                 "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034404"));
   }
 
-  public static void main(String[] args) {
-    System.out.println(UInt256.valueOf(128).mod(Parameters.VERKLE_NODE_WIDTH));
-  }
-
   @Test
   public void testAccountKeysWithStorage() {
     final List<Bytes32> expectedIndexes = new ArrayList<>();
@@ -92,10 +88,15 @@ public class TrieKeyBatchAdapterTest {
     expectedIndexes.add(Parameters.CODE_SIZE_LEAF_KEY);
 
     final UInt256 storage = UInt256.valueOf(64);
+    final UInt256 storage2 =
+        UInt256.fromHexString(
+            "0xff0d54412868ab2569622781556c0b41264d9dae313826adad7b60da4b441e67"); // test overflow
     expectedIndexes.add(storage);
+    expectedIndexes.add(storage2);
 
     final Map<Bytes32, Bytes32> generatedHashes =
-        adapter.manyTrieKeyHashes(address, expectedIndexes, List.of(storage), new ArrayList<>());
+        adapter.manyTrieKeyHashes(
+            address, expectedIndexes, List.of(storage, storage2), new ArrayList<>());
 
     final TrieKeyAdapter cachedTrieKeyAdapter =
         new TrieKeyAdapter(new CachedPedersenHasher(generatedHashes, new FailedHasher()));
@@ -123,6 +124,10 @@ public class TrieKeyBatchAdapterTest {
         .isEqualTo(
             Bytes32.fromHexString(
                 "0x6127e4b0c266bee72914ce7261d0e4595c414c1ef439d9b0eb7d13cda5dc7640"));
+    assertThat(cachedTrieKeyAdapter.storageKey(address, storage2))
+        .isEqualTo(
+            Bytes32.fromHexString(
+                "0xe4674a8f2ed2b61006311280d5bf4bccb24c69ed5c2c7c4fe71133748e28a267"));
   }
 
   @Test

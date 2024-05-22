@@ -26,7 +26,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testEmptyTrie() {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     assertThat(trie.getRootHash()).as("Retrieve root hash").isEqualByComparingTo(Bytes32.ZERO);
@@ -34,7 +34,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testOneValue() {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     Bytes32 key =
@@ -52,7 +52,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testTwoValuesAtSameStem() throws Exception {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     Bytes32 key1 =
@@ -78,7 +78,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testTwoValuesAtDifferentIndex() throws Exception {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     Bytes32 key1 =
@@ -100,7 +100,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testTwoValuesWithDivergentStemsAtDepth2() throws Exception {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     Bytes32 key1 =
@@ -122,7 +122,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testDeleteTwoValuesAtSameStem() throws Exception {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     Bytes32 key1 =
@@ -145,7 +145,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testDeleteTwoValuesAtDifferentIndex() throws Exception {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     Bytes32 key1 =
@@ -168,7 +168,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testDeleteTwoValuesWithDivergentStemsAtDepth2() throws Exception {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     Bytes32 key1 =
@@ -191,7 +191,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testDeleteThreeValues() throws Exception {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     Bytes32 key1 =
@@ -223,7 +223,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testDeleteThreeValuesWithFlattening() throws Exception {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     Bytes32 key1 =
@@ -255,7 +255,7 @@ public class SimpleBatchedVerkleTrieTest {
 
   @Test
   public void testDeleteManyValuesWithDivergentStemsAtDepth2() throws Exception {
-    final VerkleTreeBatchHasher batchProcessor = new VerkleTreeBatchHasher();
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
         new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
     assertThat(trie.getRootHash()).isEqualTo(Bytes32.ZERO);

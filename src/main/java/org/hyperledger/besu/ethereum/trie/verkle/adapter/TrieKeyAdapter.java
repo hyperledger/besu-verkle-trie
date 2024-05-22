@@ -21,9 +21,10 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_OFF
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_SIZE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_STORAGE_OFFSET;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_STORAGE_SIZE;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.MAIN_STORAGE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.MAIN_STORAGE_OFFSET_SHIFT_LEFT_VERKLE_NODE_WIDTH;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.NONCE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH_LOG2;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERSION_LEAF_KEY;
 
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
@@ -73,17 +74,33 @@ public class TrieKeyAdapter {
    * @return The generated storage key.
    */
   public Bytes32 storageKey(Bytes address, Bytes32 storageKey) {
-    UInt256 pos = locateStorageKeyOffset(storageKey);
-    Bytes32 base = hasher.trieKeyHash(address, pos.divide(VERKLE_NODE_WIDTH));
-    Bytes32 key = swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
-    return key;
+    final UInt256 pos = locateStorageKeyOffset(storageKey);
+    final Bytes32 base = hasher.trieKeyHash(address, pos);
+    final UInt256 suffix = locateStorageKeySuffix(storageKey);
+    return swapLastByte(base, suffix);
   }
 
-  protected UInt256 locateStorageKeyOffset(Bytes32 storageKey) {
+  public UInt256 locateStorageKeyOffset(Bytes32 storageKey) {
     UInt256 index = UInt256.fromBytes(storageKey);
-    UInt256 offset =
-        ((index.compareTo(HEADER_STORAGE_SIZE) < 0) ? HEADER_STORAGE_OFFSET : MAIN_STORAGE_OFFSET);
-    return offset.add(index);
+    if (index.compareTo(HEADER_STORAGE_SIZE) < 0) {
+      return index.add(HEADER_STORAGE_OFFSET).divide(VERKLE_NODE_WIDTH);
+    } else {
+      // We divide by VerkleNodeWidthLog2 to make space and prevent any potential overflow
+      // Then, we increment, a step that is safeguarded against overflow.
+      return index
+          .shiftRight(VERKLE_NODE_WIDTH_LOG2.intValue())
+          .add(MAIN_STORAGE_OFFSET_SHIFT_LEFT_VERKLE_NODE_WIDTH);
+    }
+  }
+
+  public UInt256 locateStorageKeySuffix(Bytes32 storageKey) {
+    UInt256 index = UInt256.fromBytes(storageKey);
+    if (index.compareTo(HEADER_STORAGE_SIZE) < 0) {
+      final UInt256 mod = index.add(HEADER_STORAGE_OFFSET).mod(VERKLE_NODE_WIDTH);
+      return UInt256.fromBytes(mod.slice(mod.size() - 1));
+    } else {
+      return UInt256.fromBytes(storageKey.slice(Bytes32.SIZE - 1));
+    }
   }
 
   /**
@@ -99,7 +116,7 @@ public class TrieKeyAdapter {
     return swapLastByte(base, pos.mod(VERKLE_NODE_WIDTH));
   }
 
-  protected UInt256 locateCodeChunkKeyOffset(Bytes32 chunkId) {
+  public UInt256 locateCodeChunkKeyOffset(Bytes32 chunkId) {
     return CODE_OFFSET.add(UInt256.fromBytes(chunkId));
   }
 
@@ -122,8 +139,8 @@ public class TrieKeyAdapter {
    * @param subIndex The subIndex.
    * @return The modified key.
    */
-  public Bytes32 swapLastByte(Bytes32 base, Bytes32 subIndex) {
-    final Bytes lastByte = subIndex.slice(31, 1);
+  public Bytes32 swapLastByte(Bytes32 base, Bytes subIndex) {
+    final Bytes lastByte = subIndex.slice(subIndex.size() - 1, 1);
     return (Bytes32) Bytes.concatenate(base.slice(0, 31), lastByte);
   }
 

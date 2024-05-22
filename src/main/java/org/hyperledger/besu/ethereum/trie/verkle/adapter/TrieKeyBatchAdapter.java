@@ -52,8 +52,7 @@ public class TrieKeyBatchAdapter extends TrieKeyAdapter {
       offsets.add(UInt256.ZERO);
     }
     for (Bytes32 storageKey : storageKeys) {
-      final UInt256 storageOffset = locateStorageKeyOffset(storageKey);
-      offsets.add(storageOffset.divide(VERKLE_NODE_WIDTH));
+      offsets.add(locateStorageKeyOffset(storageKey));
     }
     for (Bytes32 codeChunkId : codeChunkIds) {
       final UInt256 codeChunkOffset = locateCodeChunkKeyOffset(codeChunkId);

@@ -35,7 +35,6 @@ import org.apache.tuweni.rlp.RLPWriter;
  * @param <V> The type of the node's value.
  */
 public class StemNode<V> extends BranchNode<V> {
-  private final Node<V> NULL_LEAF_NODE = NullLeafNode.instance();
 
   private final Bytes stem;
   private Optional<Bytes32> leftHash;
@@ -73,6 +72,7 @@ public class StemNode<V> extends BranchNode<V> {
     this.leftCommitment = Optional.of(leftCommitment);
     this.rightHash = Optional.of(rightHash);
     this.rightCommitment = Optional.of(rightCommitment);
+    this.previous = Optional.of(hash);
   }
 
   /**
@@ -92,6 +92,7 @@ public class StemNode<V> extends BranchNode<V> {
       final Optional<Bytes> location,
       final Bytes stem,
       final Optional<Bytes32> hash,
+      final Optional<Bytes32> previousHash,
       final Optional<Bytes> commitment,
       final Optional<Bytes32> leftHash,
       final Optional<Bytes> leftCommitment,
@@ -104,6 +105,7 @@ public class StemNode<V> extends BranchNode<V> {
     this.leftCommitment = leftCommitment;
     this.rightHash = rightHash;
     this.rightCommitment = rightCommitment;
+    this.previous = previousHash;
   }
 
   /**
@@ -115,13 +117,16 @@ public class StemNode<V> extends BranchNode<V> {
   public StemNode(final Bytes location, final Bytes stem) {
     super(location);
     for (int i = 0; i < maxChild(); i++) {
-      replaceChild((byte) i, NULL_LEAF_NODE);
+      NullLeafNode<V> nullLeafNode = new NullLeafNode<V>();
+      nullLeafNode.markDirty();
+      replaceChild((byte) i, nullLeafNode);
     }
     this.stem = extractStem(stem);
     this.leftHash = Optional.empty();
     this.leftCommitment = Optional.empty();
     this.rightHash = Optional.empty();
     this.rightCommitment = Optional.empty();
+    this.previous = Optional.empty();
   }
 
   /**
@@ -208,27 +213,27 @@ public class StemNode<V> extends BranchNode<V> {
    * @return StemNode with new location.
    */
   public StemNode<V> replaceLocation(final Bytes location) {
-    return new StemNode<V>(
-        Optional.of(location),
-        stem,
-        getHash(),
-        getCommitment(),
-        leftHash,
-        leftCommitment,
-        rightHash,
-        rightCommitment,
-        getChildren());
+    StemNode<V> vStemNode =
+        new StemNode<>(
+            Optional.of(location),
+            stem,
+            getHash(),
+            Optional.empty(),
+            getCommitment(),
+            leftHash,
+            leftCommitment,
+            rightHash,
+            rightCommitment,
+            getChildren());
+    return vStemNode;
   }
 
   /**
    * Creates a new node by replacing all its commitments
    *
    * @param hash Node's vector commitment hash
-   * @param commitment Node's vector commitment
    * @param leftHash Node's left vector commitment hash
-   * @param leftCommitment Node's left vector commitment
    * @param rightHash Node's right vector commitment hash
-   * @param rightCommitment Node's right vector commitment
    * @return StemNode with new commitments.
    */
   public StemNode<V> replaceHash(
@@ -282,7 +287,7 @@ public class StemNode<V> extends BranchNode<V> {
     builder.append(String.format("Stem: %s", stem));
     for (int i = 0; i < maxChild(); i++) {
       final Node<V> child = child((byte) i);
-      if (child != NullLeafNode.instance()) {
+      if (!(child instanceof NullNode)) {
         final String label = String.format("[%02x] ", i);
         final String childRep = child.print().replaceAll("\n\t", "\n\t\t");
         builder.append("\n\t").append(label).append(childRep);

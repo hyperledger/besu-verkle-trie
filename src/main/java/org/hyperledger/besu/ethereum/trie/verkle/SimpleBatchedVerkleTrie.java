@@ -37,23 +37,23 @@ import org.apache.tuweni.bytes.Bytes32;
 public class SimpleBatchedVerkleTrie<K extends Bytes, V extends Bytes>
     extends SimpleVerkleTrie<K, V> implements VerkleTrie<K, V> {
 
-  private final VerkleTreeBatchHasher batchProcessor;
+  private final VerkleTrieBatchHasher batchProcessor;
 
-  public SimpleBatchedVerkleTrie(final VerkleTreeBatchHasher batchProcessor) {
+  public SimpleBatchedVerkleTrie(final VerkleTrieBatchHasher batchProcessor) {
     super();
     this.batchProcessor = batchProcessor;
     this.batchProcessor.addNodeToBatch(Optional.of(Bytes.EMPTY), this.root);
   }
 
   public SimpleBatchedVerkleTrie(
-      final Node<V> providedRoot, final VerkleTreeBatchHasher batchProcessor) {
+      final Node<V> providedRoot, final VerkleTrieBatchHasher batchProcessor) {
     super(providedRoot);
     this.batchProcessor = batchProcessor;
     this.batchProcessor.addNodeToBatch(root.getLocation(), root);
   }
 
   public SimpleBatchedVerkleTrie(
-      final Optional<Node<V>> maybeRoot, final VerkleTreeBatchHasher batchProcessor) {
+      final Optional<Node<V>> maybeRoot, final VerkleTrieBatchHasher batchProcessor) {
     super(maybeRoot);
     this.batchProcessor = batchProcessor;
     this.batchProcessor.addNodeToBatch(root.getLocation(), root);

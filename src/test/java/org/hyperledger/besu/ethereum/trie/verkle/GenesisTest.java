@@ -17,6 +17,8 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.hyperledger.besu.ethereum.trie.verkle.factory.StoredNodeFactory;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -33,6 +35,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
+@SuppressWarnings("unused")
 public class GenesisTest {
 
   private static Stream<Arguments> provideGenesisAndStateRootExpected() {
@@ -42,14 +45,21 @@ public class GenesisTest {
             "0x5e8519756841faf0b2c28951c451b61a4b407b70a5ce5b57992f4bec973173ff"),
         Arguments.of(
             "/gen-devnet-3.csv",
-            "0x382960711d9ccf58b9db20122e2253eb9bfa99d513f8c9d4e85b55971721f4de"));
+            "0x382960711d9ccf58b9db20122e2253eb9bfa99d513f8c9d4e85b55971721f4de"),
+        Arguments.of(
+            "/gen-devnet-6.csv",
+            "0x1fbf85345a3cbba9a6d44f991b721e55620a22397c2a93ee8d5011136ac300ee"));
   }
 
   @ParameterizedTest
   @MethodSource("provideGenesisAndStateRootExpected")
   public void putGenesis(String genesisCSVFile, String expectedStateRootHash) throws IOException {
     HashMap<Bytes, Bytes> storage = new HashMap<Bytes, Bytes>();
-    VerkleTrie<Bytes32, Bytes> trie = new SimpleVerkleTrie<Bytes32, Bytes>();
+    NodeLoaderMock nodeLoader = new NodeLoaderMock(storage);
+    VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
+    StoredNodeFactory<Bytes> nodeFactory = new StoredNodeFactory<>(nodeLoader, value -> value);
+    StoredBatchedVerkleTrie<Bytes32, Bytes> trie =
+        new StoredBatchedVerkleTrie<>(batchProcessor, nodeFactory);
     InputStream input = GenesisTest.class.getResourceAsStream(genesisCSVFile);
     try (Reader reader = new InputStreamReader(input, "UTF-8");
         CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT); ) {

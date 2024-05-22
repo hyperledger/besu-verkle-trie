@@ -30,25 +30,10 @@ import org.apache.tuweni.bytes.Bytes32;
  * structure. It implements the Node interface and represents a node that contains no information or
  * value.
  */
-public class NullNode<V> implements Node<V> {
-  @SuppressWarnings("rawtypes")
-  private static final NullNode instance = new NullNode();
+public class NullNode<V> extends Node<V> {
 
-  /**
-   * Constructs a new `NullNode`. This constructor is protected to ensure that `NullNode` instances
-   * are only created as singletons.
-   */
-  protected NullNode() {}
-
-  /**
-   * Gets the shared instance of the `NullNode`.
-   *
-   * @param <V> The type of the node's value.
-   * @return The shared `NullNode` instance.
-   */
-  @SuppressWarnings("unchecked")
-  public static <V> NullNode<V> instance() {
-    return instance;
+  public NullNode() {
+    super(false, true);
   }
 
   /**
@@ -94,6 +79,11 @@ public class NullNode<V> implements Node<V> {
     return Optional.of(EMPTY_COMMITMENT);
   }
 
+  @Override
+  public void markDirty() {
+    dirty = true;
+  }
+
   /**
    * Get a string representation of the `NullNode`.
    *
@@ -121,35 +111,5 @@ public class NullNode<V> implements Node<V> {
             + getLocation().orElse(Bytes.EMPTY)
             + "\"]\n";
     return result;
-  }
-
-  /**
-   * Check if the `NullNode` is marked as dirty (needing to be persisted).
-   *
-   * @return `false` since a `NullNode` does not require persistence.
-   */
-  @Override
-  public boolean isDirty() {
-    return false;
-  }
-
-  /**
-   * Mark the `NullNode` as dirty (not used, no operation).
-   *
-   * <p>This method intentionally does nothing.
-   */
-  @Override
-  public void markDirty() {
-    // do nothing
-  }
-
-  /**
-   * Mark the `NullNode` as clean.
-   *
-   * <p>This method intentionally does nothing.
-   */
-  @Override
-  public void markClean() {
-    // do nothing
   }
 }

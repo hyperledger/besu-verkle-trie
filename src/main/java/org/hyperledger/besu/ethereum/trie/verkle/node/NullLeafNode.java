@@ -30,27 +30,16 @@ import org.apache.tuweni.bytes.Bytes32;
  * structure. It implements the Node interface and represents a node that contains no information or
  * value.
  */
-public class NullLeafNode<V> implements Node<V> {
-  @SuppressWarnings("rawtypes")
-  private static final NullLeafNode instance = new NullLeafNode();
+public class NullLeafNode<V> extends Node<V> {
 
-  /**
-   * Constructs a new `NullNode`. This constructor is protected to ensure that `NullNode` instances
-   * are only created as singletons.
-   */
-  protected NullLeafNode() {}
-
-  /**
-   * Gets the shared instance of the `NullNode`.
-   *
-   * @param <V> The type of the node's value.
-   * @return The shared `NullNode` instance.
-   */
-  @SuppressWarnings("unchecked")
-  public static <V> NullLeafNode<V> instance() {
-    return instance;
+  public NullLeafNode() {
+    super(false, true);
   }
 
+  public NullLeafNode(Optional<V> previousValue) {
+    super(false, true);
+    this.previous = previousValue;
+  }
   /**
    * Accepts a visitor for path-based operations on the node.
    *
@@ -94,6 +83,11 @@ public class NullLeafNode<V> implements Node<V> {
     return Optional.of(EMPTY_COMMITMENT);
   }
 
+  @Override
+  public void markDirty() {
+    dirty = true;
+  }
+
   /**
    * Get a string representation of the `NullNode`.
    *
@@ -121,35 +115,5 @@ public class NullLeafNode<V> implements Node<V> {
             + getLocation().orElse(Bytes.EMPTY)
             + "\"]\n";
     return result;
-  }
-
-  /**
-   * Check if the `NullNode` is marked as dirty (needing to be persisted).
-   *
-   * @return `false` since a `NullNode` does not require persistence.
-   */
-  @Override
-  public boolean isDirty() {
-    return false;
-  }
-
-  /**
-   * Mark the `NullNode` as dirty (not used, no operation).
-   *
-   * <p>This method intentionally does nothing.
-   */
-  @Override
-  public void markDirty() {
-    // do nothing
-  }
-
-  /**
-   * Marks the node as clean, indicating that it no longer needs to be persisted.
-   *
-   * <p>This method intentionally does nothing.
-   */
-  @Override
-  public void markClean() {
-    // do nothing
   }
 }

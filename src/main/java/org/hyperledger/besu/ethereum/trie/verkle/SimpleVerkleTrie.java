@@ -34,8 +34,10 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /**
- * A simple implementation of a Verkle Trie.
+ * A simple implementation of a Verkle Trie. The batched version is recommended for better
+ * performance
  *
+ * @see org.hyperledger.besu.ethereum.trie.verkle.SimpleBatchedVerkleTrie
  * @param <K> The type of keys in the Verkle Trie.
  * @param <V> The type of values in the Verkle Trie.
  */

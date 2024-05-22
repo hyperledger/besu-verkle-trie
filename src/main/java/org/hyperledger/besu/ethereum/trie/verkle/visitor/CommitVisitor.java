@@ -55,16 +55,21 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(final InternalNode<V> internalNode, final Bytes location) {
-    if (!internalNode.isDirty()) {
+    if (internalNode.isPersisted()) {
       return internalNode;
+    }
+    if (internalNode.isDirty()) {
+      throw new RuntimeException("cannot persist dirty node");
     }
     for (int i = 0; i < InternalNode.maxChild(); ++i) {
       Bytes index = Bytes.of(i);
       final Node<V> child = internalNode.child((byte) i);
-      child.accept(this, Bytes.concatenate(location, index));
+      if (!child.isPersisted()) {
+        child.accept(this, Bytes.concatenate(location, index));
+      }
     }
     nodeUpdater.store(location, null, internalNode.getEncodedValue());
-    internalNode.markClean();
+    internalNode.markPersisted();
     return internalNode;
   }
 
@@ -77,17 +82,22 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(final StemNode<V> stemNode, final Bytes location) {
-    if (!stemNode.isDirty()) {
+    if (stemNode.isPersisted()) {
       return stemNode;
+    }
+    if (stemNode.isDirty()) {
+      throw new RuntimeException("cannot persist dirty node");
     }
     final Bytes stem = stemNode.getStem();
     for (int i = 0; i < StemNode.maxChild(); ++i) {
       Bytes index = Bytes.of(i);
       final Node<V> child = stemNode.child((byte) i);
-      child.accept(this, Bytes.concatenate(stem, index));
+      if (!child.isPersisted()) {
+        child.accept(this, Bytes.concatenate(stem, index));
+      }
     }
     nodeUpdater.store(location, null, stemNode.getEncodedValue());
-    stemNode.markClean();
+    stemNode.markPersisted();
     return stemNode;
   }
 
@@ -100,11 +110,14 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(final LeafNode<V> leafNode, final Bytes location) {
-    if (!leafNode.isDirty()) {
+    if (leafNode.isPersisted()) {
       return leafNode;
     }
+    if (leafNode.isDirty()) {
+      throw new RuntimeException("cannot persist dirty node");
+    }
     nodeUpdater.store(location, null, leafNode.getEncodedValue());
-    leafNode.markClean();
+    leafNode.markPersisted();
     return leafNode;
   }
 

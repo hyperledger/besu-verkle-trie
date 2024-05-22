@@ -20,8 +20,10 @@ import org.hyperledger.besu.ethereum.trie.verkle.factory.NodeFactory;
 import org.apache.tuweni.bytes.Bytes;
 
 /**
- * Implementation of a Verkle Trie with nodes saved in storage.
+ * Implementation of a Verkle Trie with nodes saved in storage. The batched version is recommended
+ * for better performance
  *
+ * @see org.hyperledger.besu.ethereum.trie.verkle.StoredBatchedVerkleTrie
  * @param <K> The type of keys in the Verkle Trie.
  * @param <V> The type of values in the Verkle Trie.
  */

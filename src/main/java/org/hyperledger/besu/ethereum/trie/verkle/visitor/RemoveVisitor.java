@@ -15,7 +15,7 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
-import org.hyperledger.besu.ethereum.trie.verkle.VerkleTreeBatchHasher;
+import org.hyperledger.besu.ethereum.trie.verkle.VerkleTrieBatchHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
@@ -38,14 +38,12 @@ import org.apache.tuweni.bytes.Bytes;
  * @param <V> The type of values associated with the nodes.
  */
 public class RemoveVisitor<V> implements PathNodeVisitor<V> {
-  private final Node<V> NULL_NODE = NullNode.instance();
-  private final Node<V> NULL_LEAF_NODE = NullLeafNode.instance();
   private final GetVisitor<V> getter = new GetVisitor<>();
 
-  private final Optional<VerkleTreeBatchHasher> batchProcessor;
+  private final Optional<VerkleTrieBatchHasher> batchProcessor;
   private final FlattenVisitor<V> flatten;
 
-  public RemoveVisitor(final Optional<VerkleTreeBatchHasher> batchProcessor) {
+  public RemoveVisitor(final Optional<VerkleTrieBatchHasher> batchProcessor) {
     this.batchProcessor = batchProcessor;
     this.flatten = new FlattenVisitor<>(batchProcessor);
   }
@@ -61,10 +59,15 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   @Override
   public Node<V> visit(InternalNode<V> internalNode, Bytes path) {
     final byte index = path.get(0);
-    final Node<V> childNode = internalNode.child(index);
-    final Node<V> updatedChild = childNode.accept(this, path.slice(1));
+    final Node<V> child = internalNode.child(index);
+    final Node<V> updatedChild = child.accept(this, path.slice(1));
+    if (child instanceof NullNode<V> || child instanceof NullLeafNode<V>) {
+      batchProcessor.ifPresent(
+          processor -> processor.addNodeToBatch(updatedChild.getLocation(), updatedChild));
+    }
     internalNode.replaceChild(index, updatedChild);
-    final boolean wasChildNullified = (childNode != NULL_NODE && updatedChild == NULL_NODE);
+    final boolean wasChildNullified =
+        (!(child instanceof NullNode) && (updatedChild instanceof NullNode));
     if (updatedChild.isDirty() || wasChildNullified) {
       internalNode.markDirty();
       batchProcessor.ifPresent(
@@ -75,7 +78,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
       return internalNode;
     }
     final Node<V> newNode = internalNode.child(onlyChildIndex.get()).accept(flatten);
-    if (newNode != NULL_NODE) { // Flatten StemNode one-level up
+    if (!(newNode instanceof NullNode)) { // Flatten StemNode one-level up
       newNode.markDirty();
       return newNode;
     }
@@ -94,14 +97,16 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   public Node<V> visit(StemNode<V> stemNode, Bytes path) {
     final byte childIndex = path.get(path.size() - 1);
     final Node<V> child = stemNode.child(childIndex);
-    final Node<V> newChild = child.accept(this, path);
-    stemNode.replaceChild(childIndex, newChild);
+    final Node<V> updatedChild = child.accept(this, path);
+    stemNode.replaceChild(childIndex, updatedChild);
     if (allLeavesAreNull(stemNode)) {
+      final NullNode<V> nullNode = new NullNode<>();
       batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(stemNode.getLocation(), NULL_NODE));
-      return NULL_NODE;
+          processor -> processor.addNodeToBatch(stemNode.getLocation(), nullNode));
+      nullNode.markDirty();
+      return nullNode;
     }
-    if (child != NULL_LEAF_NODE) { // Removed a genuine leaf-node
+    if (!(child instanceof NullLeafNode)) { // Removed a genuine leaf-node
       batchProcessor.ifPresent(
           processor -> processor.addNodeToBatch(stemNode.getLocation(), stemNode));
       stemNode.markDirty();
@@ -119,9 +124,11 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(LeafNode<V> leafNode, Bytes path) {
+    final NullLeafNode<V> nullLeafNode = new NullLeafNode<>(leafNode.getPrevious());
     batchProcessor.ifPresent(
-        processor -> processor.addNodeToBatch(leafNode.getLocation(), NULL_LEAF_NODE));
-    return NULL_LEAF_NODE;
+        processor -> processor.addNodeToBatch(leafNode.getLocation(), nullLeafNode));
+    nullLeafNode.markDirty();
+    return nullLeafNode;
   }
 
   /**
@@ -133,7 +140,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(NullNode<V> nullNode, Bytes path) {
-    return NULL_NODE;
+    return nullNode;
   }
 
   /**
@@ -145,7 +152,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(NullLeafNode<V> nullLeafNode, Bytes path) {
-    return NULL_LEAF_NODE;
+    return nullLeafNode;
   }
 
   /**
@@ -159,7 +166,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     final List<Node<V>> children = branchNode.getChildren();
     Optional<Byte> onlyChildIndex = Optional.empty();
     for (int i = 0; i < children.size(); ++i) {
-      if (children.get(i) != NULL_NODE) {
+      if (!(children.get(i) instanceof NullNode)) {
         if (!(children.get(i) instanceof StoredNode)
             || !children.get(i).getEncodedValue().isEmpty()) {
           if (onlyChildIndex.isPresent()) {
@@ -178,7 +185,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
       Node<V> child =
           children.get(i).accept(getter, Bytes.EMPTY); // forces to load node if StoredNode;
       stemNode.replaceChild((byte) i, child);
-      if (child != NULL_LEAF_NODE) {
+      if (!(child instanceof NullLeafNode)) {
         return false;
       }
     }

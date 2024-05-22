@@ -30,13 +30,31 @@ import org.apache.tuweni.bytes.Bytes32;
  *
  * @param <V> The type of the node's value.
  */
-public interface Node<V> {
+public abstract class Node<V> {
 
   /** A constant representing a commitment's hash to NullNodes */
-  Bytes32 EMPTY_HASH = Bytes32.ZERO;
+  public static Bytes32 EMPTY_HASH = Bytes32.ZERO;
 
   /** A constant representing a commitment to NullNodes */
-  Bytes EMPTY_COMMITMENT = Bytes.EMPTY;
+  public static Bytes EMPTY_COMMITMENT = Bytes.EMPTY;
+
+  Optional<?> previous;
+
+  boolean dirty;
+
+  boolean persisted;
+
+  public Node(final boolean dirty, final boolean persisted) {
+    this.dirty = dirty;
+    this.persisted = persisted;
+    this.previous = Optional.empty();
+  }
+
+  public Node(final Optional<Bytes> previous, final boolean dirty, final boolean persisted) {
+    this.previous = previous;
+    this.dirty = dirty;
+    this.persisted = persisted;
+  }
 
   /**
    * Accept a visitor to perform operations on the node based on a provided path.
@@ -45,7 +63,7 @@ public interface Node<V> {
    * @param path The path associated with a node.
    * @return The result of visitor's operation.
    */
-  Node<V> accept(PathNodeVisitor<V> visitor, Bytes path);
+  public abstract Node<V> accept(PathNodeVisitor<V> visitor, Bytes path);
 
   /**
    * Accept a visitor to perform operations on the node.
@@ -53,14 +71,14 @@ public interface Node<V> {
    * @param visitor The visitor to accept.
    * @return The result of the visitor's operation.
    */
-  Node<V> accept(NodeVisitor<V> visitor);
+  public abstract Node<V> accept(NodeVisitor<V> visitor);
 
   /**
    * Get the location of the node.
    *
    * @return An optional containing the location of the node if available.
    */
-  default Optional<Bytes> getLocation() {
+  public Optional<Bytes> getLocation() {
     return Optional.empty();
   }
 
@@ -69,7 +87,7 @@ public interface Node<V> {
    *
    * @return An optional containing the value of the node if available.
    */
-  default Optional<V> getValue() {
+  public Optional<V> getValue() {
     return Optional.empty();
   }
 
@@ -78,7 +96,7 @@ public interface Node<V> {
    *
    * @return An optional containing the hash of the node if available.
    */
-  default Optional<Bytes32> getHash() {
+  public Optional<Bytes32> getHash() {
     return Optional.empty();
   }
 
@@ -87,7 +105,7 @@ public interface Node<V> {
    *
    * @return An optional containing the hash of the node if available.
    */
-  default Optional<Bytes> getCommitment() {
+  public Optional<Bytes> getCommitment() {
     return Optional.empty();
   }
 
@@ -96,7 +114,7 @@ public interface Node<V> {
    *
    * @return The encoded value of the node.
    */
-  default Bytes getEncodedValue() {
+  public Bytes getEncodedValue() {
     return Bytes.EMPTY;
   }
 
@@ -105,29 +123,74 @@ public interface Node<V> {
    *
    * @return A list of children nodes.
    */
-  default List<Node<V>> getChildren() {
+  public List<Node<V>> getChildren() {
     return Collections.emptyList();
   }
 
+  /**
+   * Retrieves the previous state of this node, if it exists.
+   *
+   * <p>This method is used to obtain the state of the node before the current one.
+   *
+   * @return An {@link Optional} containing the previous state of this node if it exists; otherwise,
+   *     an empty {@link Optional}.
+   */
+  public Optional<?> getPrevious() {
+    return previous;
+  }
+
+  /**
+   * Sets the previous state of this node.
+   *
+   * <p>This method allows updating the node's previous state. It is typically used during the
+   * process of node modification to keep a record of the node's state prior to the current changes.
+   *
+   * @param previous An {@link Optional} containing the new previous state to be set for this node.
+   */
+  public void setPrevious(final Optional<?> previous) {
+    this.previous = previous;
+  }
+
   /** Marks the node as needs to be persisted */
-  void markDirty();
+  public void markDirty() {
+    dirty = true;
+    persisted = false;
+  }
+
+  /** Marks this node as needing an update of its scalar and commitment. */
+  public void markClean() {
+    dirty = false;
+  }
 
   /** Marks the node as no longer requiring persistence. */
-  void markClean();
+  public void markPersisted() {
+    persisted = true;
+  }
+
+  /**
+   * Is this node needing an update of its scalar and commitment?
+   *
+   * @return True if the node needs to be updated.
+   */
+  public boolean isDirty() {
+    return dirty;
+  }
 
   /**
    * Is this node not persisted and needs to be?
    *
    * @return True if the node needs to be persisted.
    */
-  boolean isDirty();
+  public boolean isPersisted() {
+    return persisted;
+  }
 
   /**
    * Get a string representation of the node.
    *
    * @return A string representation of the node.
    */
-  String print();
+  abstract String print();
 
   /**
    * Generates DOT representation for the Node.
@@ -136,7 +199,7 @@ public interface Node<V> {
    *     edges.
    * @return DOT representation of the Node.
    */
-  String toDot(Boolean showNullNodes);
+  public abstract String toDot(Boolean showNullNodes);
 
   /**
    * Generates DOT representation for the Node.
@@ -145,7 +208,7 @@ public interface Node<V> {
    *
    * @return DOT representation of the Node.
    */
-  default String toDot() {
+  public String toDot() {
     return toDot(false);
   }
 
@@ -155,7 +218,7 @@ public interface Node<V> {
    * @param value The optional value.
    * @return The low value.
    */
-  static Bytes32 getLowValue(Optional<?> value) {
+  public static Bytes32 getLowValue(Optional<?> value) {
     // Low values have a flag at bit 128.
     return value
         .map(
@@ -171,7 +234,7 @@ public interface Node<V> {
    * @param value The optional value.
    * @return The high value.
    */
-  static Bytes32 getHighValue(Optional<?> value) {
+  public static Bytes32 getHighValue(Optional<?> value) {
     return value
         .map((v) -> Bytes32.rightPad(Bytes32.rightPad((Bytes) v).slice(16, 16)))
         .orElse(Bytes32.ZERO);

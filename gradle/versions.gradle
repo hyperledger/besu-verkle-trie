@@ -19,7 +19,9 @@ dependencyManagement {
 
         dependency 'net.java.dev.jna:jna:5.14.0'
 
-        dependency 'org.hyperledger.besu:ipa-multipoint:0.8.4-SNAPSHOT'
+        dependency 'org.hyperledger.besu.internal:trie:24.5.2'
+
+        dependency 'org.hyperledger.besu:ipa-multipoint:0.8.5'
 
         dependency 'org.assertj:assertj-core:3.25.1'
 

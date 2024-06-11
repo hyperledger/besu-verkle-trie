@@ -59,16 +59,19 @@ public class VerkleTrieBatchHasher {
    * Adds a node for future batching. If the node is a NullNode or NullLeafNode and the location is
    * not empty, it removes the node from the batch.
    *
-   * @param location The location of the node.
+   * @param maybeLocation The location of the node.
    * @param node The node to add.
    */
-  public void addNodeToBatch(final Optional<Bytes> location, final Node<?> node) {
-    if ((node instanceof NullNode<?> || node instanceof NullLeafNode<?>)
-        && !location.orElseThrow().isEmpty()) {
-      updatedNodes.remove(location.orElseThrow());
-    } else {
-      updatedNodes.put(location.orElseThrow(), node);
-    }
+  public void addNodeToBatch(final Optional<Bytes> maybeLocation, final Node<?> node) {
+    maybeLocation.ifPresent(
+        location -> {
+          if ((node instanceof NullNode<?> || node instanceof NullLeafNode<?>)
+              && !location.isEmpty()) {
+            updatedNodes.remove(location);
+          } else {
+            updatedNodes.put(location, node);
+          }
+        });
   }
 
   /**

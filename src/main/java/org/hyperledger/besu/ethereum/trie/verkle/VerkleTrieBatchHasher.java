@@ -44,9 +44,7 @@ import org.apache.tuweni.bytes.Bytes32;
 /**
  * Processes batches of trie nodes for efficient hashing.
  *
- * <p>
- * This class manages the batching and hashing of trie nodes to optimize
- * performance.
+ * <p>This class manages the batching and hashing of trie nodes to optimize performance.
  */
 public class VerkleTrieBatchHasher {
 
@@ -54,11 +52,11 @@ public class VerkleTrieBatchHasher {
   private static final int MAX_BATCH_SIZE = 1000; // Maximum number of nodes in a batch
   private static final Bytes[] EMPTY_ARRAY_TEMPLATE = new Bytes[0];
   private final Hasher hasher = new PedersenHasher(); // Hasher for node hashing
-  private final Map<Bytes, Node<?>> updatedNodes = new HashMap<>(); // Map to hold nodes for batching
+  private final Map<Bytes, Node<?>> updatedNodes =
+      new HashMap<>(); // Map to hold nodes for batching
 
   /**
-   * Adds a node for future batching. If the node is a NullNode or NullLeafNode
-   * and the location is
+   * Adds a node for future batching. If the node is a NullNode or NullLeafNode and the location is
    * not empty, it removes the node from the batch.
    *
    * @param maybeLocation The location of the node.
@@ -86,8 +84,7 @@ public class VerkleTrieBatchHasher {
   }
 
   /**
-   * Processes the nodes in batches. Sorts the nodes by their location and hashes
-   * them in batches.
+   * Processes the nodes in batches. Sorts the nodes by their location and hashes them in batches.
    * Clears the batch after processing.
    */
   public void calculateStateRoot() {
@@ -95,7 +92,8 @@ public class VerkleTrieBatchHasher {
       return;
     }
 
-    final List<Map.Entry<Bytes, Node<?>>> sortedNodesByLocation = new ArrayList<>(updatedNodes.entrySet());
+    final List<Map.Entry<Bytes, Node<?>>> sortedNodesByLocation =
+        new ArrayList<>(updatedNodes.entrySet());
     sortedNodesByLocation.sort(
         (entry1, entry2) -> Integer.compare(entry2.getKey().size(), entry1.getKey().size()));
 
@@ -157,7 +155,8 @@ public class VerkleTrieBatchHasher {
             "Executing batch hashing for {} commitments of stem (left/right) and internal nodes.",
             commitments.size());
     Iterator<Bytes> commitmentsIterator = new ArrayList<>(commitments).iterator();
-    Iterator<Bytes32> hashesIterator = hasher.hashMany(commitments.toArray(EMPTY_ARRAY_TEMPLATE)).iterator();
+    Iterator<Bytes32> hashesIterator =
+        hasher.hashMany(commitments.toArray(EMPTY_ARRAY_TEMPLATE)).iterator();
 
     // reset commitments list for stem
     commitments.clear();

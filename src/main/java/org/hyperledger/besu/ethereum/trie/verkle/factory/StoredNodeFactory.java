@@ -19,8 +19,8 @@ import org.hyperledger.besu.ethereum.trie.NodeLoader;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
+import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StoredNode;
 
@@ -51,10 +51,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   private final Function<Bytes, V> valueDeserializer;
 
   /**
-   * Creates a new StoredNodeFactory with the given node loader and value
-   * deserializer.
+   * Creates a new StoredNodeFactory with the given node loader and value deserializer.
    *
-   * @param nodeLoader        The loader for retrieving stored nodes.
+   * @param nodeLoader The loader for retrieving stored nodes.
    * @param valueDeserializer The function to deserialize values from Bytes.
    */
   public StoredNodeFactory(NodeLoader nodeLoader, Function<Bytes, V> valueDeserializer) {
@@ -66,10 +65,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
    * Retrieves a Verkle Trie node from stored data based on the location and hash.
    *
    * @param location Node's location
-   * @param hash     Node's hash
-   * @return An optional containing the retrieved node, or an empty optional if
-   *         the node is not
-   *         found.
+   * @param hash Node's hash
+   * @return An optional containing the retrieved node, or an empty optional if the node is not
+   *     found.
    */
   @Override
   public Optional<Node<V>> retrieve(final Bytes location, final Bytes32 hash) {
@@ -103,7 +101,6 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
       }
     }
     return isNull;
-
   }
 
   private List<Bytes32> decodeScalars(List<Boolean> isNull, Bytes values) {
@@ -150,9 +147,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   /**
    * Creates a internalNode using the provided location, hash, and path.
    *
-   * @param location      The location of the internalNode.
+   * @param location The location of the internalNode.
    * @param encodedValues List of Bytes values retrieved from storage.
-   * @param hash          Node's hash value.
+   * @param hash Node's hash value.
    * @return A internalNode instance.
    */
   InternalNode<V> createInternalNode(Bytes location, Bytes encodedValues, Bytes32 hash) {
@@ -182,9 +179,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   /**
    * Creates a BranchNode using the provided location, hash, and path.
    *
-   * @param location      The location of the BranchNode.
+   * @param location The location of the BranchNode.
    * @param encodedValues List of Bytes values retrieved from storage.
-   * @param hash          Node's hash value.
+   * @param hash Node's hash value.
    * @return A BranchNode instance.
    */
   StemNode<V> createStemNode(Bytes location, Bytes encodedValues, Bytes32 hash) {
@@ -215,16 +212,21 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
       }
     }
     return new StemNode<V>(
-        location, stem,
-        hash, commitment,
-        leftHash, leftCommitment, rightHash, rightCommitment,
+        location,
+        stem,
+        hash,
+        commitment,
+        leftHash,
+        leftCommitment,
+        rightHash,
+        rightCommitment,
         children);
   }
 
   /**
    * Creates a LeafNode using the provided location, path, and value.
    *
-   * @param key          The key of the LeafNode.
+   * @param key The key of the LeafNode.
    * @param encodedValue Leaf value retrieved from storage.
    * @return A LeafNode instance.
    */

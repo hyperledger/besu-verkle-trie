@@ -32,8 +32,7 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /**
- * A visitor class for hashing operations on Verkle Trie nodes. The batched
- * version is recommended
+ * A visitor class for hashing operations on Verkle Trie nodes. The batched version is recommended
  * for better performance
  *
  * @see VerkleTrieBatchHasher
@@ -43,12 +42,11 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
   Hasher hasher = new PedersenHasher();
 
   /**
-   * Visits a internal node, computes its hash, and returns a new internal node
-   * with the updated
+   * Visits a internal node, computes its hash, and returns a new internal node with the updated
    * hash.
    *
    * @param internalNode The internal node to visit.
-   * @param location     The location associated with the internal node.
+   * @param location The location associated with the internal node.
    * @return A new internal node with the updated hash.
    */
   @Override
@@ -81,8 +79,7 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
   }
 
   /**
-   * Visits a branch node, computes its hash, and returns a new branch node with
-   * the updated hash.
+   * Visits a branch node, computes its hash, and returns a new branch node with the updated hash.
    *
    * @param stemNode The branch node to visit.
    * @param location The location associated with the branch node.
@@ -121,10 +118,9 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     hashes[3] = hasher.hash(rightCommitment);
     Bytes commitment = hasher.commit(hashes);
     final Bytes32 hash = hasher.hash(commitment);
-    StemNode<V> vStemNode = stemNode.replaceHash(
-        hash, commitment,
-        hashes[2], leftCommitment,
-        hashes[3], rightCommitment);
+    StemNode<V> vStemNode =
+        stemNode.replaceHash(
+            hash, commitment, hashes[2], leftCommitment, hashes[3], rightCommitment);
     vStemNode.markClean();
     return vStemNode;
   }

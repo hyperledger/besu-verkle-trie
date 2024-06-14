@@ -44,7 +44,9 @@ import org.apache.tuweni.bytes.Bytes32;
 /**
  * Processes batches of trie nodes for efficient hashing.
  *
- * <p>This class manages the batching and hashing of trie nodes to optimize performance.
+ * <p>
+ * This class manages the batching and hashing of trie nodes to optimize
+ * performance.
  */
 public class VerkleTrieBatchHasher {
 
@@ -52,11 +54,11 @@ public class VerkleTrieBatchHasher {
   private static final int MAX_BATCH_SIZE = 1000; // Maximum number of nodes in a batch
   private static final Bytes[] EMPTY_ARRAY_TEMPLATE = new Bytes[0];
   private final Hasher hasher = new PedersenHasher(); // Hasher for node hashing
-  private final Map<Bytes, Node<?>> updatedNodes =
-      new HashMap<>(); // Map to hold nodes for batching
+  private final Map<Bytes, Node<?>> updatedNodes = new HashMap<>(); // Map to hold nodes for batching
 
   /**
-   * Adds a node for future batching. If the node is a NullNode or NullLeafNode and the location is
+   * Adds a node for future batching. If the node is a NullNode or NullLeafNode
+   * and the location is
    * not empty, it removes the node from the batch.
    *
    * @param maybeLocation The location of the node.
@@ -84,7 +86,8 @@ public class VerkleTrieBatchHasher {
   }
 
   /**
-   * Processes the nodes in batches. Sorts the nodes by their location and hashes them in batches.
+   * Processes the nodes in batches. Sorts the nodes by their location and hashes
+   * them in batches.
    * Clears the batch after processing.
    */
   public void calculateStateRoot() {
@@ -92,8 +95,7 @@ public class VerkleTrieBatchHasher {
       return;
     }
 
-    final List<Map.Entry<Bytes, Node<?>>> sortedNodesByLocation =
-        new ArrayList<>(updatedNodes.entrySet());
+    final List<Map.Entry<Bytes, Node<?>>> sortedNodesByLocation = new ArrayList<>(updatedNodes.entrySet());
     sortedNodesByLocation.sort(
         (entry1, entry2) -> Integer.compare(entry2.getKey().size(), entry1.getKey().size()));
 
@@ -111,7 +113,8 @@ public class VerkleTrieBatchHasher {
           }
           if (location.isEmpty()) {
             // We will end up updating the root node. Once all the batching is finished,
-            // we will update the previous states of the nodes by setting them to the new ones.
+            // we will update the previous states of the nodes by setting them to the new
+            // ones.
             calculateRootInternalNodeHash((InternalNode<?>) node);
             updatedNodes.forEach(
                 (__, n) -> {
@@ -154,8 +157,7 @@ public class VerkleTrieBatchHasher {
             "Executing batch hashing for {} commitments of stem (left/right) and internal nodes.",
             commitments.size());
     Iterator<Bytes> commitmentsIterator = new ArrayList<>(commitments).iterator();
-    Iterator<Bytes32> hashesIterator =
-        hasher.hashMany(commitments.toArray(EMPTY_ARRAY_TEMPLATE)).iterator();
+    Iterator<Bytes32> hashesIterator = hasher.hashMany(commitments.toArray(EMPTY_ARRAY_TEMPLATE)).iterator();
 
     // reset commitments list for stem
     commitments.clear();
@@ -185,8 +187,9 @@ public class VerkleTrieBatchHasher {
   }
 
   private void calculateRootInternalNodeHash(final InternalNode<?> internalNode) {
-    final Bytes32 hash = Bytes32.wrap(getRootNodeCommitments(internalNode).get(0));
-    internalNode.replaceHash(hash, hash);
+    final Bytes commitment = getRootNodeCommitments(internalNode).get(0);
+    final Bytes32 hash = hasher.compress(commitment);
+    internalNode.replaceHash(hash, commitment);
   }
 
   private void calculateStemNodeHashes(
@@ -229,9 +232,11 @@ public class VerkleTrieBatchHasher {
       Node<?> node = stemNode.child((byte) idx);
 
       Optional<Bytes> oldValue = node.getPrevious().map(Bytes.class::cast);
-      // We should not recalculate a node if it is persisted and has not undergone an update since
+      // We should not recalculate a node if it is persisted and has not undergone an
+      // update since
       // its last save.
-      // If a child does not have a previous value, it means that it is a new node and we must
+      // If a child does not have a previous value, it means that it is a new node and
+      // we must
       // therefore recalculate it.
       if (!(node instanceof StoredNode<?>) && (oldValue.isEmpty() || node.isDirty())) {
         if (idx < halfSize) {
@@ -300,9 +305,11 @@ public class VerkleTrieBatchHasher {
     for (int i = 0; i < size; i++) {
       final Node<?> node = internalNode.child((byte) i);
       Optional<Bytes> oldValue = node.getPrevious().map(Bytes.class::cast);
-      // We should not recalculate a node if it is persisted and has not undergone an update since
+      // We should not recalculate a node if it is persisted and has not undergone an
+      // update since
       // its last save.
-      // If a child does not have a previous value, it means that it is a new node and we must
+      // If a child does not have a previous value, it means that it is a new node and
+      // we must
       // therefore recalculate it.
       if (!(node instanceof StoredNode<?>) && (oldValue.isEmpty() || node.isDirty())) {
         indices.add((byte) i);
@@ -318,12 +325,12 @@ public class VerkleTrieBatchHasher {
   private List<Bytes> getRootNodeCommitments(InternalNode<?> internalNode) {
     int size = InternalNode.maxChild();
     final List<Bytes> commitmentsHashes = new ArrayList<>();
-    final List<Bytes> newValues = new ArrayList<>();
+    final List<Bytes32> newValues = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       final Node<?> node = internalNode.child((byte) i);
       newValues.add(node.getHash().get());
     }
-    commitmentsHashes.add(hasher.commitRoot(newValues.toArray(new Bytes[] {})));
+    commitmentsHashes.add(hasher.commit(newValues.toArray(new Bytes32[] {})));
     return commitmentsHashes;
   }
 }

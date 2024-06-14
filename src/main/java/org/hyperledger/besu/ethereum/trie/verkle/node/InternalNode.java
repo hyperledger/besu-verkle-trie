@@ -18,14 +18,12 @@ package org.hyperledger.besu.ethereum.trie.verkle.node;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPWriter;
 
 /**
  * Represents an internal node in the Verkle Trie.
@@ -38,10 +36,10 @@ public class InternalNode<V> extends BranchNode<V> {
   /**
    * Constructs a new InternalNode with location, hash, path, and children.
    *
-   * @param location The location in the tree.
-   * @param hash Node's vector commitment's hash.
+   * @param location   The location in the tree.
+   * @param hash       Node's vector commitment's hash.
    * @param commitment Node's vector commitment.
-   * @param children The list of children nodes.
+   * @param children   The list of children nodes.
    */
   public InternalNode(
       final Bytes location,
@@ -53,7 +51,8 @@ public class InternalNode<V> extends BranchNode<V> {
   }
 
   /**
-   * Constructs a new InternalNode with optional location and path, initializing children to
+   * Constructs a new InternalNode with optional location and path, initializing
+   * children to
    * NullNodes.
    *
    * @param location The optional location in the tree.
@@ -66,7 +65,7 @@ public class InternalNode<V> extends BranchNode<V> {
    * Accepts a visitor for path-based operations on the node.
    *
    * @param visitor The path node visitor.
-   * @param path The path associated with a node.
+   * @param path    The path associated with a node.
    * @return The result of the visitor's operation.
    */
   @Override
@@ -88,7 +87,7 @@ public class InternalNode<V> extends BranchNode<V> {
   /**
    * Replace the vector commitment with a new one.
    *
-   * @param hash The new vector commitment's hash to set.
+   * @param hash       The new vector commitment's hash to set.
    * @param commitment The new vector commitment to set.
    * @return A new InternalNode with the updated vector commitment.
    */
@@ -108,8 +107,21 @@ public class InternalNode<V> extends BranchNode<V> {
     if (encodedValue.isPresent()) {
       return encodedValue.get();
     }
-    List<Bytes> values = Arrays.asList((Bytes) getHash().get(), getCommitment().get());
-    Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
+    List<Bytes> values = new ArrayList<>();
+    if (getLocation().get().isEmpty()) {
+      values.add(Bytes.of(0));
+      values.add((Bytes) getHash().get());
+    } else {
+      values.add(Bytes.of(1));
+    }
+    values.add(getCommitment().get());
+    values.add(getNullBitmap());
+    for (Node<V> child : getChildren()) {
+      if (!child.isNull()) {
+        values.add(child.getHash().get());
+      }
+    }
+    Bytes result = Bytes.concatenate(values);
     this.encodedValue = Optional.of(result);
     return result;
   }
@@ -143,24 +155,22 @@ public class InternalNode<V> extends BranchNode<V> {
    */
   @Override
   public String toDot(Boolean showNullNodes) {
-    StringBuilder result =
-        new StringBuilder()
-            .append(getClass().getSimpleName())
-            .append(getLocation().orElse(Bytes.EMPTY))
-            .append(" [label=\"I: ")
-            .append(getLocation().orElse(Bytes.EMPTY))
-            .append("\nCommitment: ")
-            .append(getCommitment().orElse(Bytes32.ZERO))
-            .append("\"]\n");
+    StringBuilder result = new StringBuilder()
+        .append(getClass().getSimpleName())
+        .append(getLocation().orElse(Bytes.EMPTY))
+        .append(" [label=\"I: ")
+        .append(getLocation().orElse(Bytes.EMPTY))
+        .append("\nCommitment: ")
+        .append(getCommitment().orElse(Bytes32.ZERO))
+        .append("\"]\n");
 
     for (Node<V> child : getChildren()) {
-      String edgeString =
-          getClass().getSimpleName()
-              + getLocation().orElse(Bytes.EMPTY)
-              + " -> "
-              + child.getClass().getSimpleName()
-              + child.getLocation().orElse(Bytes.EMPTY)
-              + "\n";
+      String edgeString = getClass().getSimpleName()
+          + getLocation().orElse(Bytes.EMPTY)
+          + " -> "
+          + child.getClass().getSimpleName()
+          + child.getLocation().orElse(Bytes.EMPTY)
+          + "\n";
 
       if (showNullNodes || !result.toString().contains(edgeString)) {
         result.append(edgeString);

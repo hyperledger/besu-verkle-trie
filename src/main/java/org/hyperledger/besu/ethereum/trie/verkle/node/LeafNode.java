@@ -18,14 +18,11 @@ package org.hyperledger.besu.ethereum.trie.verkle.node;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPWriter;
 
 /**
  * Represents a leaf node in the Verkle Trie.
@@ -42,7 +39,7 @@ public class LeafNode<V> extends Node<V> {
    * Constructs a new LeafNode with location, value.
    *
    * @param location The location of the node in the tree.
-   * @param value The value associated with the node.
+   * @param value    The value associated with the node.
    */
   public LeafNode(final Bytes location, final V value) {
     super(false, false);
@@ -55,7 +52,7 @@ public class LeafNode<V> extends Node<V> {
    * Constructs a new LeafNode with optional location, value.
    *
    * @param location The location of the node in the tree (Optional).
-   * @param value The value associated with the node.
+   * @param value    The value associated with the node.
    */
   public LeafNode(final Optional<Bytes> location, final V value) {
     this(location, value, Optional.of(value));
@@ -74,7 +71,7 @@ public class LeafNode<V> extends Node<V> {
    * Accepts a visitor for path-based operations on the node.
    *
    * @param visitor The path node visitor.
-   * @param path The path associated with a node.
+   * @param path    The path associated with a node.
    * @return The result of the visitor's operation.
    */
   @Override
@@ -114,7 +111,8 @@ public class LeafNode<V> extends Node<V> {
   }
 
   /**
-   * Get the children of the node. A leaf node does not have children, so this method throws an
+   * Get the children of the node. A leaf node does not have children, so this
+   * method throws an
    * UnsupportedOperationException.
    *
    * @return The list of children nodes (unsupported operation).
@@ -146,12 +144,9 @@ public class LeafNode<V> extends Node<V> {
     if (encodedValue.isPresent()) {
       return encodedValue.get();
     }
-    Bytes encodedVal =
-        getValue().isPresent() ? valueSerializer.apply(getValue().get()) : Bytes.EMPTY;
-    List<Bytes> values = Arrays.asList(encodedVal);
-    Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
-    this.encodedValue = Optional.of(result);
-    return result;
+    Bytes encodedVal = getValue().isPresent() ? valueSerializer.apply(getValue().get()) : Bytes.EMPTY;
+    this.encodedValue = Optional.of(encodedVal);
+    return encodedVal;
   }
 
   /**

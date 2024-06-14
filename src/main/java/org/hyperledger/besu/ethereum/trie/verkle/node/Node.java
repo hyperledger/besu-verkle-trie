@@ -36,7 +36,9 @@ public abstract class Node<V> {
   public static Bytes32 EMPTY_HASH = Bytes32.ZERO;
 
   /** A constant representing a commitment to NullNodes */
-  public static Bytes EMPTY_COMMITMENT = Bytes.EMPTY;
+  public static Bytes EMPTY_COMMITMENT = Bytes.fromHexString(
+      "0x0000000000000000000000000000000000000000000000000000000000000000"
+          + "0100000000000000000000000000000000000000000000000000000000000000");
 
   Optional<?> previous;
 
@@ -60,7 +62,7 @@ public abstract class Node<V> {
    * Accept a visitor to perform operations on the node based on a provided path.
    *
    * @param visitor The visitor to accept.
-   * @param path The path associated with a node.
+   * @param path    The path associated with a node.
    * @return The result of visitor's operation.
    */
   public abstract Node<V> accept(PathNodeVisitor<V> visitor, Bytes path);
@@ -72,6 +74,24 @@ public abstract class Node<V> {
    * @return The result of the visitor's operation.
    */
   public abstract Node<V> accept(NodeVisitor<V> visitor);
+
+  /**
+   * Should the node be considered Null ?
+   *
+   * @return isNull
+   */
+  public Boolean isNull() {
+    return false;
+  }
+
+  /**
+   * Does the node have an extension path ?
+   *
+   * @return hasExtension
+   */
+  public Boolean hasExtension() {
+    return false;
+  }
 
   /**
    * Get the location of the node.
@@ -130,10 +150,12 @@ public abstract class Node<V> {
   /**
    * Retrieves the previous state of this node, if it exists.
    *
-   * <p>This method is used to obtain the state of the node before the current one.
+   * <p>
+   * This method is used to obtain the state of the node before the current one.
    *
-   * @return An {@link Optional} containing the previous state of this node if it exists; otherwise,
-   *     an empty {@link Optional}.
+   * @return An {@link Optional} containing the previous state of this node if it
+   *         exists; otherwise,
+   *         an empty {@link Optional}.
    */
   public Optional<?> getPrevious() {
     return previous;
@@ -142,10 +164,14 @@ public abstract class Node<V> {
   /**
    * Sets the previous state of this node.
    *
-   * <p>This method allows updating the node's previous state. It is typically used during the
-   * process of node modification to keep a record of the node's state prior to the current changes.
+   * <p>
+   * This method allows updating the node's previous state. It is typically used
+   * during the
+   * process of node modification to keep a record of the node's state prior to
+   * the current changes.
    *
-   * @param previous An {@link Optional} containing the new previous state to be set for this node.
+   * @param previous An {@link Optional} containing the new previous state to be
+   *                 set for this node.
    */
   public void setPrevious(final Optional<?> previous) {
     this.previous = previous;
@@ -195,8 +221,9 @@ public abstract class Node<V> {
   /**
    * Generates DOT representation for the Node.
    *
-   * @param showNullNodes If true, prints NullNodes and NullLeafNodes; if false, prints only unique
-   *     edges.
+   * @param showNullNodes If true, prints NullNodes and NullLeafNodes; if false,
+   *                      prints only unique
+   *                      edges.
    * @return DOT representation of the Node.
    */
   public abstract String toDot(Boolean showNullNodes);
@@ -204,7 +231,8 @@ public abstract class Node<V> {
   /**
    * Generates DOT representation for the Node.
    *
-   * <p>Representation does not contain repeating edges.
+   * <p>
+   * Representation does not contain repeating edges.
    *
    * @return DOT representation of the Node.
    */
@@ -222,9 +250,8 @@ public abstract class Node<V> {
     // Low values have a flag at bit 128.
     return value
         .map(
-            (v) ->
-                Bytes32.rightPad(
-                    Bytes.concatenate(Bytes32.rightPad((Bytes) v).slice(0, 16), Bytes.of(1))))
+            (v) -> Bytes32.rightPad(
+                Bytes.concatenate(Bytes32.rightPad((Bytes) v).slice(0, 16), Bytes.of(1))))
         .orElse(Bytes32.ZERO);
   }
 

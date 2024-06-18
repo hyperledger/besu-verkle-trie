@@ -48,6 +48,19 @@ public class SimpleVerkleTrieTest {
   }
 
   @Test
+  public void testDeleteAlreadyDeletedValue() {
+    SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<Bytes32, Bytes32>();
+    Bytes32 key =
+        Bytes32.fromHexString("0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff");
+    Bytes32 value =
+        Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
+    trie.put(key, value);
+    trie.remove(key);
+    trie.remove(key);
+    assertThat(trie.getRootHash()).isEqualTo(Bytes32.ZERO);
+  }
+
+  @Test
   public void testTwoValuesAtSameStem() throws Exception {
     SimpleVerkleTrie<Bytes32, Bytes32> trie = new SimpleVerkleTrie<Bytes32, Bytes32>();
     Bytes32 key1 =

@@ -51,6 +51,21 @@ public class SimpleBatchedVerkleTrieTest {
   }
 
   @Test
+  public void testDeleteAlreadyDeletedValue() {
+    final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
+    SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =
+        new SimpleBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor);
+    Bytes32 key =
+        Bytes32.fromHexString("0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff");
+    Bytes32 value =
+        Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
+    trie.put(key, value);
+    trie.remove(key);
+    trie.remove(key);
+    assertThat(trie.getRootHash()).isEqualTo(Bytes32.ZERO);
+  }
+
+  @Test
   public void testTwoValuesAtSameStem() throws Exception {
     final VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     SimpleBatchedVerkleTrie<Bytes32, Bytes32> trie =

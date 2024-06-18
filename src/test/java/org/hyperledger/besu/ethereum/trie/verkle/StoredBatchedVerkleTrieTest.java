@@ -69,6 +69,27 @@ public class StoredBatchedVerkleTrieTest {
   }
 
   @Test
+  public void testDeleteAlreadyDeletedValue() {
+    NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
+    NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
+    VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
+    StoredNodeFactory<Bytes32> nodeFactory =
+        new StoredNodeFactory<>(nodeLoader, value -> (Bytes32) value);
+    StoredBatchedVerkleTrie<Bytes32, Bytes32> trie =
+        new StoredBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor, nodeFactory);
+    Bytes32 key =
+        Bytes32.fromHexString("0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff");
+    Bytes32 value =
+        Bytes32.fromHexString("0x1000000000000000000000000000000000000000000000000000000000000000");
+    trie.put(key, value);
+    trie.remove(key);
+    trie.remove(key);
+    StoredBatchedVerkleTrie<Bytes32, Bytes32> storedTrie =
+        new StoredBatchedVerkleTrie<Bytes32, Bytes32>(batchProcessor, nodeFactory);
+    assertThat(storedTrie.getRootHash()).isEqualTo(Bytes32.ZERO);
+  }
+
+  @Test
   public void testTwoValuesAtSameStem() throws Exception {
     NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);

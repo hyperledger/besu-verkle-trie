@@ -41,9 +41,9 @@ public class PedersenHasherTest {
     n = n.shiftLeft(129);
     n = n.add(BigInteger.valueOf(3));
     Bytes32 index = UInt256.valueOf(n).toBytes();
-    Bytes32 tk = hasher.trieKeyHash(address, index);
+    Bytes tk = hasher.computeStem(address, index);
     String got = tk.toHexString();
-    String exp = "0x6ede905763d5856cd2d67936541e82aa78f7141bf8cd5ff6c962170f3e9dc201";
+    String exp = "0x6ede905763d5856cd2d67936541e82aa78f7141bf8cd5ff6c962170f3e9dc2";
 
     assertEquals(exp, got);
   }

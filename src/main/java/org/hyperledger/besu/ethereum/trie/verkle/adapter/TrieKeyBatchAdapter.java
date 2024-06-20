@@ -15,8 +15,6 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.adapter;
 
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH;
-
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 
 import java.util.ArrayList;
@@ -40,25 +38,24 @@ public class TrieKeyBatchAdapter extends TrieKeyAdapter {
     super(hasher);
   }
 
-  public Map<Bytes32, Bytes32> manyTrieKeyHashes(
+  public Map<Bytes32, Bytes> manyStems(
       final Bytes address,
       final List<Bytes32> headerKeys,
       final List<Bytes32> storageKeys,
       final List<Bytes32> codeChunkIds) {
 
-    final Set<Bytes32> offsets = new HashSet<>();
+    final Set<Bytes32> trieIndex = new HashSet<>();
 
     if (headerKeys.size() > 0) {
-      offsets.add(UInt256.ZERO);
+      trieIndex.add(UInt256.ZERO);
     }
     for (Bytes32 storageKey : storageKeys) {
-      offsets.add(locateStorageKeyOffset(storageKey));
+      trieIndex.add(getStorageKeyTrieIndex(storageKey));
     }
     for (Bytes32 codeChunkId : codeChunkIds) {
-      final UInt256 codeChunkOffset = locateCodeChunkKeyOffset(codeChunkId);
-      offsets.add(codeChunkOffset.divide(VERKLE_NODE_WIDTH));
+      trieIndex.add(getCodeChunkKeyTrieIndex(codeChunkId));
     }
 
-    return getHasher().manyTrieKeyHashes(address, new ArrayList<>(offsets));
+    return getHasher().manyStems(address, new ArrayList<>(trieIndex));
   }
 }

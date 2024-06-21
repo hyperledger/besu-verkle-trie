@@ -134,6 +134,15 @@ allprojects {
         artifact sourcesJar
         artifact javadocJar
 
+        versionMapping {
+          usage('java-api') {
+            fromResolutionOf('runtimeClasspath')
+          }
+          usage('java-runtime') {
+            fromResolutionResult()
+          }
+        }
+
         pom {
           name = "Verkle Tries - ${project.name}"
           description = 'VerkleTries'

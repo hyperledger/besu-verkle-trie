@@ -18,14 +18,12 @@ package org.hyperledger.besu.ethereum.trie.verkle.node;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPWriter;
 
 /**
  * Represents an internal node in the Verkle Trie.
@@ -108,8 +106,21 @@ public class InternalNode<V> extends BranchNode<V> {
     if (encodedValue.isPresent()) {
       return encodedValue.get();
     }
-    List<Bytes> values = Arrays.asList((Bytes) getHash().get(), getCommitment().get());
-    Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
+    List<Bytes> values = new ArrayList<>();
+    if (getLocation().get().isEmpty()) {
+      values.add(Bytes.of(0));
+      values.add((Bytes) getHash().get());
+    } else {
+      values.add(Bytes.of(1));
+    }
+    values.add(getCommitment().get());
+    values.add(getNullBitmap());
+    for (Node<V> child : getChildren()) {
+      if (!child.isNull()) {
+        values.add(child.getHash().get());
+      }
+    }
+    Bytes result = Bytes.concatenate(values);
     this.encodedValue = Optional.of(result);
     return result;
   }

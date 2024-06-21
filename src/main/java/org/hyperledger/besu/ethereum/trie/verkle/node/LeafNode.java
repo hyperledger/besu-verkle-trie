@@ -18,14 +18,11 @@ package org.hyperledger.besu.ethereum.trie.verkle.node;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPWriter;
 
 /**
  * Represents a leaf node in the Verkle Trie.
@@ -148,10 +145,8 @@ public class LeafNode<V> extends Node<V> {
     }
     Bytes encodedVal =
         getValue().isPresent() ? valueSerializer.apply(getValue().get()) : Bytes.EMPTY;
-    List<Bytes> values = Arrays.asList(encodedVal);
-    Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
-    this.encodedValue = Optional.of(result);
-    return result;
+    this.encodedValue = Optional.of(encodedVal);
+    return encodedVal;
   }
 
   /**

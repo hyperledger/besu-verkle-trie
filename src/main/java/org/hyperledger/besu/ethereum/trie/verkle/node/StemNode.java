@@ -18,14 +18,12 @@ package org.hyperledger.besu.ethereum.trie.verkle.node;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPWriter;
 
 /**
  * Represents a stem node in the Verkle Trie.
@@ -161,6 +159,11 @@ public class StemNode<V> extends BranchNode<V> {
     return stem;
   }
 
+  @Override
+  public Boolean hasExtension() {
+    return true;
+  }
+
   /**
    * Get Node's extension.
    *
@@ -262,16 +265,21 @@ public class StemNode<V> extends BranchNode<V> {
     if (encodedValue.isPresent()) {
       return encodedValue.get();
     }
-    List<Bytes> values =
-        Arrays.asList(
-            getStem(),
-            (Bytes) getHash().get(),
-            getCommitment().get(),
-            (Bytes) getLeftHash().get(),
-            getLeftCommitment().get(),
-            (Bytes) getRightHash().get(),
-            getRightCommitment().get());
-    Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
+    List<Bytes> values = new ArrayList<>();
+    values.add(Bytes.of(2));
+    values.add(stem);
+    values.add(getCommitment().get());
+    values.add(getLeftCommitment().get());
+    values.add(getRightCommitment().get());
+    values.add((Bytes) getLeftHash().get());
+    values.add((Bytes) getRightHash().get());
+    values.add(getNullBitmap());
+    for (Node<V> child : getChildren()) {
+      if (!child.isNull()) {
+        values.add(child.getEncodedValue());
+      }
+    }
+    Bytes result = Bytes.concatenate(values);
     this.encodedValue = Optional.of(result);
     return result;
   }

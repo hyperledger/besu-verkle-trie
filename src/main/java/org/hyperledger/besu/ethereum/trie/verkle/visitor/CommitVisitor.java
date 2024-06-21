@@ -110,13 +110,13 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(final LeafNode<V> leafNode, final Bytes location) {
-    if (leafNode.isPersisted()) {
-      return leafNode;
-    }
-    if (leafNode.isDirty()) {
-      throw new RuntimeException("cannot persist dirty node");
-    }
-    nodeUpdater.store(location, null, leafNode.getEncodedValue());
+    // if (leafNode.isPersisted()) {
+    // return leafNode;
+    // }
+    // if (leafNode.isDirty()) {
+    // throw new RuntimeException("cannot persist dirty node");
+    // }
+    // nodeUpdater.store(location, null, leafNode.getEncodedValue());
     leafNode.markPersisted();
     return leafNode;
   }

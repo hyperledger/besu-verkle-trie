@@ -111,7 +111,8 @@ public class VerkleTrieBatchHasher {
           }
           if (location.isEmpty()) {
             // We will end up updating the root node. Once all the batching is finished,
-            // we will update the previous states of the nodes by setting them to the new ones.
+            // we will update the previous states of the nodes by setting them to the new
+            // ones.
             calculateRootInternalNodeHash((InternalNode<?>) node);
             updatedNodes.forEach(
                 (__, n) -> {
@@ -185,8 +186,9 @@ public class VerkleTrieBatchHasher {
   }
 
   private void calculateRootInternalNodeHash(final InternalNode<?> internalNode) {
-    final Bytes32 hash = Bytes32.wrap(getRootNodeCommitments(internalNode).get(0));
-    internalNode.replaceHash(hash, hash);
+    final Bytes commitment = getRootNodeCommitments(internalNode).get(0);
+    final Bytes32 hash = hasher.compress(commitment);
+    internalNode.replaceHash(hash, commitment);
   }
 
   private void calculateStemNodeHashes(
@@ -229,9 +231,11 @@ public class VerkleTrieBatchHasher {
       Node<?> node = stemNode.child((byte) idx);
 
       Optional<Bytes> oldValue = node.getPrevious().map(Bytes.class::cast);
-      // We should not recalculate a node if it is persisted and has not undergone an update since
+      // We should not recalculate a node if it is persisted and has not undergone an
+      // update since
       // its last save.
-      // If a child does not have a previous value, it means that it is a new node and we must
+      // If a child does not have a previous value, it means that it is a new node and
+      // we must
       // therefore recalculate it.
       if (!(node instanceof StoredNode<?>) && (oldValue.isEmpty() || node.isDirty())) {
         if (idx < halfSize) {
@@ -300,9 +304,11 @@ public class VerkleTrieBatchHasher {
     for (int i = 0; i < size; i++) {
       final Node<?> node = internalNode.child((byte) i);
       Optional<Bytes> oldValue = node.getPrevious().map(Bytes.class::cast);
-      // We should not recalculate a node if it is persisted and has not undergone an update since
+      // We should not recalculate a node if it is persisted and has not undergone an
+      // update since
       // its last save.
-      // If a child does not have a previous value, it means that it is a new node and we must
+      // If a child does not have a previous value, it means that it is a new node and
+      // we must
       // therefore recalculate it.
       if (!(node instanceof StoredNode<?>) && (oldValue.isEmpty() || node.isDirty())) {
         indices.add((byte) i);
@@ -318,12 +324,12 @@ public class VerkleTrieBatchHasher {
   private List<Bytes> getRootNodeCommitments(InternalNode<?> internalNode) {
     int size = InternalNode.maxChild();
     final List<Bytes> commitmentsHashes = new ArrayList<>();
-    final List<Bytes> newValues = new ArrayList<>();
+    final List<Bytes32> newValues = new ArrayList<>();
     for (int i = 0; i < size; i++) {
       final Node<?> node = internalNode.child((byte) i);
       newValues.add(node.getHash().get());
     }
-    commitmentsHashes.add(hasher.commitRoot(newValues.toArray(new Bytes[] {})));
+    commitmentsHashes.add(hasher.commit(newValues.toArray(new Bytes32[] {})));
     return commitmentsHashes;
   }
 }

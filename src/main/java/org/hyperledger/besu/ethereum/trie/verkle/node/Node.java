@@ -36,7 +36,10 @@ public abstract class Node<V> {
   public static Bytes32 EMPTY_HASH = Bytes32.ZERO;
 
   /** A constant representing a commitment to NullNodes */
-  public static Bytes EMPTY_COMMITMENT = Bytes.EMPTY;
+  public static Bytes EMPTY_COMMITMENT =
+      Bytes.fromHexString(
+          "0x0000000000000000000000000000000000000000000000000000000000000000"
+              + "0100000000000000000000000000000000000000000000000000000000000000");
 
   Optional<?> previous;
 
@@ -72,6 +75,24 @@ public abstract class Node<V> {
    * @return The result of the visitor's operation.
    */
   public abstract Node<V> accept(NodeVisitor<V> visitor);
+
+  /**
+   * Should the node be considered Null ?
+   *
+   * @return isNull
+   */
+  public Boolean isNull() {
+    return false;
+  }
+
+  /**
+   * Does the node have an extension path ?
+   *
+   * @return hasExtension
+   */
+  public Boolean hasExtension() {
+    return false;
+  }
 
   /**
    * Get the location of the node.

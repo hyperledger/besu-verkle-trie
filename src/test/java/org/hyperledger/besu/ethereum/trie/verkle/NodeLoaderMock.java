@@ -17,7 +17,7 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 
 import org.hyperledger.besu.ethereum.trie.NodeLoader;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -25,9 +25,9 @@ import org.apache.tuweni.bytes.Bytes32;
 
 public class NodeLoaderMock implements NodeLoader {
 
-  public HashMap<Bytes, Bytes> storage;
+  public Map<Bytes, Bytes> storage;
 
-  public NodeLoaderMock(HashMap<Bytes, Bytes> storage) {
+  public NodeLoaderMock(Map<Bytes, Bytes> storage) {
     this.storage = storage;
   }
 

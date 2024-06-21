@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test;
 public class PedersenHasherTest {
 
   PedersenHasher hasher = new PedersenHasher();
+
   // Pulled out of geth, good test case to compare in case of breaking changes on key generation
   @Test
   public void testGetTreeKey() {

@@ -309,15 +309,13 @@ public class NodeDirtyTest {
 
     nodes.add(node);
 
-    if (node instanceof InternalNode) {
-      InternalNode<Bytes32> internalNode = (InternalNode<Bytes32>) node;
+    if (node instanceof InternalNode<Bytes32> internalNode) {
       for (int i = 0; i < InternalNode.maxChild(); i++) {
         Bytes index = Bytes.of(i);
         Node<Bytes32> child = internalNode.child((byte) i);
         collectNodes(child, path + index.toString(), nodes);
       }
-    } else if (node instanceof StemNode) {
-      StemNode<Bytes32> stemNode = (StemNode<Bytes32>) node;
+    } else if (node instanceof StemNode<Bytes32> stemNode) {
       for (int i = 0; i < StemNode.maxChild(); i++) {
         Bytes index = Bytes.of(i);
         Node<Bytes32> child = stemNode.child((byte) i);

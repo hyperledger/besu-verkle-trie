@@ -224,6 +224,7 @@ public abstract class BranchNode<V> extends Node<V> {
   public Optional<Bytes32> getPrevious() {
     return previous.map(Bytes32.class::cast);
   }
+
   /**
    * Generates a string representation of the branch node and its children.
    *

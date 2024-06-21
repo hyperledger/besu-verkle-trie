@@ -197,6 +197,7 @@ public class TrieKeyAdapter {
   public int getNbChunk(Bytes bytecode) {
     return bytecode.isEmpty() ? 0 : (1 + ((bytecode.size() - 1) / CHUNK_SIZE));
   }
+
   /**
    * Chunk code's bytecode for insertion in the Trie. Each chunk code uses its position in the list
    * as chunkId

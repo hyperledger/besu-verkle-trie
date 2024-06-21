@@ -40,6 +40,7 @@ public class NullLeafNode<V> extends Node<V> {
     super(false, true);
     this.previous = previousValue;
   }
+
   /**
    * Accepts a visitor for path-based operations on the node.
    *

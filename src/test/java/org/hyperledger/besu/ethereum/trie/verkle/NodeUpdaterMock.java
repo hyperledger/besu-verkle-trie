@@ -18,19 +18,20 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 import org.hyperledger.besu.ethereum.trie.NodeUpdater;
 
 import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 public class NodeUpdaterMock implements NodeUpdater {
 
-  public HashMap<Bytes, Bytes> storage;
+  public Map<Bytes, Bytes> storage;
 
   public NodeUpdaterMock() {
     this.storage = new HashMap<Bytes, Bytes>();
   }
 
-  public NodeUpdaterMock(HashMap<Bytes, Bytes> storage) {
+  public NodeUpdaterMock(Map<Bytes, Bytes> storage) {
     this.storage = storage;
   }
 

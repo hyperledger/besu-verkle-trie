@@ -87,20 +87,20 @@ public interface Hasher {
   List<Bytes32> hashMany(Bytes[] commitments);
 
   /**
-   * Calculates the hash for an address and index.
+   * Calculates the stem for an address and index.
    *
    * @param address Account address.
    * @param index index in storage.
    * @return trie-key hash
    */
-  Bytes32 trieKeyHash(Bytes address, Bytes32 index);
+  Bytes computeStem(Bytes address, Bytes32 index);
 
   /**
-   * Calculates the hash for an address and indexes.
+   * Calculates the stem for an address and indexes.
    *
    * @param address Account address.
    * @param indexes list of indexes in storage.
    * @return The list of trie-key hashes
    */
-  Map<Bytes32, Bytes32> manyTrieKeyHashes(Bytes address, List<Bytes32> indexes);
+  Map<Bytes32, Bytes> manyStems(Bytes address, List<Bytes32> indexes);
 }

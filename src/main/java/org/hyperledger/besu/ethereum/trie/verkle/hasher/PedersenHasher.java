@@ -50,6 +50,9 @@ public class PedersenHasher implements Hasher {
   // making the total number of chunks equal to five.
   private static final int NUM_CHUNKS = 5;
 
+  // Size of the stem is 31 bytes
+  private static final int STEM_SIZE = 31;
+
   /**
    * Commit to a vector of values.
    *
@@ -141,7 +144,7 @@ public class PedersenHasher implements Hasher {
    * @return The trie-key hash
    */
   @Override
-  public Bytes32 trieKeyHash(Bytes address, Bytes32 index) {
+  public Bytes computeStem(Bytes address, Bytes32 index) {
 
     // Pad the address so that it is 32 bytes
     final Bytes32 addr = Bytes32.leftPad(address);
@@ -151,7 +154,7 @@ public class PedersenHasher implements Hasher {
     final Bytes hash =
         Bytes.wrap(
             LibIpaMultipoint.hash(LibIpaMultipoint.commit(Bytes.concatenate(chunks).toArray())));
-    return Bytes32.wrap(hash);
+    return hash.slice(0, STEM_SIZE);
   }
 
   /**
@@ -162,7 +165,7 @@ public class PedersenHasher implements Hasher {
    * @return The list of trie-key hashes
    */
   @Override
-  public Map<Bytes32, Bytes32> manyTrieKeyHashes(Bytes address, List<Bytes32> indexes) {
+  public Map<Bytes32, Bytes> manyStems(Bytes address, List<Bytes32> indexes) {
 
     // Pad the address so that it is 32 bytes
     final Bytes32 addr = Bytes32.leftPad(address);
@@ -176,12 +179,12 @@ public class PedersenHasher implements Hasher {
 
       final Bytes hashMany = Bytes.wrap(LibIpaMultipoint.hashMany(outputStream.toByteArray()));
 
-      final Map<Bytes32, Bytes32> hashes = new HashMap<>();
+      final Map<Bytes32, Bytes> stems = new HashMap<>();
       for (int i = 0; i < indexes.size(); i++) {
         // Slice input into 16 byte segments
-        hashes.put(indexes.get(i), Bytes32.wrap(hashMany.slice(i * Bytes32.SIZE, Bytes32.SIZE)));
+        stems.put(indexes.get(i), Bytes.wrap(hashMany.slice(i * Bytes32.SIZE, STEM_SIZE)));
       }
-      return hashes;
+      return stems;
     } catch (IOException e) {
       throw new RuntimeException("unable to generate trie key hash", e);
     }

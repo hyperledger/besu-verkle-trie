@@ -30,7 +30,7 @@ public class PedersenHasherTest {
 
   // Pulled out of geth, good test case to compare in case of breaking changes on key generation
   @Test
-  public void testGetTreeKey() {
+  public void testGetStem() {
     byte[] addr = new byte[32];
     for (int i = 0; i < 16; i++) {
       addr[1 + 2 * i] = (byte) 0xff;

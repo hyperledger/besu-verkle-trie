@@ -35,7 +35,7 @@ import org.apache.tuweni.bytes.Bytes32;
  * @param <V> The type of values in the Verkle Trie.
  */
 public class SimpleBatchedVerkleTrie<K extends Bytes, V extends Bytes>
-    extends SimpleVerkleTrie<K, V> implements VerkleTrie<K, V> {
+    extends SimpleVerkleTrie<K, V> {
 
   private final VerkleTrieBatchHasher batchProcessor;
 

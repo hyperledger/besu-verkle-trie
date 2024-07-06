@@ -67,12 +67,13 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
       hashes[i] = updatedChild.getHash().get();
     }
     final Bytes32 hash;
+    final Bytes commitment = hasher.commit(hashes);
     if (location.isEmpty()) {
-      hash = hasher.commitRoot(hashes);
+      hash = hasher.compress(commitment);
     } else {
-      hash = hasher.hash(hasher.commit(hashes));
+      hash = hasher.hash(commitment);
     }
-    final Node<V> vNode = internalNode.replaceHash(hash, hash); // commitment should be different
+    final Node<V> vNode = internalNode.replaceHash(hash, commitment);
     vNode.markClean();
     return vNode;
   }
@@ -109,15 +110,17 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
       rightValues[2 * i - size] = getLowValue(child.getValue());
       rightValues[2 * i + 1 - size] = getHighValue(child.getValue());
     }
+    Bytes leftCommitment = hasher.commit(leftValues);
+    Bytes rightCommitment = hasher.commit(rightValues);
     hashes[0] = Bytes32.rightPad(Bytes.of(1)); // extension marker
     hashes[1] = Bytes32.rightPad(stemNode.getStem());
-    hashes[2] = hasher.hash(hasher.commit(leftValues));
-    hashes[3] = hasher.hash(hasher.commit(rightValues));
-    final Bytes32 hash = hasher.hash(hasher.commit(hashes));
+    hashes[2] = hasher.hash(leftCommitment);
+    hashes[3] = hasher.hash(rightCommitment);
+    Bytes commitment = hasher.commit(hashes);
+    final Bytes32 hash = hasher.hash(commitment);
     StemNode<V> vStemNode =
         stemNode.replaceHash(
-            hash, hash, hashes[2], hashes[2], hashes[3],
-            hashes[3]); // commitment should be different
+            hash, commitment, hashes[2], leftCommitment, hashes[3], rightCommitment);
     vStemNode.markClean();
     return vStemNode;
   }

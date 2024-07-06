@@ -89,6 +89,11 @@ public class NullLeafNode<V> extends Node<V> {
     dirty = true;
   }
 
+  @Override
+  public Boolean isNull() {
+    return true;
+  }
+
   /**
    * Get a string representation of the `NullNode`.
    *

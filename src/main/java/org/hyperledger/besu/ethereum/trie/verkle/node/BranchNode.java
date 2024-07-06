@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.bytes.MutableBytes;
 
 /**
  * Represents a branch node in the Verkle Trie.
@@ -204,6 +205,28 @@ public abstract class BranchNode<V> extends Node<V> {
    */
   @Override
   public abstract Bytes getEncodedValue();
+
+  /**
+   * Get nullity bitmap
+   *
+   * @return Children's nullity bitmap
+   */
+  public Bytes getNullBitmap() {
+    int N = maxChild() / 8;
+    MutableBytes bitmap = MutableBytes.create(N);
+    for (int i = 0; i < N; i++) {
+      int mask = 128; // 1000 0000
+      int cur = 0;
+      for (int j = 8 * i; j < 8 * (i + 1); j++) {
+        if (child((byte) j).isNull()) {
+          cur |= mask;
+        }
+        mask = mask >> 1;
+      }
+      bitmap.set(i, (byte) cur);
+    }
+    return (Bytes) bitmap;
+  }
 
   /**
    * Get the list of children nodes.

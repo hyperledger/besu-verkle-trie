@@ -516,11 +516,11 @@ StemNode0x00 -> NullLeafNode0x
 NullLeafNode0x [label="NL: 0x"]
 StemNode0x00 -> NullLeafNode0x
 NullLeafNode0x [label="NL: 0x"]
-StemNode0x00 -> LeafNode0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
-LeafNode0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff [label="L: 0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
+StemNode0x00 -> LeafNode0x00ff
+LeafNode0x00ff [label="L: 0x00ff
 Suffix: 0xff"]
-LeafNode0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff -> Value0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff
-Value0x00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff [label="Value: 0x1000000000000000000000000000000000000000000000000000000000000000"]
+LeafNode0x00ff -> Value0x00ff
+Value0x00ff [label="Value: 0x1000000000000000000000000000000000000000000000000000000000000000"]
 InternalNode0x -> NullNode0x
 NullNode0x [label="NL: 0x"]
 InternalNode0x -> NullNode0x

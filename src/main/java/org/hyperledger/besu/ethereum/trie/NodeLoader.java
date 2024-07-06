@@ -13,30 +13,16 @@
  * SPDX-License-Identifier: Apache-2.0
  *
  */
-package org.hyperledger.besu.ethereum.trie.verkle;
+package org.hyperledger.besu.ethereum.trie;
 
-import org.hyperledger.besu.ethereum.trie.NodeUpdater;
-
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
-public class NodeUpdaterMock implements NodeUpdater {
+public interface NodeLoader {
 
-  public SortedMap<Bytes, byte[]> storage;
+  Optional<NearestKeyValue> getNode(Bytes location, Bytes32 hash);
 
-  public NodeUpdaterMock() {
-    this.storage = new TreeMap<Bytes, byte[]>((b1, b2) -> b1.toHexString().compareTo(b2.toHexString()));
-  }
-
-  public NodeUpdaterMock(SortedMap<Bytes, byte[]> storage) {
-    this.storage = storage;
-  }
-
-  @Override
-  public void store(Bytes location, Bytes32 hash, Bytes value) {
-    storage.put(location, value.toArray());
-  }
+  record NearestKeyValue(Bytes key, Optional<byte[]> value) {}
 }

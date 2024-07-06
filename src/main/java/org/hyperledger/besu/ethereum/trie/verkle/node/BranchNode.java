@@ -32,7 +32,7 @@ import org.apache.tuweni.bytes.MutableBytes;
  * @param <V> The type of the node's value.
  */
 public abstract class BranchNode<V> extends Node<V> {
-  private final Optional<Bytes> location; // Location in the tree
+  protected Optional<Bytes> location; // Location in the tree
   protected Optional<Bytes32> hash; // Vector commitment's hash
   protected Optional<Bytes> commitment; // Vector commitment serialized
   private final List<Node<V>> children; // List of children nodes
@@ -40,10 +40,10 @@ public abstract class BranchNode<V> extends Node<V> {
   /**
    * Constructs a new BranchNode with location, hash, path, and children.
    *
-   * @param location The location in the tree.
-   * @param hash Node's vector commitment's hash.
+   * @param location   The location in the tree.
+   * @param hash       Node's vector commitment's hash.
    * @param commitment Node's vector commitment.
-   * @param children The list of children nodes.
+   * @param children   The list of children nodes.
    */
   public BranchNode(
       final Bytes location,
@@ -59,13 +59,14 @@ public abstract class BranchNode<V> extends Node<V> {
   }
 
   /**
-   * Constructs a new BranchNode with optional location, optional hash, optional commitment and
+   * Constructs a new BranchNode with optional location, optional hash, optional
+   * commitment and
    * children.
    *
-   * @param location The optional location in the tree.
-   * @param hash The optional vector commitment of children's commitments.
+   * @param location   The optional location in the tree.
+   * @param hash       The optional vector commitment of children's commitments.
    * @param commitment Node's optional vector commitment.
-   * @param children The list of children nodes.
+   * @param children   The list of children nodes.
    */
   public BranchNode(
       final Optional<Bytes> location,
@@ -96,7 +97,8 @@ public abstract class BranchNode<V> extends Node<V> {
   }
 
   /**
-   * Constructs a new BranchNode with optional location and path, initializing children to
+   * Constructs a new BranchNode with optional location and path, initializing
+   * children to
    * NullNodes.
    *
    * @param location The optional location in the tree.
@@ -133,7 +135,7 @@ public abstract class BranchNode<V> extends Node<V> {
    * Accepts a visitor for path-based operations on the node.
    *
    * @param visitor The path node visitor.
-   * @param path The path associated with a node.
+   * @param path    The path associated with a node.
    * @return The result of the visitor's operation.
    */
   @Override
@@ -161,7 +163,7 @@ public abstract class BranchNode<V> extends Node<V> {
   /**
    * Replaces the child node at a specified index with a new node.
    *
-   * @param index The index of the child node to replace.
+   * @param index     The index of the child node to replace.
    * @param childNode The new child node.
    */
   public void replaceChild(final byte index, final Node<V> childNode) {
@@ -275,25 +277,23 @@ public abstract class BranchNode<V> extends Node<V> {
    */
   @Override
   public String toDot(Boolean showNullNodes) {
-    StringBuilder result =
-        new StringBuilder()
-            .append(getClass().getSimpleName())
-            .append(getLocation().orElse(Bytes.EMPTY))
-            .append(" [label=\"B: ")
-            .append(getLocation().orElse(Bytes.EMPTY))
-            .append("\n")
-            .append("Commitment: ")
-            .append(getCommitment().orElse(Bytes32.ZERO))
-            .append("\"]\n");
+    StringBuilder result = new StringBuilder()
+        .append(getClass().getSimpleName())
+        .append(getLocation().orElse(Bytes.EMPTY))
+        .append(" [label=\"B: ")
+        .append(getLocation().orElse(Bytes.EMPTY))
+        .append("\n")
+        .append("Commitment: ")
+        .append(getCommitment().orElse(Bytes32.ZERO))
+        .append("\"]\n");
 
     for (Node<V> child : getChildren()) {
-      String edgeString =
-          getClass().getSimpleName()
-              + getLocation().orElse(Bytes.EMPTY)
-              + " -> "
-              + child.getClass().getSimpleName()
-              + child.getLocation().orElse(Bytes.EMPTY)
-              + "\n";
+      String edgeString = getClass().getSimpleName()
+          + getLocation().orElse(Bytes.EMPTY)
+          + " -> "
+          + child.getClass().getSimpleName()
+          + child.getLocation().orElse(Bytes.EMPTY)
+          + "\n";
 
       if (showNullNodes || !result.toString().contains(edgeString)) {
         result.append(edgeString);

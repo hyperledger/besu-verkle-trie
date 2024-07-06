@@ -15,10 +15,10 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.node;
 
+import org.hyperledger.besu.ethereum.rlp.BytesValueRLPOutput;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,7 +28,9 @@ import org.apache.tuweni.bytes.Bytes32;
 /**
  * Represents a stem node in the Verkle Trie.
  *
- * <p>StemNodes are nodes storing the stem of the key, and is the root of the suffix to value trie.
+ * <p>
+ * StemNodes are nodes storing the stem of the key, and is the root of the
+ * suffix to value trie.
  *
  * @param <V> The type of the node's value.
  */
@@ -44,15 +46,15 @@ public class StemNode<V> extends BranchNode<V> {
   /**
    * Constructs a new StemNode with non-optional parameters.
    *
-   * @param location The location in the tree.
-   * @param stem Node's stem.
-   * @param hash Node's vector commitment's hash.
-   * @param commitment Node's vector commitment.
-   * @param leftHash Hash of vector commitment to left values.
-   * @param leftCommitment Vector commitment to left values.
-   * @param rightHash Hash of vector commitment to right values.
+   * @param location        The location in the tree.
+   * @param stem            Node's stem.
+   * @param hash            Node's vector commitment's hash.
+   * @param commitment      Node's vector commitment.
+   * @param leftHash        Hash of vector commitment to left values.
+   * @param leftCommitment  Vector commitment to left values.
+   * @param rightHash       Hash of vector commitment to right values.
    * @param rightCommitment Vector commitment to right values.
-   * @param children The list of children nodes.
+   * @param children        The list of children nodes.
    */
   public StemNode(
       final Bytes location,
@@ -76,15 +78,15 @@ public class StemNode<V> extends BranchNode<V> {
   /**
    * Constructs a new StemNode with optional parameters.
    *
-   * @param location Optional location in the tree.
-   * @param stem Node's stem.
-   * @param hash Optional node's vector commitment's hash.
-   * @param commitment Optional node's vector commitment.
-   * @param leftHash Optional hash of vector commitment to left values.
-   * @param leftCommitment Optional vector commitment to left values.
-   * @param rightHash Optional hash of vector commitment to right values.
+   * @param location        Optional location in the tree.
+   * @param stem            Node's stem.
+   * @param hash            Optional node's vector commitment's hash.
+   * @param commitment      Optional node's vector commitment.
+   * @param leftHash        Optional hash of vector commitment to left values.
+   * @param leftCommitment  Optional vector commitment to left values.
+   * @param rightHash       Optional hash of vector commitment to right values.
    * @param rightCommitment Optional vector commitment to right values.
-   * @param children The list of children nodes.
+   * @param children        The list of children nodes.
    */
   public StemNode(
       final Optional<Bytes> location,
@@ -110,7 +112,7 @@ public class StemNode<V> extends BranchNode<V> {
    * Constructs a new BranchNode with non-optional parameters.
    *
    * @param location The location in the tree.
-   * @param stem Node's stem.
+   * @param stem     Node's stem.
    */
   public StemNode(final Bytes location, final Bytes stem) {
     super(location);
@@ -131,7 +133,7 @@ public class StemNode<V> extends BranchNode<V> {
    * Accepts a visitor for path-based operations on the node.
    *
    * @param visitor The path node visitor.
-   * @param path The path associated with a node.
+   * @param path    The path associated with a node.
    * @return The result of the visitor's operation.
    */
   @Override
@@ -210,32 +212,27 @@ public class StemNode<V> extends BranchNode<V> {
   }
 
   /**
-   * Creates a new node by replacing its location
+   * Replace node's Location
    *
-   * @param location The location in the tree.
-   * @return StemNode with new location.
+   * @param newLocation The new location for the Node
+   * @return The updated Node
    */
-  public StemNode<V> replaceLocation(final Bytes location) {
-    StemNode<V> vStemNode =
-        new StemNode<>(
-            Optional.of(location),
-            stem,
-            getHash(),
-            Optional.empty(),
-            getCommitment(),
-            leftHash,
-            leftCommitment,
-            rightHash,
-            rightCommitment,
-            getChildren());
-    return vStemNode;
+  @Override
+  public StemNode<V> replaceLocation(Bytes newLocation) {
+    location = Optional.of(newLocation);
+    for (int i = 0; i < maxChild(); i++) {
+      Bytes index = Bytes.of(i);
+      Bytes childLocation = Bytes.concatenate(newLocation, index);
+      child(index.get(0)).replaceLocation(childLocation);
+    }
+    return this;
   }
 
   /**
    * Creates a new node by replacing all its commitments
    *
-   * @param hash Node's vector commitment hash
-   * @param leftHash Node's left vector commitment hash
+   * @param hash      Node's vector commitment hash
+   * @param leftHash  Node's left vector commitment hash
    * @param rightHash Node's right vector commitment hash
    * @return StemNode with new commitments.
    */
@@ -265,21 +262,17 @@ public class StemNode<V> extends BranchNode<V> {
     if (encodedValue.isPresent()) {
       return encodedValue.get();
     }
-    List<Bytes> values = new ArrayList<>();
-    values.add(Bytes.of(2));
-    values.add(stem);
-    values.add(getCommitment().get());
-    values.add(getLeftCommitment().get());
-    values.add(getRightCommitment().get());
-    values.add((Bytes) getLeftHash().get());
-    values.add((Bytes) getRightHash().get());
-    values.add(getNullBitmap());
-    for (Node<V> child : getChildren()) {
-      if (!child.isNull()) {
-        values.add(child.getEncodedValue());
-      }
-    }
-    Bytes result = Bytes.concatenate(values);
+    BytesValueRLPOutput values = new BytesValueRLPOutput();
+    values.startList();
+    values.writeByte((byte) (getLocation().get().size() & 0xff));
+    values.writeBytes(encodeCommitment(getCommitment().get()));
+    values.writeBytes(encodeCommitment(getLeftCommitment().get()));
+    values.writeBytes(encodeCommitment(getRightCommitment().get()));
+    values.writeBytes(encodeScalar(getLeftHash().get()));
+    values.writeBytes(encodeScalar(getRightHash().get()));
+    values.writeList(getChildren(), (child, writer) -> writer.writeBytes(child.getEncodedValue()));
+    values.endList();
+    Bytes result = values.encoded();
     this.encodedValue = Optional.of(result);
     return result;
   }
@@ -295,10 +288,10 @@ public class StemNode<V> extends BranchNode<V> {
     builder.append(String.format("Stem: %s", stem));
     for (int i = 0; i < maxChild(); i++) {
       final Node<V> child = child((byte) i);
-      if (!(child instanceof NullNode)) {
+      if (!(child instanceof NullNode) && !(child instanceof NullLeafNode)) {
         final String label = String.format("[%02x] ", i);
-        final String childRep = child.print().replaceAll("\n\t", "\n\t\t");
-        builder.append("\n\t").append(label).append(childRep);
+        final String childRep = child.print().replaceAll("\n  ", "\n    ");
+        builder.append("\n  ").append(label).append(childRep);
       }
     }
     return builder.toString();
@@ -310,28 +303,26 @@ public class StemNode<V> extends BranchNode<V> {
 
   @Override
   public String toDot(Boolean showNullNodes) {
-    StringBuilder result =
-        new StringBuilder()
-            .append(getClass().getSimpleName())
-            .append(getLocation().orElse(Bytes.EMPTY))
-            .append(" [label=\"S: ")
-            .append(getLocation().orElse(Bytes.EMPTY))
-            .append("\nStem: ")
-            .append(getStem())
-            .append("\nLeftCommitment: ")
-            .append(getLeftCommitment().orElse(Bytes32.ZERO))
-            .append("\nRightCommitment: ")
-            .append(getRightCommitment().orElse(Bytes32.ZERO))
-            .append("\"]\n");
+    StringBuilder result = new StringBuilder()
+        .append(getClass().getSimpleName())
+        .append(getLocation().orElse(Bytes.EMPTY))
+        .append(" [label=\"S: ")
+        .append(getLocation().orElse(Bytes.EMPTY))
+        .append("\nStem: ")
+        .append(getStem())
+        .append("\nLeftCommitment: ")
+        .append(getLeftCommitment().orElse(Bytes32.ZERO))
+        .append("\nRightCommitment: ")
+        .append(getRightCommitment().orElse(Bytes32.ZERO))
+        .append("\"]\n");
 
     for (Node<V> child : getChildren()) {
-      String edgeString =
-          getClass().getSimpleName()
-              + getLocation().orElse(Bytes.EMPTY)
-              + " -> "
-              + child.getClass().getSimpleName()
-              + child.getLocation().orElse(Bytes.EMPTY)
-              + "\n";
+      String edgeString = getClass().getSimpleName()
+          + getLocation().orElse(Bytes.EMPTY)
+          + " -> "
+          + child.getClass().getSimpleName()
+          + child.getLocation().orElse(Bytes.EMPTY)
+          + "\n";
 
       if (showNullNodes || !result.toString().contains(edgeString)) {
         result.append(edgeString);

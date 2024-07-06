@@ -25,6 +25,10 @@ dependencyManagement {
 
         dependency 'org.assertj:assertj-core:3.25.1'
 
+        dependencySet(group: 'org.hyperledger.besu.internal', version: '23.4.1') {
+            entry 'rlp'
+        }
+
         dependencySet(group: 'org.apache.logging.log4j', version: '2.22.1') {
             entry 'log4j-api'
             entry 'log4j-core'

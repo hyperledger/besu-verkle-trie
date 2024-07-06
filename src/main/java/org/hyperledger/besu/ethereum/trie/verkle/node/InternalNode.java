@@ -15,10 +15,10 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.node;
 
+import org.hyperledger.besu.ethereum.rlp.BytesValueRLPOutput;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,10 +36,10 @@ public class InternalNode<V> extends BranchNode<V> {
   /**
    * Constructs a new InternalNode with location, hash, path, and children.
    *
-   * @param location The location in the tree.
-   * @param hash Node's vector commitment's hash.
+   * @param location   The location in the tree.
+   * @param hash       Node's vector commitment's hash.
    * @param commitment Node's vector commitment.
-   * @param children The list of children nodes.
+   * @param children   The list of children nodes.
    */
   public InternalNode(
       final Bytes location,
@@ -51,7 +51,8 @@ public class InternalNode<V> extends BranchNode<V> {
   }
 
   /**
-   * Constructs a new InternalNode with optional location and path, initializing children to
+   * Constructs a new InternalNode with optional location and path, initializing
+   * children to
    * NullNodes.
    *
    * @param location The optional location in the tree.
@@ -64,7 +65,7 @@ public class InternalNode<V> extends BranchNode<V> {
    * Accepts a visitor for path-based operations on the node.
    *
    * @param visitor The path node visitor.
-   * @param path The path associated with a node.
+   * @param path    The path associated with a node.
    * @return The result of the visitor's operation.
    */
   @Override
@@ -84,9 +85,26 @@ public class InternalNode<V> extends BranchNode<V> {
   }
 
   /**
+   * Replace node's Location
+   *
+   * @param newLocation The new location for the Node
+   * @return The updated Node
+   */
+  @Override
+  public InternalNode<V> replaceLocation(Bytes newLocation) {
+    location = Optional.of(newLocation);
+    for (int i = 0; i < maxChild(); i++) {
+      Bytes index = Bytes.of(i);
+      Bytes childLocation = Bytes.concatenate(newLocation, index);
+      child(index.get(0)).replaceLocation(childLocation);
+    }
+    return this;
+  }
+
+  /**
    * Replace the vector commitment with a new one.
    *
-   * @param hash The new vector commitment's hash to set.
+   * @param hash       The new vector commitment's hash to set.
    * @param commitment The new vector commitment to set.
    * @return A new InternalNode with the updated vector commitment.
    */
@@ -106,21 +124,15 @@ public class InternalNode<V> extends BranchNode<V> {
     if (encodedValue.isPresent()) {
       return encodedValue.get();
     }
-    List<Bytes> values = new ArrayList<>();
+    BytesValueRLPOutput out = new BytesValueRLPOutput();
+    out.startList();
     if (getLocation().get().isEmpty()) {
-      values.add(Bytes.of(0));
-      values.add((Bytes) getHash().get());
-    } else {
-      values.add(Bytes.of(1));
+      out.writeBytes((Bytes) getHash().get());
     }
-    values.add(getCommitment().get());
-    values.add(getNullBitmap());
-    for (Node<V> child : getChildren()) {
-      if (!child.isNull()) {
-        values.add(child.getHash().get());
-      }
-    }
-    Bytes result = Bytes.concatenate(values);
+    out.writeBytes(encodeCommitment(getCommitment().get()));
+    out.writeList(getChildren(), (child, writer) -> writer.writeBytes(encodeScalar(child.getHash().get())));
+    out.endList();
+    Bytes result = out.encoded();
     this.encodedValue = Optional.of(result);
     return result;
   }
@@ -139,8 +151,8 @@ public class InternalNode<V> extends BranchNode<V> {
       if (!(child instanceof NullNode)) {
         if (!(child instanceof StoredNode) || !child.getEncodedValue().isEmpty()) {
           final String label = String.format("[%02x] ", i);
-          final String childRep = child.print().replaceAll("\n\t", "\n\t\t");
-          builder.append("\n\t").append(label).append(childRep);
+          final String childRep = child.print().replaceAll("\n  ", "\n    ");
+          builder.append("\n  ").append(label).append(childRep);
         }
       }
     }
@@ -154,24 +166,22 @@ public class InternalNode<V> extends BranchNode<V> {
    */
   @Override
   public String toDot(Boolean showNullNodes) {
-    StringBuilder result =
-        new StringBuilder()
-            .append(getClass().getSimpleName())
-            .append(getLocation().orElse(Bytes.EMPTY))
-            .append(" [label=\"I: ")
-            .append(getLocation().orElse(Bytes.EMPTY))
-            .append("\nCommitment: ")
-            .append(getCommitment().orElse(Bytes32.ZERO))
-            .append("\"]\n");
+    StringBuilder result = new StringBuilder()
+        .append(getClass().getSimpleName())
+        .append(getLocation().orElse(Bytes.EMPTY))
+        .append(" [label=\"I: ")
+        .append(getLocation().orElse(Bytes.EMPTY))
+        .append("\nCommitment: ")
+        .append(getCommitment().orElse(Bytes32.ZERO))
+        .append("\"]\n");
 
     for (Node<V> child : getChildren()) {
-      String edgeString =
-          getClass().getSimpleName()
-              + getLocation().orElse(Bytes.EMPTY)
-              + " -> "
-              + child.getClass().getSimpleName()
-              + child.getLocation().orElse(Bytes.EMPTY)
-              + "\n";
+      String edgeString = getClass().getSimpleName()
+          + getLocation().orElse(Bytes.EMPTY)
+          + " -> "
+          + child.getClass().getSimpleName()
+          + child.getLocation().orElse(Bytes.EMPTY)
+          + "\n";
 
       if (showNullNodes || !result.toString().contains(edgeString)) {
         result.append(edgeString);

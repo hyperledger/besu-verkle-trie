@@ -15,6 +15,8 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.factory;
 
+import org.hyperledger.besu.ethereum.rlp.BytesValueRLPInput;
+import org.hyperledger.besu.ethereum.rlp.RLPInput;
 import org.hyperledger.besu.ethereum.trie.NodeLoader;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
@@ -49,25 +51,47 @@ enum NodeType {
 public class StoredNodeFactory<V> implements NodeFactory<V> {
   private final NodeLoader nodeLoader;
   private final Function<Bytes, V> valueDeserializer;
+  private final Boolean areCommitmentsCompressed;
 
   /**
-   * Creates a new StoredNodeFactory with the given node loader and value deserializer.
+   * Creates a new StoredNodeFactory with the given node loader and value
+   * deserializer.
    *
-   * @param nodeLoader The loader for retrieving stored nodes.
+   * @param nodeLoader        The loader for retrieving stored nodes.
    * @param valueDeserializer The function to deserialize values from Bytes.
    */
   public StoredNodeFactory(NodeLoader nodeLoader, Function<Bytes, V> valueDeserializer) {
     this.nodeLoader = nodeLoader;
     this.valueDeserializer = valueDeserializer;
+    this.areCommitmentsCompressed = false;
+  }
+
+  /**
+   * Creates a new StoredNodeFactory with the given node loader and value
+   * deserializer.
+   *
+   * @param nodeLoader               The loader for retrieving stored nodes.
+   * @param valueDeserializer        The function to deserialize values from
+   *                                 Bytes.
+   * @param areCommitmentsCompressed Are commitments stored compressed (32bytes).
+   */
+  public StoredNodeFactory(
+      NodeLoader nodeLoader,
+      Function<Bytes, V> valueDeserializer,
+      Boolean areCommitmentsCompressed) {
+    this.nodeLoader = nodeLoader;
+    this.valueDeserializer = valueDeserializer;
+    this.areCommitmentsCompressed = areCommitmentsCompressed;
   }
 
   /**
    * Retrieves a Verkle Trie node from stored data based on the location and hash.
    *
    * @param location Node's location
-   * @param hash Node's hash
-   * @return An optional containing the retrieved node, or an empty optional if the node is not
-   *     found.
+   * @param hash     Node's hash
+   * @return An optional containing the retrieved node, or an empty optional if
+   *         the node is not
+   *         found.
    */
   @Override
   public Optional<Node<V>> retrieve(final Bytes location, final Bytes32 hash) {
@@ -76,61 +100,37 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
      * To distinguish internal from stem, we further need values.
      * Currently, they are distinguished by values length.
      */
-    Optional<Bytes> optionalEncodedValues = nodeLoader.getNode(location, hash);
-    if (optionalEncodedValues.isEmpty()) {
+    Optional<Node<V>> result;
+    Optional<NodeLoader.NearestKeyValue> optionalKeyValue = nodeLoader.getNode(location, hash);
+    if (optionalKeyValue.isEmpty()) {
       return Optional.empty();
     }
-    Bytes encodedValues = optionalEncodedValues.get();
-    int indicator = (int) encodedValues.get(0);
-    Bytes values = encodedValues.slice(1);
-    return switch (indicator) {
-      case 0 -> Optional.of(createRootNode(values));
-      case 1 -> Optional.of(createInternalNode(location, values, hash));
-      case 2 -> Optional.of(createStemNode(location, values, hash));
-      default -> Optional.empty();
-    };
+    Bytes key = optionalKeyValue.get().key();
+    Optional<byte[]> maybeEncodedValues = optionalKeyValue.get().value();
+    Bytes encodedValues = maybeEncodedValues.isPresent() ? Bytes.of(maybeEncodedValues.get()) : Bytes.EMPTY;
+
+    if (key.size() == 0) {
+      result = Optional.of(decodeRootNode(encodedValues));
+    } else if (key.size() > 0 && key.size() < 31) {
+      result = Optional.of(decodeInternalNode(key, encodedValues, hash));
+    } else if (key.size() == 31) {
+      result = Optional.of(decodeStemNode(key, encodedValues, hash));
+    } else {
+      result = Optional.empty();
+    }
+    return result;
   }
 
-  private List<Boolean> decodeIsNull(Bytes nullBitMap, int nChild) {
-    List<Boolean> isNull = new ArrayList<>(nChild);
-    for (int i = 0; i < nChild / 8; i++) {
-      int mask = 128;
-      for (int j = 8 * i; j < 8 * (i + 1); j++) {
-        isNull.add((nullBitMap.get(i) & mask) != 0);
-        mask = mask >> 1;
-      }
+  private Bytes decodeCommitment(Bytes commitment) {
+    if (areCommitmentsCompressed && !commitment.isEmpty()) {
+      // TODO: uncompress commitment
     }
-    return isNull;
-  }
-
-  private List<Bytes32> decodeScalars(List<Boolean> isNull, Bytes values) {
-    int nChild = isNull.size();
-    List<Bytes32> scalars = new ArrayList<>(nChild);
-    for (int i = 0; i < nChild; i++) {
-      if (!isNull.get(i)) {
-        Bytes32 scalar = (Bytes32) values.slice(0, 32);
-        values = values.slice(32);
-        scalars.add(scalar);
-      } else {
-        scalars.add(Bytes32.ZERO);
-      }
+    if (commitment.isEmpty()) {
+      commitment = Node.EMPTY_COMMITMENT;
     }
-    return scalars;
-  }
-
-  private List<Bytes> decodeValues(List<Boolean> isNull, Bytes encoded) {
-    int nChild = isNull.size();
-    List<Bytes> values = new ArrayList<>(nChild);
-    for (int i = 0; i < nChild; i++) {
-      if (!isNull.get(i)) {
-        Bytes value = encoded.slice(0, 32);
-        encoded = encoded.slice(32);
-        values.add(value);
-      } else {
-        values.add(Bytes.EMPTY);
-      }
-    }
-    return values;
+    MutableBytes comm = MutableBytes.create(64);
+    comm.set(0, commitment);
+    return (Bytes) comm;
   }
 
   /**
@@ -139,35 +139,43 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
    * @param encodedValues List of Bytes values retrieved from storage.
    * @return A internalNode instance.
    */
-  InternalNode<V> createRootNode(Bytes encodedValues) {
-    Bytes32 hash = (Bytes32) encodedValues.slice(0, 32);
-    return createInternalNode(Bytes.EMPTY, encodedValues.slice(32), hash);
+  InternalNode<V> decodeRootNode(Bytes encodedValues) {
+    RLPInput input = new BytesValueRLPInput(encodedValues, false);
+    input.enterList();
+    Bytes32 hash = Bytes32.rightPad(input.readBytes());
+    Bytes commitment = decodeCommitment(input.readBytes());
+    List<Bytes32> scalars = input.readList(in -> Bytes32.rightPad(in.readBytes()));
+    input.leaveList();
+    return createInternalNode(Bytes.EMPTY, hash, commitment, scalars);
   }
 
   /**
    * Creates a internalNode using the provided location, hash, and path.
    *
-   * @param location The location of the internalNode.
+   * @param location      The location of the internalNode.
    * @param encodedValues List of Bytes values retrieved from storage.
-   * @param hash Node's hash value.
+   * @param hash          Node's hash value.
    * @return A internalNode instance.
    */
-  InternalNode<V> createInternalNode(Bytes location, Bytes encodedValues, Bytes32 hash) {
+  InternalNode<V> decodeInternalNode(Bytes location, Bytes encodedValues, Bytes32 hash) {
+    RLPInput input = new BytesValueRLPInput(encodedValues, false);
+    input.enterList();
+    Bytes commitment = decodeCommitment(input.readBytes());
+    List<Bytes32> scalars = input.readList(in -> Bytes32.rightPad(in.readBytes()));
+    input.leaveList();
+    return createInternalNode(location, hash, commitment, scalars);
+  }
+
+  private InternalNode<V> createInternalNode(
+      Bytes location, Bytes32 hash, Bytes commitment, List<Bytes32> scalars) {
     int nChild = InternalNode.maxChild();
-    Bytes commitment = encodedValues.slice(0, 64);
-    Bytes nullBitMap = encodedValues.slice(64, 32);
-    Bytes values = encodedValues.slice(96);
-
-    List<Boolean> isNull = decodeIsNull(nullBitMap, nChild);
-    List<Bytes32> scalars = decodeScalars(isNull, values);
-
     List<Node<V>> children = new ArrayList<>(nChild);
     MutableBytes nextBuffer = MutableBytes.create(location.size() + 1);
     Bytes.concatenate(location, Bytes.of(0)).copyTo(nextBuffer);
     for (int i = 0; i < nChild; i++) {
       nextBuffer.set(location.size(), Bytes.of(i));
       Bytes nextLoc = nextBuffer.copy();
-      if (isNull.get(i)) {
+      if (scalars.get(i) == Bytes32.ZERO) {
         children.add(new NullNode<V>());
       } else {
         children.add(new StoredNode<V>(this, nextLoc, scalars.get(i)));
@@ -177,38 +185,38 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   }
 
   /**
-   * Creates a BranchNode using the provided location, hash, and path.
+   * Creates a StemNode using the provided stem, hash and encodedValues
    *
-   * @param location The location of the BranchNode.
+   * @param stem          The stem of the BranchNode.
    * @param encodedValues List of Bytes values retrieved from storage.
-   * @param hash Node's hash value.
+   * @param hash          Node's hash value.
    * @return A BranchNode instance.
    */
-  StemNode<V> createStemNode(Bytes location, Bytes encodedValues, Bytes32 hash) {
+  StemNode<V> decodeStemNode(Bytes stem, Bytes encodedValues, Bytes32 hash) {
+    RLPInput input = new BytesValueRLPInput(encodedValues, false);
+    input.enterList();
+
+    int depth = input.readByte();
+    Bytes commitment = decodeCommitment(input.readBytes());
+    Bytes leftCommitment = decodeCommitment(input.readBytes());
+    Bytes rightCommitment = decodeCommitment(input.readBytes());
+    Bytes32 leftScalar = Bytes32.rightPad(input.readBytes());
+    Bytes32 rightScalar = Bytes32.rightPad(input.readBytes());
+    List<Bytes> values = input.readList(in -> in.readBytes());
+
+    // create StemNode
+    final Bytes location = stem.slice(0, depth);
     final int nChild = StemNode.maxChild();
-    Bytes stem = encodedValues.slice(0, 31);
-    Bytes commitment = encodedValues.slice(31, 64);
-    Bytes leftCommitment = encodedValues.slice(95, 64);
-    Bytes rightCommitment = encodedValues.slice(159, 64);
-    Bytes32 leftHash = (Bytes32) encodedValues.slice(223, 32);
-    Bytes32 rightHash = (Bytes32) encodedValues.slice(255, 32);
-
-    Bytes nullBitMap = encodedValues.slice(287, 32);
-    Bytes encoded = encodedValues.slice(319);
-
-    List<Boolean> isNull = decodeIsNull(nullBitMap, nChild);
-    List<Bytes> values = decodeValues(isNull, encoded);
-
     List<Node<V>> children = new ArrayList<>(nChild);
-    MutableBytes nextBuffer = MutableBytes.create(stem.size() + 1);
-    Bytes.concatenate(stem, Bytes.of(0)).copyTo(nextBuffer);
+    MutableBytes nextBuffer = MutableBytes.create(location.size() + 1);
+    Bytes.concatenate(location, Bytes.of(0)).copyTo(nextBuffer);
     for (int i = 0; i < nChild; i++) {
-      nextBuffer.set(stem.size(), Bytes.of(i));
+      nextBuffer.set(location.size(), Bytes.of(i));
       Bytes nextLoc = nextBuffer.copy();
-      if (isNull.get(i)) {
+      if (values.get(i) == Bytes.EMPTY) {
         children.add(new NullLeafNode<V>());
       } else {
-        children.add(createLeafNode(nextLoc, values.get(i)));
+        children.add(createLeafNode(nextLoc, Bytes32.rightPad(values.get(i))));
       }
     }
     return new StemNode<V>(
@@ -216,9 +224,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
         stem,
         hash,
         commitment,
-        leftHash,
+        leftScalar,
         leftCommitment,
-        rightHash,
+        rightScalar,
         rightCommitment,
         children);
   }
@@ -226,7 +234,7 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   /**
    * Creates a LeafNode using the provided location, path, and value.
    *
-   * @param key The key of the LeafNode.
+   * @param key          The key of the LeafNode.
    * @param encodedValue Leaf value retrieved from storage.
    * @return A LeafNode instance.
    */

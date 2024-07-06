@@ -30,8 +30,11 @@ import org.apache.tuweni.bytes.Bytes;
 /**
  * A visitor for inserting or updating values in a Verkle Trie.
  *
- * <p>This class implements the PathNodeVisitor interface and is used to visit and modify nodes in
- * the Verkle Trie while inserting or updating a value associated with a specific path.
+ * <p>
+ * This class implements the PathNodeVisitor interface and is used to visit and
+ * modify nodes in
+ * the Verkle Trie while inserting or updating a value associated with a
+ * specific path.
  *
  * @param <V> The type of values to insert or update.
  */
@@ -55,10 +58,11 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
   }
 
   /**
-   * Visits a branch node to insert or update a value associated with the provided path.
+   * Visits a branch node to insert or update a value associated with the provided
+   * path.
    *
    * @param internalNode The internal node to visit.
-   * @param path The path associated with the value to insert or update.
+   * @param path         The path associated with the value to insert or update.
    * @return The updated branch node with the inserted or updated value.
    */
   @Override
@@ -82,10 +86,11 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
   }
 
   /**
-   * Visits a stem node to insert or update a value associated with the provided path.
+   * Visits a stem node to insert or update a value associated with the provided
+   * path.
    *
    * @param stemNode The stem node to visit.
-   * @param path The path associated with the value to insert or update.
+   * @param path     The path associated with the value to insert or update.
    * @return The updated branch node with the inserted or updated value.
    */
   @Override
@@ -97,11 +102,12 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     final Bytes newStem = fullPath.slice(0, stem.size());
     if (stem.compareTo(newStem) == 0) { // Same stem => skip to leaf in StemNode
       final byte index = fullPath.get(newStem.size());
-      visited = Bytes.concatenate(newStem, Bytes.of(index));
+      visited = Bytes.concatenate(visited, Bytes.of(index));
       final Node<V> child = stemNode.child(index);
-      final Node<V> updatedChild = stemNode.child(index).accept(this, fullPath);
+      final Node<V> updatedChild = stemNode.child(index).accept(this, path.slice(1));
       if (child instanceof NullNode<V> || child instanceof NullLeafNode<V>) {
-        // This call may lead to the removal of the node from the batch if a null node is inserted.
+        // This call may lead to the removal of the node from the batch if a null node
+        // is inserted.
         batchProcessor.ifPresent(
             processor -> processor.addNodeToBatch(updatedChild.getLocation(), updatedChild));
       }
@@ -130,10 +136,11 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
   }
 
   /**
-   * Visits a leaf node to insert or update a value associated with the provided path.
+   * Visits a leaf node to insert or update a value associated with the provided
+   * path.
    *
    * @param leafNode The leaf node to visit.
-   * @param path The path associated with the value to insert or update.
+   * @param path     The path associated with the value to insert or update.
    * @return The updated leaf node with the inserted or updated value.
    */
   @Override
@@ -149,15 +156,15 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     } else {
       newNode = leafNode;
     }
-    visited = Bytes.EMPTY;
     return newNode;
   }
 
   /**
-   * Visits a null node to insert or update a value associated with the provided path.
+   * Visits a null node to insert or update a value associated with the provided
+   * path.
    *
    * @param nullNode The null node to visit.
-   * @param path The path associated with the value to insert or update.
+   * @param path     The path associated with the value to insert or update.
    * @return A new leaf node containing the inserted or updated value.
    */
   @Override
@@ -177,17 +184,17 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
    * Visits a null leaf node to insert a value associated with the provided path.
    *
    * @param nullLeafNode The null leaf node to visit.
-   * @param path The path associated with the value to insert or update.
+   * @param path         The path associated with the value to insert or update.
    * @return A new leaf node containing the inserted or updated value.
    */
   @Override
   public Node<V> visit(final NullLeafNode<V> nullLeafNode, final Bytes path) {
     assert path.size() < 33;
     oldValue = Optional.empty();
+    visited = Bytes.concatenate(visited, path.slice(path.size()));
     LeafNode<V> newNode = new LeafNode<>(visited, value);
     batchProcessor.ifPresent(processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
     newNode.markDirty();
-    visited = Bytes.EMPTY;
     return newNode;
   }
 

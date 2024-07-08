@@ -26,11 +26,8 @@ import org.apache.tuweni.bytes.Bytes32;
 /**
  * A special node representing a null or empty node in the Verkle Trie.
  *
- * <p>
- * The `NullNode` class serves as a placeholder for non-existent nodes in the
- * Verkle Trie
- * structure. It implements the Node interface and represents a node that
- * contains no information or
+ * <p>The `NullNode` class serves as a placeholder for non-existent nodes in the Verkle Trie
+ * structure. It implements the Node interface and represents a node that contains no information or
  * value.
  */
 public class NullLeafNode<V> extends Node<V> {
@@ -48,7 +45,7 @@ public class NullLeafNode<V> extends Node<V> {
    * Accepts a visitor for path-based operations on the node.
    *
    * @param visitor The path node visitor.
-   * @param path    The path associated with a node.
+   * @param path The path associated with a node.
    * @return The result of the visitor's operation.
    */
   @Override
@@ -128,11 +125,12 @@ public class NullLeafNode<V> extends Node<V> {
     if (!showRepeatingEdges) {
       return "";
     }
-    String result = getClass().getSimpleName()
-        + getLocation().orElse(Bytes.EMPTY)
-        + " [label=\"NL: "
-        + getLocation().orElse(Bytes.EMPTY)
-        + "\"]\n";
+    String result =
+        getClass().getSimpleName()
+            + getLocation().orElse(Bytes.EMPTY)
+            + " [label=\"NL: "
+            + getLocation().orElse(Bytes.EMPTY)
+            + "\"]\n";
     return result;
   }
 }

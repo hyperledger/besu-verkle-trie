@@ -28,7 +28,8 @@ public class NodeUpdaterMock implements NodeUpdater {
   public SortedMap<Bytes, byte[]> storage;
 
   public NodeUpdaterMock() {
-    this.storage = new TreeMap<Bytes, byte[]>((b1, b2) -> b1.toHexString().compareTo(b2.toHexString()));
+    this.storage =
+        new TreeMap<Bytes, byte[]>((b1, b2) -> b1.toHexString().compareTo(b2.toHexString()));
   }
 
   public NodeUpdaterMock(SortedMap<Bytes, byte[]> storage) {

@@ -29,11 +29,8 @@ import org.apache.tuweni.bytes.Bytes;
 /**
  * Class representing a visitor for flattening a node in a Trie tree.
  *
- * <p>
- * Flattening a node means that it is merged with its parent, adding one level
- * to the extension
- * path. Per current specs, only StemNodes can have extensions, so only
- * StemNodes can potentially be
+ * <p>Flattening a node means that it is merged with its parent, adding one level to the extension
+ * path. Per current specs, only StemNodes can have extensions, so only StemNodes can potentially be
  * flattened.
  *
  * @param <V> The type of node values.
@@ -73,7 +70,8 @@ public class FlattenVisitor<V> implements NodeVisitor<V> {
               final NullLeafNode<V> childNullNode = new NullLeafNode<>();
               childNullNode.markDirty();
               processor.addNodeToBatch(stemNode.child(index).getLocation(), childNullNode);
-              processor.addNodeToBatch(updateStemNode.child(index).getLocation(), updateStemNode.child(index));
+              processor.addNodeToBatch(
+                  updateStemNode.child(index).getLocation(), updateStemNode.child(index));
             }
           }
         });

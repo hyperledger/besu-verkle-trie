@@ -54,7 +54,6 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     if (!internalNode.isDirty()
         && internalNode.getHash().isPresent()
         && internalNode.getCommitment().isPresent()) {
-      System.out.println(String.format("Internal Commitment %s", location));
       return internalNode;
     }
     int size = InternalNode.maxChild();
@@ -76,7 +75,6 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     }
     final Node<V> vNode = internalNode.replaceHash(hash, commitment);
     vNode.markClean();
-    System.out.println(String.format("Computed Internal Commitment %s", location));
     return vNode;
   }
 
@@ -92,7 +90,6 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     if (!stemNode.isDirty()
         && stemNode.getHash().isPresent()
         && stemNode.getCommitment().isPresent()) {
-      System.out.println(String.format("Stem Commitment %s", location));
       return stemNode;
     }
     int size = StemNode.maxChild();
@@ -125,14 +122,12 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
         stemNode.replaceHash(
             hash, commitment, hashes[2], leftCommitment, hashes[3], rightCommitment);
     vStemNode.markClean();
-    System.out.println(String.format("Computed Stem Commitment %s", location));
     return vStemNode;
   }
 
   @Override
   public Node<V> visit(final LeafNode<V> leafNode, final Bytes path) {
     leafNode.markClean();
-    System.out.println(String.format("Leaf Commitment %s", leafNode.getLocation().get()));
     return leafNode;
   }
 

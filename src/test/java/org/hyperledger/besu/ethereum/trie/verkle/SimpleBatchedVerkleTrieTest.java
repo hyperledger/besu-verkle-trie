@@ -253,21 +253,15 @@ public class SimpleBatchedVerkleTrieTest {
         Bytes32.fromHexString("0x00ff112233445566778899aabbccddeeff00112233445566778899aabbccddff");
     Bytes32 value3 =
         Bytes32.fromHexString("0x0300000000000000000000000000000000000000000000000000000000000000");
-    System.out.println(String.format("Put at key %s", key1));
     trie.put(key1, value1);
-    System.out.println(String.format("Put at key %s", key2));
     trie.put(key2, value2);
-    System.out.println(String.format("Put at key %s", key3));
     trie.put(key3, value3);
-    System.out.println(String.format("Remove at key %s", key1));
     trie.remove(key1);
     assertThat(trie.get(key1)).as("First value has been deleted").isEqualTo(Optional.empty());
     assertThat(trie.get(key2)).as("Second value").isEqualTo(Optional.of(value2));
-    System.out.println(String.format("Remove at key %s", key2));
     trie.remove(key2);
     assertThat(trie.get(key2)).as("Second value has been deleted").isEqualTo(Optional.empty());
     assertThat(trie.get(key3)).as("Third value").isEqualTo(Optional.of(value3));
-    System.out.println(String.format("Remove at key %s", key3));
     trie.remove(key3);
     assertThat(trie.get(key3)).as("Third value has been deleted").isEqualTo(Optional.empty());
     assertThat(batchProcessor.getNodesToBatch()).hasSize(1);

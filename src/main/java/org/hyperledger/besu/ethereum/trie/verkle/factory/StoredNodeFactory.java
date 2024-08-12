@@ -54,10 +54,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   private final Boolean areCommitmentsCompressed;
 
   /**
-   * Creates a new StoredNodeFactory with the given node loader and value
-   * deserializer.
+   * Creates a new StoredNodeFactory with the given node loader and value deserializer.
    *
-   * @param nodeLoader        The loader for retrieving stored nodes.
+   * @param nodeLoader The loader for retrieving stored nodes.
    * @param valueDeserializer The function to deserialize values from Bytes.
    */
   public StoredNodeFactory(NodeLoader nodeLoader, Function<Bytes, V> valueDeserializer) {
@@ -67,12 +66,10 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   }
 
   /**
-   * Creates a new StoredNodeFactory with the given node loader and value
-   * deserializer.
+   * Creates a new StoredNodeFactory with the given node loader and value deserializer.
    *
-   * @param nodeLoader               The loader for retrieving stored nodes.
-   * @param valueDeserializer        The function to deserialize values from
-   *                                 Bytes.
+   * @param nodeLoader The loader for retrieving stored nodes.
+   * @param valueDeserializer The function to deserialize values from Bytes.
    * @param areCommitmentsCompressed Are commitments stored compressed (32bytes).
    */
   public StoredNodeFactory(
@@ -88,10 +85,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
    * Retrieves a Verkle Trie node from stored data based on the location and hash.
    *
    * @param location Node's location
-   * @param hash     Node's hash
-   * @return An optional containing the retrieved node, or an empty optional if
-   *         the node is not
-   *         found.
+   * @param hash Node's hash
+   * @return An optional containing the retrieved node, or an empty optional if the node is not
+   *     found.
    */
   @Override
   public Optional<Node<V>> retrieve(final Bytes location, final Bytes32 hash) {
@@ -107,7 +103,8 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
     }
     Bytes key = optionalKeyValue.get().key();
     Optional<byte[]> maybeEncodedValues = optionalKeyValue.get().value();
-    Bytes encodedValues = maybeEncodedValues.isPresent() ? Bytes.of(maybeEncodedValues.get()) : Bytes.EMPTY;
+    Bytes encodedValues =
+        maybeEncodedValues.isPresent() ? Bytes.of(maybeEncodedValues.get()) : Bytes.EMPTY;
 
     if (key.size() == 0) {
       result = Optional.of(decodeRootNode(encodedValues));
@@ -152,9 +149,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   /**
    * Creates a internalNode using the provided location, hash, and path.
    *
-   * @param location      The location of the internalNode.
+   * @param location The location of the internalNode.
    * @param encodedValues List of Bytes values retrieved from storage.
-   * @param hash          Node's hash value.
+   * @param hash Node's hash value.
    * @return A internalNode instance.
    */
   InternalNode<V> decodeInternalNode(Bytes location, Bytes encodedValues, Bytes32 hash) {
@@ -174,7 +171,8 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
       if (scalars.get(i) == Bytes32.ZERO) {
         children.add(new NullNode<V>());
       } else {
-        children.add(new StoredNode<V>(this, Bytes.concatenate(location, Bytes.of(i)), scalars.get(i)));
+        children.add(
+            new StoredNode<V>(this, Bytes.concatenate(location, Bytes.of(i)), scalars.get(i)));
       }
     }
     return new InternalNode<V>(location, hash, commitment, children);
@@ -183,9 +181,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   /**
    * Creates a StemNode using the provided stem, hash and encodedValues
    *
-   * @param stem          The stem of the BranchNode.
+   * @param stem The stem of the BranchNode.
    * @param encodedValues List of Bytes values retrieved from storage.
-   * @param hash          Node's hash value.
+   * @param hash Node's hash value.
    * @return A BranchNode instance.
    */
   StemNode<V> decodeStemNode(Bytes stem, Bytes encodedValues, Bytes32 hash) {
@@ -208,7 +206,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
       if (values.get(i) == Bytes.EMPTY) {
         children.add(new NullLeafNode<V>());
       } else {
-        children.add(createLeafNode(Bytes.concatenate(location, Bytes.of(i)), Bytes32.rightPad(values.get(i))));
+        children.add(
+            createLeafNode(
+                Bytes.concatenate(location, Bytes.of(i)), Bytes32.rightPad(values.get(i))));
       }
     }
     return new StemNode<V>(
@@ -226,7 +226,7 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   /**
    * Creates a LeafNode using the provided location, path, and value.
    *
-   * @param key          The key of the LeafNode.
+   * @param key The key of the LeafNode.
    * @param encodedValue Leaf value retrieved from storage.
    * @return A LeafNode instance.
    */

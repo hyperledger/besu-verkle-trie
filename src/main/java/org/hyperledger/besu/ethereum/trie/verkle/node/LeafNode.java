@@ -30,7 +30,7 @@ import org.apache.tuweni.bytes.Bytes;
  * @param <V> The type of the node's value.
  */
 public class LeafNode<V> extends Node<V> {
-  private Optional<Bytes> location; // Location in the tree, or the key
+  private final Optional<Bytes> location; // Location in the tree, or the key
   private final V value; // Value associated with the node
   private Optional<Bytes> encodedValue = Optional.empty(); // Encoded value
   private final Function<V, Bytes> valueSerializer; // Serializer function for the value
@@ -39,7 +39,7 @@ public class LeafNode<V> extends Node<V> {
    * Constructs a new LeafNode with location, value.
    *
    * @param location The location of the node in the tree.
-   * @param value The value associated with the node.
+   * @param value    The value associated with the node.
    */
   public LeafNode(final Bytes location, final V value) {
     super(false, false);
@@ -52,7 +52,7 @@ public class LeafNode<V> extends Node<V> {
    * Constructs a new LeafNode with optional location, value.
    *
    * @param location The location of the node in the tree (Optional).
-   * @param value The value associated with the node.
+   * @param value    The value associated with the node.
    */
   public LeafNode(final Optional<Bytes> location, final V value) {
     this(location, value, Optional.of(value));
@@ -71,7 +71,7 @@ public class LeafNode<V> extends Node<V> {
    * Accepts a visitor for path-based operations on the node.
    *
    * @param visitor The path node visitor.
-   * @param path The path associated with a node.
+   * @param path    The path associated with a node.
    * @return The result of the visitor's operation.
    */
   @Override
@@ -118,12 +118,14 @@ public class LeafNode<V> extends Node<V> {
    */
   @Override
   public LeafNode<V> replaceLocation(Bytes newLocation) {
-    location = Optional.of(newLocation);
-    return this;
+    return new LeafNode<V>(
+        Optional.of(newLocation),
+        value);
   }
 
   /**
-   * Get the children of the node. A leaf node does not have children, so this method throws an
+   * Get the children of the node. A leaf node does not have children, so this
+   * method throws an
    * UnsupportedOperationException.
    *
    * @return The list of children nodes (unsupported operation).
@@ -155,8 +157,7 @@ public class LeafNode<V> extends Node<V> {
     if (encodedValue.isPresent()) {
       return encodedValue.get();
     }
-    Bytes encodedVal =
-        getValue().isPresent() ? valueSerializer.apply(getValue().get()) : Bytes.EMPTY;
+    Bytes encodedVal = getValue().isPresent() ? valueSerializer.apply(getValue().get()) : Bytes.EMPTY;
     this.encodedValue = Optional.of(encodedVal.trimTrailingZeros());
     return encodedVal;
   }

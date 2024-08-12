@@ -28,7 +28,8 @@ import org.apache.tuweni.bytes.Bytes32;
 /**
  * Represents a regular node that can possibly be stored in storage.
  *
- * <p>StoredNodes wrap regular nodes and loads them lazily from storage as needed.
+ * <p>
+ * StoredNodes wrap regular nodes and loads them lazily from storage as needed.
  *
  * @param <V> The type of the node's value.
  */
@@ -42,7 +43,7 @@ public class StoredNode<V> extends Node<V> {
    * Constructs a new StoredNode at location.
    *
    * @param nodeFactory The node factory for creating nodes from storage.
-   * @param location The location in the tree.
+   * @param location    The location in the tree.
    */
   public StoredNode(final NodeFactory<V> nodeFactory, final Bytes location) {
     super(false, true);
@@ -56,8 +57,8 @@ public class StoredNode<V> extends Node<V> {
    * Constructs a new StoredNode at location.
    *
    * @param nodeFactory The node factory for creating nodes from storage.
-   * @param location The location in the tree.
-   * @param hash The hash value of the node.
+   * @param location    The location in the tree.
+   * @param hash        The hash value of the node.
    */
   public StoredNode(final NodeFactory<V> nodeFactory, final Bytes location, final Bytes32 hash) {
     super(false, true);
@@ -71,7 +72,7 @@ public class StoredNode<V> extends Node<V> {
    * Accept a visitor to perform operations on the node based on a provided path.
    *
    * @param visitor The visitor to accept.
-   * @param path The path associated with a node.
+   * @param path    The path associated with a node.
    * @return The result of visitor's operation.
    */
   @Override
@@ -195,12 +196,11 @@ public class StoredNode<V> extends Node<V> {
    */
   @Override
   public String toDot(Boolean showNullNodes) {
-    String result =
-        getClass().getSimpleName()
-            + getLocation().orElse(Bytes.EMPTY)
-            + " [label=\"SD: "
-            + getLocation().orElse(Bytes.EMPTY)
-            + "\"]\n";
+    String result = getClass().getSimpleName()
+        + getLocation().orElse(Bytes.EMPTY)
+        + " [label=\"SD: "
+        + getLocation().orElse(Bytes.EMPTY)
+        + "\"]\n";
     return result;
   }
 

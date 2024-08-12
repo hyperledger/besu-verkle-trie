@@ -25,7 +25,7 @@ dependencyManagement {
 
         dependency 'org.assertj:assertj-core:3.25.1'
 
-        dependencySet(group: 'org.hyperledger.besu.internal', version: '23.4.1') {
+        dependencySet(group: 'org.hyperledger.besu.internal', version: '24.7.0') {
             entry 'rlp'
         }
 

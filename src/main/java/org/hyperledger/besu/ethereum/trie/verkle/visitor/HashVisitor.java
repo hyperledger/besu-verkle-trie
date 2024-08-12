@@ -32,7 +32,8 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /**
- * A visitor class for hashing operations on Verkle Trie nodes. The batched version is recommended
+ * A visitor class for hashing operations on Verkle Trie nodes. The batched
+ * version is recommended
  * for better performance
  *
  * @see VerkleTrieBatchHasher
@@ -42,11 +43,12 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
   Hasher hasher = new PedersenHasher();
 
   /**
-   * Visits a internal node, computes its hash, and returns a new internal node with the updated
+   * Visits a internal node, computes its hash, and returns a new internal node
+   * with the updated
    * hash.
    *
    * @param internalNode The internal node to visit.
-   * @param location The location associated with the internal node.
+   * @param location     The location associated with the internal node.
    * @return A new internal node with the updated hash.
    */
   @Override
@@ -54,6 +56,7 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     if (!internalNode.isDirty()
         && internalNode.getHash().isPresent()
         && internalNode.getCommitment().isPresent()) {
+      System.out.println(String.format("Internal Commitment %s", location));
       return internalNode;
     }
     int size = InternalNode.maxChild();
@@ -75,11 +78,13 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     }
     final Node<V> vNode = internalNode.replaceHash(hash, commitment);
     vNode.markClean();
+    System.out.println(String.format("Computed Internal Commitment %s", location));
     return vNode;
   }
 
   /**
-   * Visits a branch node, computes its hash, and returns a new branch node with the updated hash.
+   * Visits a branch node, computes its hash, and returns a new branch node with
+   * the updated hash.
    *
    * @param stemNode The branch node to visit.
    * @param location The location associated with the branch node.
@@ -90,6 +95,7 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     if (!stemNode.isDirty()
         && stemNode.getHash().isPresent()
         && stemNode.getCommitment().isPresent()) {
+      System.out.println(String.format("Stem Commitment %s", location));
       return stemNode;
     }
     int size = StemNode.maxChild();
@@ -118,16 +124,17 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
     hashes[3] = hasher.hash(rightCommitment);
     Bytes commitment = hasher.commit(hashes);
     final Bytes32 hash = hasher.hash(commitment);
-    StemNode<V> vStemNode =
-        stemNode.replaceHash(
-            hash, commitment, hashes[2], leftCommitment, hashes[3], rightCommitment);
+    StemNode<V> vStemNode = stemNode.replaceHash(
+        hash, commitment, hashes[2], leftCommitment, hashes[3], rightCommitment);
     vStemNode.markClean();
+    System.out.println(String.format("Computed Stem Commitment %s", location));
     return vStemNode;
   }
 
   @Override
   public Node<V> visit(final LeafNode<V> leafNode, final Bytes path) {
     leafNode.markClean();
+    System.out.println(String.format("Leaf Commitment %s", leafNode.getLocation().get()));
     return leafNode;
   }
 

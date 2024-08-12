@@ -19,11 +19,14 @@ dependencyManagement {
 
         dependency 'net.java.dev.jna:jna:5.14.0'
 
-        dependency 'org.hyperledger.besu.internal:trie:24.6.0'
-
         dependency 'org.hyperledger.besu:ipa-multipoint:0.8.5'
 
         dependency 'org.assertj:assertj-core:3.25.1'
+
+        dependencySet(group: 'org.hyperledger.besu.internal', version: '24.7.0') {
+            entry 'rlp'
+            entry 'trie'
+        }
 
         dependencySet(group: 'org.apache.logging.log4j', version: '2.22.1') {
             entry 'log4j-api'

@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.util.HashMap;
 import java.util.stream.Stream;
 
 import org.apache.commons.csv.CSVFormat;
@@ -53,8 +54,8 @@ public class GenesisTest {
   @ParameterizedTest
   @MethodSource("provideGenesisAndStateRootExpected")
   public void putGenesis(String genesisCSVFile, String expectedStateRootHash) throws IOException {
-    NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
-    NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
+    HashMap<Bytes, Bytes> storage = new HashMap<Bytes, Bytes>();
+    NodeLoaderMock nodeLoader = new NodeLoaderMock(storage);
     VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     StoredNodeFactory<Bytes> nodeFactory = new StoredNodeFactory<>(nodeLoader, value -> value);
     StoredBatchedVerkleTrie<Bytes32, Bytes> trie =
@@ -68,7 +69,7 @@ public class GenesisTest {
         trie.put(key, value);
       }
     }
-    trie.commit(nodeUpdater);
+    trie.commit((location, hash, value) -> storage.put(location, value));
 
     assertThat(trie.getRootHash())
         .isEqualByComparingTo(Bytes32.fromHexString(expectedStateRootHash));

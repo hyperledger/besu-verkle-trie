@@ -36,13 +36,12 @@ public abstract class Node<V> {
   public static Bytes32 EMPTY_HASH = Bytes32.ZERO;
 
   /** A constant representing a commitment to NullNodes */
-  public static Bytes EMPTY_COMMITMENT =
-      Bytes.fromHexString(
-          "0x0000000000000000000000000000000000000000000000000000000000000000"
-              + "0100000000000000000000000000000000000000000000000000000000000000");
+  public static Bytes EMPTY_COMMITMENT = Bytes.EMPTY;
 
   Optional<?> previous;
+
   boolean dirty;
+
   boolean persisted;
 
   public Node(final boolean dirty, final boolean persisted) {
@@ -75,15 +74,6 @@ public abstract class Node<V> {
   public abstract Node<V> accept(NodeVisitor<V> visitor);
 
   /**
-   * Does the node have an extension path ?
-   *
-   * @return hasExtension
-   */
-  public Boolean hasExtension() {
-    return false;
-  }
-
-  /**
    * Get the location of the node.
    *
    * @return An optional containing the location of the node if available.
@@ -91,14 +81,6 @@ public abstract class Node<V> {
   public Optional<Bytes> getLocation() {
     return Optional.empty();
   }
-
-  /**
-   * Replace node's Location
-   *
-   * @param newLocation The new location for the Node
-   * @return The updated Node
-   */
-  public abstract Node<V> replaceLocation(Bytes newLocation);
 
   /**
    * Get the value associated with the node.
@@ -208,7 +190,7 @@ public abstract class Node<V> {
    *
    * @return A string representation of the node.
    */
-  public abstract String print();
+  abstract String print();
 
   /**
    * Generates DOT representation for the Node.
@@ -256,25 +238,5 @@ public abstract class Node<V> {
     return value
         .map((v) -> Bytes32.rightPad(Bytes32.rightPad((Bytes) v).slice(16, 16)))
         .orElse(Bytes32.ZERO);
-  }
-
-  /**
-   * Encode a commitment
-   *
-   * @param value A commitment value
-   * @return The encoded commitment
-   */
-  public static Bytes encodeCommitment(Bytes value) {
-    return value != EMPTY_COMMITMENT ? value.trimTrailingZeros() : Bytes.EMPTY;
-  }
-
-  /**
-   * Encode a scalar
-   *
-   * @param scalar A scalar value
-   * @return The encoded scalar
-   */
-  public static Bytes encodeScalar(Bytes32 scalar) {
-    return scalar != EMPTY_HASH ? scalar.trimTrailingZeros() : Bytes.EMPTY;
   }
 }

@@ -17,7 +17,12 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import org.hyperledger.besu.ethereum.trie.NodeUpdater;
 import org.hyperledger.besu.ethereum.trie.verkle.factory.StoredNodeFactory;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -238,13 +243,14 @@ public class StoredBatchedVerkleTrieTest {
 
   @Test
   public void testDeleteManyValuesWithDivergentStemsAtDepth2() throws Exception {
-    NodeUpdaterMock nodeUpdater = new NodeUpdaterMock();
-    NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
+    final Map<Bytes, Bytes> map = new HashMap<>();
 
     VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     StoredBatchedVerkleTrie<Bytes, Bytes> trie =
         new StoredBatchedVerkleTrie<>(
-            batchProcessor, new StoredNodeFactory<>(nodeLoader, value -> value));
+            batchProcessor,
+            new StoredNodeFactory<>(
+                (location, hash) -> Optional.ofNullable(map.get(location)), value -> value));
 
     assertThat(trie.getRootHash()).isEqualTo(Bytes32.ZERO);
     Bytes32 key0 =
@@ -280,10 +286,18 @@ public class StoredBatchedVerkleTrieTest {
     trie.put(key5, value5);
     trie.put(key6, value6);
 
-    trie.commit(nodeUpdater);
+    trie.commit(
+        new NodeUpdater() {
+          @Override
+          public void store(final Bytes location, final Bytes32 hash, final Bytes value) {
+            map.put(location, value);
+          }
+        });
     StoredBatchedVerkleTrie<Bytes, Bytes> trie2 =
         new StoredBatchedVerkleTrie<>(
-            batchProcessor, new StoredNodeFactory<>(nodeLoader, value -> value));
+            batchProcessor,
+            new StoredNodeFactory<>(
+                (location, hash) -> Optional.ofNullable(map.get(location)), value -> value));
     assertThat(trie2.getRootHash()).isEqualTo(trie.getRootHash());
     trie2.remove(key0);
     trie2.remove(key4);

@@ -80,8 +80,6 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     final Node<V> newNode = internalNode.child(onlyChildIndex.get()).accept(flatten);
     if (!(newNode instanceof NullNode)) { // Flatten StemNode one-level up
       newNode.markDirty();
-      batchProcessor.ifPresent(
-          processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
       return newNode;
     }
     return internalNode; // Unique child was a internalNode, do nothing

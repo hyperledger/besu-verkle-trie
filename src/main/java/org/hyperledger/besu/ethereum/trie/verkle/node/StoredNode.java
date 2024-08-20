@@ -33,8 +33,7 @@ import org.apache.tuweni.bytes.Bytes32;
  * @param <V> The type of the node's value.
  */
 public class StoredNode<V> extends Node<V> {
-  private Bytes location;
-  private final Optional<Bytes32> hash;
+  private final Bytes location;
   private final NodeFactory<V> nodeFactory;
   private Optional<Node<V>> loadedNode;
 
@@ -47,22 +46,6 @@ public class StoredNode<V> extends Node<V> {
   public StoredNode(final NodeFactory<V> nodeFactory, final Bytes location) {
     super(false, true);
     this.location = location;
-    this.hash = Optional.empty();
-    this.nodeFactory = nodeFactory;
-    loadedNode = Optional.empty();
-  }
-
-  /**
-   * Constructs a new StoredNode at location.
-   *
-   * @param nodeFactory The node factory for creating nodes from storage.
-   * @param location The location in the tree.
-   * @param hash The hash value of the node.
-   */
-  public StoredNode(final NodeFactory<V> nodeFactory, final Bytes location, final Bytes32 hash) {
-    super(false, true);
-    this.location = location;
-    this.hash = Optional.of(hash);
     this.nodeFactory = nodeFactory;
     loadedNode = Optional.empty();
   }
@@ -103,18 +86,6 @@ public class StoredNode<V> extends Node<V> {
   }
 
   /**
-   * Replace node's Location
-   *
-   * @param newLocation The new location for the Node
-   * @return The updated Node
-   */
-  @Override
-  public StoredNode<V> replaceLocation(Bytes newLocation) {
-    location = newLocation;
-    return this;
-  }
-
-  /**
    * Get the value associated with the node.
    *
    * @return An optional containing the value of the node if available.
@@ -132,9 +103,6 @@ public class StoredNode<V> extends Node<V> {
    */
   @Override
   public Optional<Bytes32> getHash() {
-    if (hash.isPresent()) {
-      return hash;
-    }
     final Node<V> node = load();
     return node.getHash();
   }
@@ -206,7 +174,7 @@ public class StoredNode<V> extends Node<V> {
 
   private Node<V> load() {
     if (loadedNode.isEmpty()) {
-      loadedNode = nodeFactory.retrieve(location, hash.orElse(null));
+      loadedNode = nodeFactory.retrieve(location, null);
     }
     if (loadedNode.isPresent()) {
       return loadedNode.get();

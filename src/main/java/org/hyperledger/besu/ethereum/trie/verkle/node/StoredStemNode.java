@@ -17,17 +17,16 @@ package org.hyperledger.besu.ethereum.trie.verkle.node;
 
 import org.hyperledger.besu.ethereum.trie.verkle.factory.NodeFactory;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
-import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
 import java.util.Optional;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 /**
  * Represents a regular node that can possibly be stored in storage.
  *
- * <p>
- * StoredNodes wrap regular nodes and loads them lazily from storage as needed.
+ * <p>StoredNodes wrap regular nodes and loads them lazily from storage as needed.
  *
  * @param <V> The type of the node's value.
  */
@@ -38,8 +37,8 @@ public class StoredStemNode<V> extends StoredNode<V> {
    * Constructs a new StoredNode at location.
    *
    * @param nodeFactory The node factory for creating nodes from storage.
-   * @param location    The location in the tree.
-   * @param stem        The stem
+   * @param location The location in the tree.
+   * @param stem The stem
    */
   public StoredStemNode(final NodeFactory<V> nodeFactory, final Bytes location, final Bytes stem) {
     super(nodeFactory, location);
@@ -50,14 +49,17 @@ public class StoredStemNode<V> extends StoredNode<V> {
    * Constructs a new StoredNode at location.
    *
    * @param nodeFactory The node factory for creating nodes from storage.
-   * @param location    The location in the tree.
-   * @param stem        The stem
-   * @param hash        The hash value of the node.
+   * @param location The location in the tree.
+   * @param stem The stem
+   * @param hash The hash value of the node.
    */
-  public StoredStemNode(final NodeFactory<V> nodeFactory, final Bytes location, final Bytes stem, final Bytes32 hash) {
+  public StoredStemNode(
+      final NodeFactory<V> nodeFactory,
+      final Bytes location,
+      final Bytes stem,
+      final Bytes32 hash) {
     super(nodeFactory, location, hash);
     this.stem = stem;
-
   }
 
   /**

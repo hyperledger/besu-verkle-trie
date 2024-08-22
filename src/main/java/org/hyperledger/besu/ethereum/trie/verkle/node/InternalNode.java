@@ -37,10 +37,10 @@ public class InternalNode<V> extends BranchNode<V> {
   /**
    * Constructs a new InternalNode with location, hash, path, and children.
    *
-   * @param location   The location in the tree.
-   * @param hash       Node's vector commitment's hash.
+   * @param location The location in the tree.
+   * @param hash Node's vector commitment's hash.
    * @param commitment Node's vector commitment.
-   * @param children   The list of children nodes.
+   * @param children The list of children nodes.
    */
   public InternalNode(
       final Bytes location,
@@ -54,10 +54,10 @@ public class InternalNode<V> extends BranchNode<V> {
   /**
    * Constructs a new InternalNode with location, hash, path, and children.
    *
-   * @param location   The location in the tree.
-   * @param hash       Node's vector commitment's hash.
+   * @param location The location in the tree.
+   * @param hash Node's vector commitment's hash.
    * @param commitment Node's vector commitment.
-   * @param children   The list of children nodes.
+   * @param children The list of children nodes.
    */
   public InternalNode(
       final Optional<Bytes> location,
@@ -79,8 +79,7 @@ public class InternalNode<V> extends BranchNode<V> {
   }
 
   /**
-   * Constructs a new InternalNode with optional location and path, initializing
-   * children to
+   * Constructs a new InternalNode with optional location and path, initializing children to
    * NullNodes.
    *
    * @param location The optional location in the tree.
@@ -93,7 +92,7 @@ public class InternalNode<V> extends BranchNode<V> {
    * Accepts a visitor for path-based operations on the node.
    *
    * @param visitor The path node visitor.
-   * @param path    The path associated with a node.
+   * @param path The path associated with a node.
    * @return The result of the visitor's operation.
    */
   @Override
@@ -134,7 +133,7 @@ public class InternalNode<V> extends BranchNode<V> {
   /**
    * Replace the vector commitment with a new one.
    *
-   * @param hash       The new vector commitment's hash to set.
+   * @param hash The new vector commitment's hash to set.
    * @param commitment The new vector commitment to set.
    * @return A new InternalNode with the updated vector commitment.
    */
@@ -170,8 +169,9 @@ public class InternalNode<V> extends BranchNode<V> {
   }
 
   private List<Bytes> getStemExtensions() {
-    Bytes location = getLocation()
-        .orElseThrow(() -> new RuntimeException("Node needs a location to getStemExtensions"));
+    Bytes location =
+        getLocation()
+            .orElseThrow(() -> new RuntimeException("Node needs a location to getStemExtensions"));
     int depth = location.size();
     List<Bytes> extensions = new ArrayList<>();
     for (Node<V> childNode : getChildren()) {
@@ -180,7 +180,6 @@ public class InternalNode<V> extends BranchNode<V> {
       }
     }
     return extensions;
-
   }
 
   /**
@@ -210,22 +209,24 @@ public class InternalNode<V> extends BranchNode<V> {
    */
   @Override
   public String toDot(Boolean showNullNodes) {
-    StringBuilder result = new StringBuilder()
-        .append(getClass().getSimpleName())
-        .append(getLocation().orElse(Bytes.EMPTY))
-        .append(" [label=\"I: ")
-        .append(getLocation().orElse(Bytes.EMPTY))
-        .append("\nCommitment: ")
-        .append(getCommitment().orElse(Bytes32.ZERO))
-        .append("\"]\n");
+    StringBuilder result =
+        new StringBuilder()
+            .append(getClass().getSimpleName())
+            .append(getLocation().orElse(Bytes.EMPTY))
+            .append(" [label=\"I: ")
+            .append(getLocation().orElse(Bytes.EMPTY))
+            .append("\nCommitment: ")
+            .append(getCommitment().orElse(Bytes32.ZERO))
+            .append("\"]\n");
 
     for (Node<V> child : getChildren()) {
-      String edgeString = getClass().getSimpleName()
-          + getLocation().orElse(Bytes.EMPTY)
-          + " -> "
-          + child.getClass().getSimpleName()
-          + child.getLocation().orElse(Bytes.EMPTY)
-          + "\n";
+      String edgeString =
+          getClass().getSimpleName()
+              + getLocation().orElse(Bytes.EMPTY)
+              + " -> "
+              + child.getClass().getSimpleName()
+              + child.getLocation().orElse(Bytes.EMPTY)
+              + "\n";
 
       if (showNullNodes || !result.toString().contains(edgeString)) {
         result.append(edgeString);

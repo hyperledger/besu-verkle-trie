@@ -28,11 +28,11 @@ import org.hyperledger.besu.ethereum.trie.verkle.node.StoredInternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StoredStemNode;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.Map;
-import java.util.HashMap;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -57,10 +57,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   private final Boolean areCommitmentsCompressed;
 
   /**
-   * Creates a new StoredNodeFactory with the given node loader and value
-   * deserializer.
+   * Creates a new StoredNodeFactory with the given node loader and value deserializer.
    *
-   * @param nodeLoader        The loader for retrieving stored nodes.
+   * @param nodeLoader The loader for retrieving stored nodes.
    * @param valueDeserializer The function to deserialize values from Bytes.
    */
   public StoredNodeFactory(NodeLoader nodeLoader, Function<Bytes, V> valueDeserializer) {
@@ -70,12 +69,10 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   }
 
   /**
-   * Creates a new StoredNodeFactory with the given node loader and value
-   * deserializer.
+   * Creates a new StoredNodeFactory with the given node loader and value deserializer.
    *
-   * @param nodeLoader               The loader for retrieving stored nodes.
-   * @param valueDeserializer        The function to deserialize values from
-   *                                 Bytes.
+   * @param nodeLoader The loader for retrieving stored nodes.
+   * @param valueDeserializer The function to deserialize values from Bytes.
    * @param areCommitmentsCompressed Are commitments stored compressed (32bytes).
    */
   public StoredNodeFactory(
@@ -91,10 +88,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
    * Retrieves a Verkle Trie node from stored data based on the location and hash.
    *
    * @param location Node's location
-   * @param hash     Node's hash
-   * @return An optional containing the retrieved node, or an empty optional if
-   *         the node is not
-   *         found.
+   * @param hash Node's hash
+   * @return An optional containing the retrieved node, or an empty optional if the node is not
+   *     found.
    */
   @Override
   public Optional<Node<V>> retrieve(final Bytes location, final Bytes32 hash) {
@@ -154,9 +150,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   /**
    * Creates a internalNode using the provided location, hash, and path.
    *
-   * @param location      The location of the internalNode.
+   * @param location The location of the internalNode.
    * @param encodedValues List of Bytes values retrieved from storage.
-   * @param hash          Node's hash value.
+   * @param hash Node's hash value.
    * @return A internalNode instance.
    */
   InternalNode<V> decodeInternalNode(Bytes location, Bytes encodedValues, Bytes32 hash) {
@@ -170,7 +166,11 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   }
 
   private InternalNode<V> createInternalNode(
-      Bytes location, Bytes32 hash, Bytes commitment, List<Bytes> stemExtensions, List<Bytes32> scalars) {
+      Bytes location,
+      Bytes32 hash,
+      Bytes commitment,
+      List<Bytes> stemExtensions,
+      List<Bytes32> scalars) {
     Map<Byte, Bytes> indices = new HashMap<>();
     for (Bytes extension : stemExtensions) {
       indices.put(extension.get(0), extension);
@@ -183,11 +183,15 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
       } else {
         if (indices.containsKey((byte) i)) {
           children.add(
-              new StoredStemNode<V>(this, Bytes.concatenate(location, Bytes.of(i)),
-                  Bytes.concatenate(location, indices.get((byte) i)), scalars.get(i)));
+              new StoredStemNode<V>(
+                  this,
+                  Bytes.concatenate(location, Bytes.of(i)),
+                  Bytes.concatenate(location, indices.get((byte) i)),
+                  scalars.get(i)));
         } else {
           children.add(
-              new StoredInternalNode<V>(this, Bytes.concatenate(location, Bytes.of(i)), scalars.get(i)));
+              new StoredInternalNode<V>(
+                  this, Bytes.concatenate(location, Bytes.of(i)), scalars.get(i)));
         }
       }
     }
@@ -197,9 +201,9 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   /**
    * Creates a StemNode using the provided stem, hash and encodedValues
    *
-   * @param stem          The stem of the BranchNode.
+   * @param stem The stem of the BranchNode.
    * @param encodedValues List of Bytes values retrieved from storage.
-   * @param hash          Node's hash value.
+   * @param hash Node's hash value.
    * @return A BranchNode instance.
    */
   StemNode<V> decodeStemNode(Bytes stem, Bytes encodedValues, Bytes32 hash) {
@@ -242,7 +246,7 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
   /**
    * Creates a LeafNode using the provided location, path, and value.
    *
-   * @param key          The key of the LeafNode.
+   * @param key The key of the LeafNode.
    * @param encodedValue Leaf value retrieved from storage.
    * @return A LeafNode instance.
    */

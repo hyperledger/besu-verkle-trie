@@ -22,7 +22,6 @@ import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
-import org.hyperledger.besu.ethereum.trie.verkle.node.StoredNode;
 
 import java.util.List;
 import java.util.Optional;
@@ -32,7 +31,9 @@ import org.apache.tuweni.bytes.Bytes;
 /**
  * A visitor for removing nodes in a Verkle Trie while preserving its structure.
  *
- * <p>This class implements the PathNodeVisitor interface and is used to visit and remove nodes in
+ * <p>
+ * This class implements the PathNodeVisitor interface and is used to visit and
+ * remove nodes in
  * the Verkle Trie while maintaining the Trie's structural integrity.
  *
  * @param <V> The type of values associated with the nodes.
@@ -49,12 +50,14 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   }
 
   /**
-   * Visits a internal node to remove a node associated with the provided path and maintain the
+   * Visits a internal node to remove a node associated with the provided path and
+   * maintain the
    * Trie's structure.
    *
    * @param internalNode The internal node to visit.
-   * @param path The path associated with the node to be removed.
-   * @return The updated internal node with the removed node and preserved structure.
+   * @param path         The path associated with the node to be removed.
+   * @return The updated internal node with the removed node and preserved
+   *         structure.
    */
   @Override
   public Node<V> visit(InternalNode<V> internalNode, Bytes path) {
@@ -66,8 +69,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
           processor -> processor.addNodeToBatch(updatedChild.getLocation(), updatedChild));
     }
     internalNode.replaceChild(index, updatedChild);
-    final boolean wasChildNullified =
-        (!(child instanceof NullNode) && (updatedChild instanceof NullNode));
+    final boolean wasChildNullified = (!(child instanceof NullNode) && (updatedChild instanceof NullNode));
     if (updatedChild.isDirty() || wasChildNullified) {
       internalNode.markDirty();
       batchProcessor.ifPresent(
@@ -88,12 +90,14 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   }
 
   /**
-   * Visits a stem node to remove a node associated with the provided path and maintain the Trie's
+   * Visits a stem node to remove a node associated with the provided path and
+   * maintain the Trie's
    * structure.
    *
    * @param stemNode The stem node to visit.
-   * @param path The path associated with the node to be removed.
-   * @return The updated branch node with the removed node and preserved structure.
+   * @param path     The path associated with the node to be removed.
+   * @return The updated branch node with the removed node and preserved
+   *         structure.
    */
   @Override
   public Node<V> visit(StemNode<V> stemNode, Bytes path) {
@@ -117,11 +121,12 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   }
 
   /**
-   * Visits a leaf node to remove a node associated with the provided path and maintain the Trie's
+   * Visits a leaf node to remove a node associated with the provided path and
+   * maintain the Trie's
    * structure.
    *
    * @param leafNode The leaf node to visit.
-   * @param path The path associated with the node to be removed.
+   * @param path     The path associated with the node to be removed.
    * @return A null node, indicating the removal of the node.
    */
   @Override
@@ -134,10 +139,11 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   }
 
   /**
-   * Visits a null node and returns a null node, indicating that no removal is required.
+   * Visits a null node and returns a null node, indicating that no removal is
+   * required.
    *
    * @param nullNode The null node to visit.
-   * @param path The path associated with the removal (no operation).
+   * @param path     The path associated with the removal (no operation).
    * @return A null node, indicating no removal is needed.
    */
   @Override
@@ -146,10 +152,11 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   }
 
   /**
-   * Visits a null leaf node and returns a null node, indicating that no removal is required.
+   * Visits a null leaf node and returns a null node, indicating that no removal
+   * is required.
    *
    * @param nullLeafNode The null node to visit.
-   * @param path The path associated with the removal (no operation).
+   * @param path         The path associated with the removal (no operation).
    * @return A null node, indicating no removal is needed.
    */
   @Override
@@ -160,22 +167,20 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   /**
    * Finds the index of the only non-null child in the list of children nodes.
    *
-   * @param branchNode BranchNode to scan for unique child.
-   * @return The index of the only non-null child if it exists, or an empty optional if there is no
-   *     or more than one non-null child.
+   * @param internalNode BranchNode to scan for unique child.
+   * @return The index of the only non-null child if it exists, or an empty
+   *         optional if there is no
+   *         or more than one non-null child.
    */
-  Optional<Byte> findOnlyChild(final InternalNode<V> branchNode) {
-    final List<Node<V>> children = branchNode.getChildren();
+  Optional<Byte> findOnlyChild(final InternalNode<V> internalNode) {
+    final List<Node<V>> children = internalNode.getChildren();
     Optional<Byte> onlyChildIndex = Optional.empty();
     for (int i = 0; i < children.size(); ++i) {
       if (!(children.get(i) instanceof NullNode)) {
-        if (!(children.get(i) instanceof StoredNode)
-            || !children.get(i).getEncodedValue().isEmpty()) {
-          if (onlyChildIndex.isPresent()) {
-            return Optional.empty();
-          }
-          onlyChildIndex = Optional.of((byte) i);
+        if (onlyChildIndex.isPresent()) {
+          return Optional.empty();
         }
+        onlyChildIndex = Optional.of((byte) i);
       }
     }
     return onlyChildIndex;
@@ -184,8 +189,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   boolean allLeavesAreNull(final StemNode<V> stemNode) {
     final List<Node<V>> children = stemNode.getChildren();
     for (int i = 0; i < children.size(); ++i) {
-      Node<V> child =
-          children.get(i).accept(getter, Bytes.EMPTY); // forces to load node if StoredNode;
+      Node<V> child = children.get(i).accept(getter, Bytes.EMPTY); // forces to load node if StoredNode;
       stemNode.replaceChild((byte) i, child);
       if (!(child instanceof NullLeafNode)) {
         return false;

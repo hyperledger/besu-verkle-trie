@@ -17,33 +17,22 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 
 import org.hyperledger.besu.ethereum.trie.NodeLoader;
 
+import java.util.Map;
 import java.util.Optional;
-import java.util.SortedMap;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 public class NodeLoaderMock implements NodeLoader {
 
-  public SortedMap<Bytes, byte[]> storage;
+  public Map<Bytes, Bytes> storage;
 
-  public NodeLoaderMock(SortedMap<Bytes, byte[]> storage) {
+  public NodeLoaderMock(Map<Bytes, Bytes> storage) {
     this.storage = storage;
   }
 
   @Override
-  public Optional<NodeLoader.NearestKeyValue> getNode(Bytes location, Bytes32 hash) {
-    Bytes key;
-    Optional<byte[]> value;
-    try {
-      key = storage.tailMap(location).firstKey();
-    } catch (Exception noSuchElementException) {
-      return Optional.empty();
-    }
-    if (key.commonPrefixLength(location) < location.size()) {
-      return Optional.empty();
-    }
-    value = Optional.ofNullable(storage.get(key));
-    return Optional.of(new NodeLoader.NearestKeyValue(key, value));
+  public Optional<Bytes> getNode(Bytes location, Bytes32 hash) {
+    return Optional.ofNullable(storage.get(location));
   }
 }

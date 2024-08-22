@@ -17,27 +17,26 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 
 import org.hyperledger.besu.ethereum.trie.NodeUpdater;
 
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 public class NodeUpdaterMock implements NodeUpdater {
 
-  public SortedMap<Bytes, byte[]> storage;
+  public Map<Bytes, Bytes> storage;
 
   public NodeUpdaterMock() {
-    this.storage =
-        new TreeMap<Bytes, byte[]>((b1, b2) -> b1.toHexString().compareTo(b2.toHexString()));
+    this.storage = new HashMap<Bytes, Bytes>();
   }
 
-  public NodeUpdaterMock(SortedMap<Bytes, byte[]> storage) {
+  public NodeUpdaterMock(Map<Bytes, Bytes> storage) {
     this.storage = storage;
   }
 
   @Override
   public void store(Bytes location, Bytes32 hash, Bytes value) {
-    storage.put(location, value.toArray());
+    storage.put(location, value);
   }
 }

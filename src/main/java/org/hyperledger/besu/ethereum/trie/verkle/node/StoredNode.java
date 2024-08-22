@@ -15,9 +15,9 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.node;
 
-import org.hyperledger.besu.ethereum.trie.verkle.factory.NodeFactory;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
+import org.hyperledger.besu.ethereum.trie.verkle.factory.NodeFactory;
 
 import java.util.List;
 import java.util.Optional;
@@ -28,21 +28,22 @@ import org.apache.tuweni.bytes.Bytes32;
 /**
  * Represents a regular node that can possibly be stored in storage.
  *
- * <p>StoredNodes wrap regular nodes and loads them lazily from storage as needed.
+ * <p>
+ * StoredNodes wrap regular nodes and loads them lazily from storage as needed.
  *
  * @param <V> The type of the node's value.
  */
-public class StoredNode<V> extends Node<V> {
-  private Bytes location;
-  private final Optional<Bytes32> hash;
-  private final NodeFactory<V> nodeFactory;
-  private Optional<Node<V>> loadedNode;
+public abstract class StoredNode<V> extends Node<V> {
+  Bytes location;
+  final Optional<Bytes32> hash;
+  final NodeFactory<V> nodeFactory;
+  Optional<Node<V>> loadedNode;
 
   /**
    * Constructs a new StoredNode at location.
    *
    * @param nodeFactory The node factory for creating nodes from storage.
-   * @param location The location in the tree.
+   * @param location    The location in the tree.
    */
   public StoredNode(final NodeFactory<V> nodeFactory, final Bytes location) {
     super(false, true);
@@ -56,8 +57,8 @@ public class StoredNode<V> extends Node<V> {
    * Constructs a new StoredNode at location.
    *
    * @param nodeFactory The node factory for creating nodes from storage.
-   * @param location The location in the tree.
-   * @param hash The hash value of the node.
+   * @param location    The location in the tree.
+   * @param hash        The hash value of the node.
    */
   public StoredNode(final NodeFactory<V> nodeFactory, final Bytes location, final Bytes32 hash) {
     super(false, true);
@@ -71,12 +72,12 @@ public class StoredNode<V> extends Node<V> {
    * Accept a visitor to perform operations on the node based on a provided path.
    *
    * @param visitor The visitor to accept.
-   * @param path The path associated with a node.
+   * @param path    The path associated with a node.
    * @return The result of visitor's operation.
    */
   @Override
   public Node<V> accept(PathNodeVisitor<V> visitor, Bytes path) {
-    final Node<V> node = load();
+    Node<V> node = load();
     return node.accept(visitor, path);
   }
 
@@ -121,8 +122,7 @@ public class StoredNode<V> extends Node<V> {
    */
   @Override
   public Optional<V> getValue() {
-    final Node<V> node = load();
-    return node.getValue();
+    throw new RuntimeException("Should load storedNode before getValue");
   }
 
   /**
@@ -132,11 +132,7 @@ public class StoredNode<V> extends Node<V> {
    */
   @Override
   public Optional<Bytes32> getHash() {
-    if (hash.isPresent()) {
-      return hash;
-    }
-    final Node<V> node = load();
-    return node.getHash();
+    return hash;
   }
 
   /**
@@ -146,8 +142,7 @@ public class StoredNode<V> extends Node<V> {
    */
   @Override
   public Optional<Bytes> getCommitment() {
-    final Node<V> node = load();
-    return node.getCommitment();
+    throw new RuntimeException("Should load StoredNode before getCommitment");
   }
 
   @Override
@@ -162,8 +157,7 @@ public class StoredNode<V> extends Node<V> {
    */
   @Override
   public Bytes getEncodedValue() {
-    final Node<V> node = load();
-    return node.getEncodedValue();
+    throw new RuntimeException("Should load StoredNode before getEncodedValue");
   }
 
   /**
@@ -173,8 +167,7 @@ public class StoredNode<V> extends Node<V> {
    */
   @Override
   public List<Node<V>> getChildren() {
-    final Node<V> node = load();
-    return node.getChildren();
+    throw new RuntimeException("Should load StoredNode before getChildren");
   }
 
   /**
@@ -184,8 +177,7 @@ public class StoredNode<V> extends Node<V> {
    */
   @Override
   public String print() {
-    final Node<V> node = load();
-    return String.format("(stored) %s", node.print());
+    return String.format("Stored %s %s", location, hash);
   }
 
   /**
@@ -195,18 +187,21 @@ public class StoredNode<V> extends Node<V> {
    */
   @Override
   public String toDot(Boolean showNullNodes) {
-    String result =
-        getClass().getSimpleName()
-            + getLocation().orElse(Bytes.EMPTY)
-            + " [label=\"SD: "
-            + getLocation().orElse(Bytes.EMPTY)
-            + "\"]\n";
+    String result = getClass().getSimpleName()
+        + getLocation().orElse(Bytes.EMPTY)
+        + " [label=\"SD: "
+        + getLocation().orElse(Bytes.EMPTY)
+        + "\"]\n";
     return result;
   }
 
-  private Node<V> load() {
+  Optional<Node<V>> retrieve() {
+    return nodeFactory.retrieve(location, hash.orElse(null));
+  }
+
+  Node<V> load() {
     if (loadedNode.isEmpty()) {
-      loadedNode = nodeFactory.retrieve(location, hash.orElse(null));
+      loadedNode = retrieve();
     }
     if (loadedNode.isPresent()) {
       return loadedNode.get();

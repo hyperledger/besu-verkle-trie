@@ -34,7 +34,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("unused")
 public class GenesisTest {
 
   private static Stream<Arguments> provideGenesisAndStateRootExpected() {
@@ -57,11 +56,10 @@ public class GenesisTest {
     NodeLoaderMock nodeLoader = new NodeLoaderMock(nodeUpdater.storage);
     VerkleTrieBatchHasher batchProcessor = new VerkleTrieBatchHasher();
     StoredNodeFactory<Bytes> nodeFactory = new StoredNodeFactory<>(nodeLoader, value -> value);
-    StoredBatchedVerkleTrie<Bytes32, Bytes> trie =
-        new StoredBatchedVerkleTrie<>(batchProcessor, nodeFactory);
+    StoredBatchedVerkleTrie<Bytes32, Bytes> trie = new StoredBatchedVerkleTrie<>(batchProcessor, nodeFactory);
     InputStream input = GenesisTest.class.getResourceAsStream(genesisCSVFile);
     try (Reader reader = new InputStreamReader(input, "UTF-8");
-        CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT); ) {
+        CSVParser csvParser = new CSVParser(reader, CSVFormat.DEFAULT);) {
       for (CSVRecord csvRecord : csvParser) {
         Bytes32 key = Bytes32.fromHexString(csvRecord.get(0));
         Bytes value = Bytes.fromHexString(csvRecord.get(1));

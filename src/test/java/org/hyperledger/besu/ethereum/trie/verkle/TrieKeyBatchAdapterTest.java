@@ -52,10 +52,10 @@ public class TrieKeyBatchAdapterTest {
     expectedIndexes.add(Parameters.CODE_KECCAK_LEAF_KEY);
     expectedIndexes.add(Parameters.CODE_SIZE_LEAF_KEY);
 
-    final Map<Bytes32, Bytes32> generatedHashes =
-        adapter.manyTrieKeyHashes(address, expectedIndexes, new ArrayList<>(), new ArrayList<>());
+    final Map<Bytes32, Bytes> generatedStems =
+        adapter.manyStems(address, expectedIndexes, new ArrayList<>(), new ArrayList<>());
     final TrieKeyAdapter cachedTrieKeyAdapter =
-        new TrieKeyAdapter(new CachedPedersenHasher(generatedHashes, new FailedHasher()));
+        new TrieKeyAdapter(new CachedPedersenHasher(100, generatedStems, new FailedHasher()));
     assertThat(cachedTrieKeyAdapter.versionKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
@@ -94,12 +94,11 @@ public class TrieKeyBatchAdapterTest {
     expectedIndexes.add(storage);
     expectedIndexes.add(storage2);
 
-    final Map<Bytes32, Bytes32> generatedHashes =
-        adapter.manyTrieKeyHashes(
-            address, expectedIndexes, List.of(storage, storage2), new ArrayList<>());
+    final Map<Bytes32, Bytes> generatedStems =
+        adapter.manyStems(address, expectedIndexes, List.of(storage, storage2), new ArrayList<>());
 
     final TrieKeyAdapter cachedTrieKeyAdapter =
-        new TrieKeyAdapter(new CachedPedersenHasher(generatedHashes, new FailedHasher()));
+        new TrieKeyAdapter(new CachedPedersenHasher(100, generatedStems, new FailedHasher()));
     assertThat(cachedTrieKeyAdapter.versionKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
@@ -142,10 +141,10 @@ public class TrieKeyBatchAdapterTest {
     final UInt256 chunkId = UInt256.valueOf(24);
     expectedIndexes.add(chunkId);
 
-    final Map<Bytes32, Bytes32> generatedHashes =
-        adapter.manyTrieKeyHashes(address, expectedIndexes, new ArrayList<>(), List.of(chunkId));
+    final Map<Bytes32, Bytes> generatedStems =
+        adapter.manyStems(address, expectedIndexes, new ArrayList<>(), List.of(chunkId));
     final TrieKeyAdapter cachedTrieKeyAdapter =
-        new TrieKeyAdapter(new CachedPedersenHasher(generatedHashes, new FailedHasher()));
+        new TrieKeyAdapter(new CachedPedersenHasher(100, generatedStems, new FailedHasher()));
     assertThat(cachedTrieKeyAdapter.versionKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
@@ -203,11 +202,11 @@ public class TrieKeyBatchAdapterTest {
             .toList();
     assertThat(chunks.size()).as("Same number of chunks").isEqualTo(testData.chunks.size());
 
-    final Map<Bytes32, Bytes32> generatedHashes =
-        adapter.manyTrieKeyHashes(addr, new ArrayList<>(), new ArrayList<>(), chunkIds);
+    final Map<Bytes32, Bytes> generatedStems =
+        adapter.manyStems(addr, new ArrayList<>(), new ArrayList<>(), chunkIds);
 
     final TrieKeyAdapter cachedTrieKeyAdapter =
-        new TrieKeyAdapter(new CachedPedersenHasher(generatedHashes, new FailedHasher()));
+        new TrieKeyAdapter(new CachedPedersenHasher(100, generatedStems, new FailedHasher()));
     for (int i = 0; i < chunks.size(); ++i) {
       Bytes32 key = cachedTrieKeyAdapter.codeChunkKey(addr, UInt256.valueOf(i));
       Bytes32 expectedKey = Bytes32.fromHexString(testData.chunks.get(i).key);
@@ -220,7 +219,7 @@ public class TrieKeyBatchAdapterTest {
 
   private static class FailedHasher extends PedersenHasher {
     @Override
-    public Bytes32 trieKeyHash(final Bytes address, final Bytes32 index) {
+    public Bytes32 computeStem(final Bytes address, final Bytes32 index) {
       throw new RuntimeException("should be found in the cache not in the fallback hasher");
     }
   }

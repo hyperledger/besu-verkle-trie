@@ -46,46 +46,28 @@ public class TrieKeyBatchAdapterTest {
   @Test
   public void testAccountKeys() {
     final List<Bytes32> expectedIndexes = new ArrayList<>();
-    expectedIndexes.add(Parameters.VERSION_LEAF_KEY);
-    expectedIndexes.add(Parameters.BALANCE_LEAF_KEY);
-    expectedIndexes.add(Parameters.NONCE_LEAF_KEY);
-    expectedIndexes.add(Parameters.CODE_KECCAK_LEAF_KEY);
-    expectedIndexes.add(Parameters.CODE_SIZE_LEAF_KEY);
+    expectedIndexes.add(Parameters.BASIC_DATA_LEAF_KEY);
+    expectedIndexes.add(Parameters.CODE_HASH_LEAF_KEY);
 
     final Map<Bytes32, Bytes32> generatedHashes =
         adapter.manyTrieKeyHashes(address, expectedIndexes, new ArrayList<>(), new ArrayList<>());
     final TrieKeyAdapter cachedTrieKeyAdapter =
         new TrieKeyAdapter(new CachedPedersenHasher(generatedHashes, new FailedHasher()));
-    assertThat(cachedTrieKeyAdapter.versionKey(address))
+    assertThat(cachedTrieKeyAdapter.basicDataKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
                 "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034400"));
-    assertThat(cachedTrieKeyAdapter.balanceKey(address))
+    assertThat(cachedTrieKeyAdapter.codeHashKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
                 "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034401"));
-    assertThat(cachedTrieKeyAdapter.nonceKey(address))
-        .isEqualTo(
-            Bytes32.fromHexString(
-                "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034402"));
-    assertThat(cachedTrieKeyAdapter.codeKeccakKey(address))
-        .isEqualTo(
-            Bytes32.fromHexString(
-                "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034403"));
-    assertThat(cachedTrieKeyAdapter.codeSizeKey(address))
-        .isEqualTo(
-            Bytes32.fromHexString(
-                "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034404"));
   }
 
   @Test
   public void testAccountKeysWithStorage() {
     final List<Bytes32> expectedIndexes = new ArrayList<>();
-    expectedIndexes.add(Parameters.VERSION_LEAF_KEY);
-    expectedIndexes.add(Parameters.BALANCE_LEAF_KEY);
-    expectedIndexes.add(Parameters.NONCE_LEAF_KEY);
-    expectedIndexes.add(Parameters.CODE_KECCAK_LEAF_KEY);
-    expectedIndexes.add(Parameters.CODE_SIZE_LEAF_KEY);
+    expectedIndexes.add(Parameters.BASIC_DATA_LEAF_KEY);
+    expectedIndexes.add(Parameters.CODE_HASH_LEAF_KEY);
 
     final UInt256 storage = UInt256.valueOf(64);
     final UInt256 storage2 =
@@ -100,26 +82,14 @@ public class TrieKeyBatchAdapterTest {
 
     final TrieKeyAdapter cachedTrieKeyAdapter =
         new TrieKeyAdapter(new CachedPedersenHasher(generatedHashes, new FailedHasher()));
-    assertThat(cachedTrieKeyAdapter.versionKey(address))
+    assertThat(cachedTrieKeyAdapter.basicDataKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
                 "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034400"));
-    assertThat(cachedTrieKeyAdapter.balanceKey(address))
+    assertThat(cachedTrieKeyAdapter.codeHashKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
                 "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034401"));
-    assertThat(cachedTrieKeyAdapter.nonceKey(address))
-        .isEqualTo(
-            Bytes32.fromHexString(
-                "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034402"));
-    assertThat(cachedTrieKeyAdapter.codeKeccakKey(address))
-        .isEqualTo(
-            Bytes32.fromHexString(
-                "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034403"));
-    assertThat(cachedTrieKeyAdapter.codeSizeKey(address))
-        .isEqualTo(
-            Bytes32.fromHexString(
-                "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034404"));
     assertThat(cachedTrieKeyAdapter.storageKey(address, storage))
         .isEqualTo(
             Bytes32.fromHexString(
@@ -133,11 +103,8 @@ public class TrieKeyBatchAdapterTest {
   @Test
   public void testAccountKeysWithCode() {
     final List<Bytes32> expectedIndexes = new ArrayList<>();
-    expectedIndexes.add(Parameters.VERSION_LEAF_KEY);
-    expectedIndexes.add(Parameters.BALANCE_LEAF_KEY);
-    expectedIndexes.add(Parameters.NONCE_LEAF_KEY);
-    expectedIndexes.add(Parameters.CODE_KECCAK_LEAF_KEY);
-    expectedIndexes.add(Parameters.CODE_SIZE_LEAF_KEY);
+    expectedIndexes.add(Parameters.BASIC_DATA_LEAF_KEY);
+    expectedIndexes.add(Parameters.CODE_HASH_LEAF_KEY);
 
     final UInt256 chunkId = UInt256.valueOf(24);
     expectedIndexes.add(chunkId);
@@ -146,26 +113,14 @@ public class TrieKeyBatchAdapterTest {
         adapter.manyTrieKeyHashes(address, expectedIndexes, new ArrayList<>(), List.of(chunkId));
     final TrieKeyAdapter cachedTrieKeyAdapter =
         new TrieKeyAdapter(new CachedPedersenHasher(generatedHashes, new FailedHasher()));
-    assertThat(cachedTrieKeyAdapter.versionKey(address))
+    assertThat(cachedTrieKeyAdapter.basicDataKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
                 "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034400"));
-    assertThat(cachedTrieKeyAdapter.balanceKey(address))
+    assertThat(cachedTrieKeyAdapter.codeHashKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
                 "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034401"));
-    assertThat(cachedTrieKeyAdapter.nonceKey(address))
-        .isEqualTo(
-            Bytes32.fromHexString(
-                "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034402"));
-    assertThat(cachedTrieKeyAdapter.codeKeccakKey(address))
-        .isEqualTo(
-            Bytes32.fromHexString(
-                "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034403"));
-    assertThat(cachedTrieKeyAdapter.codeSizeKey(address))
-        .isEqualTo(
-            Bytes32.fromHexString(
-                "0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034404"));
     assertThat(cachedTrieKeyAdapter.codeChunkKey(address, chunkId))
         .isEqualTo(
             Bytes32.fromHexString(
@@ -174,12 +129,12 @@ public class TrieKeyBatchAdapterTest {
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  static class KeyValueData {
+  public static class KeyValueData {
     public String key;
     public String value;
   }
 
-  static class TestCodeData {
+  public static class TestCodeData {
     public String address;
     public String bytecode;
     public ArrayList<KeyValueData> chunks;
@@ -188,7 +143,7 @@ public class TrieKeyBatchAdapterTest {
   public static List<TestCodeData> JsonContractCodeData() throws IOException {
     InputStream inputStream =
         TrieKeyBatchAdapterTest.class.getResourceAsStream("/contractCode.json");
-    return objectMapper.readValue(inputStream, new TypeReference<List<TestCodeData>>() {});
+    return objectMapper.readValue(inputStream, new TypeReference<>() {});
   }
 
   @ParameterizedTest

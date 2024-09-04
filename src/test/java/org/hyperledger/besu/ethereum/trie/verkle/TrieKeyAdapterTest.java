@@ -84,43 +84,19 @@ public class TrieKeyAdapterTest {
   }
 
   @Test
-  public void testVersionKey() {
+  public void testBasicDataKey() {
     // Need to change this once commit is fixed
     Bytes32 expected =
         Bytes32.fromHexString("0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034400");
-    assertThat(adapter.versionKey(address)).isEqualTo(expected);
+    assertThat(adapter.basicDataKey(address)).isEqualTo(expected);
   }
 
   @Test
-  public void testBalanceKey() {
+  public void testCodeHashKey() {
     // Need to change this once commit is fixed
     Bytes32 expected =
         Bytes32.fromHexString("0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034401");
-    assertThat(adapter.balanceKey(address)).isEqualTo(expected);
-  }
-
-  @Test
-  public void testNonceKey() {
-    // Need to change this once commit is fixed
-    Bytes32 expected =
-        Bytes32.fromHexString("0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034402");
-    assertThat(adapter.nonceKey(address)).isEqualTo(expected);
-  }
-
-  @Test
-  public void testCodeKeccakKey() {
-    // Need to change this once commit is fixed
-    Bytes32 expected =
-        Bytes32.fromHexString("0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034403");
-    assertThat(adapter.codeKeccakKey(address)).isEqualTo(expected);
-  }
-
-  @Test
-  public void testCodeSizeKey() {
-    // Need to change this once commit is fixed
-    Bytes32 expected =
-        Bytes32.fromHexString("0x46b95e4e504b92d984c91d6f17eba4b60b904fb370818f0b6e74bc3ae5034404");
-    assertThat(adapter.codeSizeKey(address)).isEqualTo(expected);
+    assertThat(adapter.codeHashKey(address)).isEqualTo(expected);
   }
 
   private static final ObjectMapper objectMapper = new ObjectMapper();

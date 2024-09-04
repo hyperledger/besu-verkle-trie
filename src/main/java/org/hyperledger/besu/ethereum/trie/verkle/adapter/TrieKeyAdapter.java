@@ -15,17 +15,14 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.adapter;
 
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.BALANCE_LEAF_KEY;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_KECCAK_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.BASIC_DATA_LEAF_KEY;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_HASH_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_OFFSET;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.CODE_SIZE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_STORAGE_OFFSET;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.HEADER_STORAGE_SIZE;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.MAIN_STORAGE_OFFSET_SHIFT_LEFT_VERKLE_NODE_WIDTH;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.NONCE_LEAF_KEY;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH_LOG2;
-import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERSION_LEAF_KEY;
 
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
 
@@ -145,53 +142,23 @@ public class TrieKeyAdapter {
   }
 
   /**
-   * Generates a version key for a given address.
+   * Generates a basic data key for a given address.
    *
    * @param address The address.
    * @return The generated version key.
    */
-  public Bytes32 versionKey(Bytes address) {
-    return headerKey(address, VERSION_LEAF_KEY);
+  public Bytes32 basicDataKey(Bytes address) {
+    return headerKey(address, BASIC_DATA_LEAF_KEY);
   }
 
   /**
-   * Generates a balance key for a given address.
-   *
-   * @param address The address.
-   * @return The generated balance key.
-   */
-  public Bytes32 balanceKey(Bytes address) {
-    return headerKey(address, BALANCE_LEAF_KEY);
-  }
-
-  /**
-   * Generates a nonce key for a given address.
-   *
-   * @param address The address.
-   * @return The generated nonce key.
-   */
-  public Bytes32 nonceKey(Bytes address) {
-    return headerKey(address, NONCE_LEAF_KEY);
-  }
-
-  /**
-   * Generates a code Keccak key for a given address.
+   * Generates a code hash key for a given address.
    *
    * @param address The address.
    * @return The generated code Keccak key.
    */
-  public Bytes32 codeKeccakKey(Bytes address) {
-    return headerKey(address, CODE_KECCAK_LEAF_KEY);
-  }
-
-  /**
-   * Generates a code size key for a given address.
-   *
-   * @param address The address.
-   * @return The generated code size key.
-   */
-  public Bytes32 codeSizeKey(Bytes address) {
-    return (headerKey(address, CODE_SIZE_LEAF_KEY));
+  public Bytes32 codeHashKey(Bytes address) {
+    return headerKey(address, CODE_HASH_LEAF_KEY);
   }
 
   public int getNbChunk(Bytes bytecode) {

@@ -30,32 +30,12 @@ import org.apache.tuweni.bytes.Bytes32;
  *
  * @param <V> The type of the node's value.
  */
+@SuppressWarnings("DoubleBraceInitialization")
 public abstract class BranchNode<V> extends Node<V> {
   protected Optional<Bytes> location; // Location in the tree
   protected Optional<Bytes32> hash; // Vector commitment's hash
   protected Optional<Bytes> commitment; // Vector commitment serialized
   private final List<Node<V>> children; // List of children nodes
-
-  /**
-   * Constructs a new BranchNode with location, hash, path, and children.
-   *
-   * @param location The location in the tree.
-   * @param hash Node's vector commitment's hash.
-   * @param commitment Node's vector commitment.
-   * @param children The list of children nodes.
-   */
-  public BranchNode(
-      final Bytes location,
-      final Bytes32 hash,
-      final Bytes commitment,
-      final List<Node<V>> children) {
-    super(false, true);
-    assert (children.size() == maxChild());
-    this.location = Optional.of(location);
-    this.hash = Optional.of(hash);
-    this.commitment = Optional.of(commitment);
-    this.children = children;
-  }
 
   /**
    * Constructs a new BranchNode with optional location, optional hash, optional commitment and
@@ -80,21 +60,39 @@ public abstract class BranchNode<V> extends Node<V> {
   }
 
   /**
+   * Constructs a new BranchNode with location, hash, path, and children.
+   *
+   * @param location The location in the tree.
+   * @param hash Node's vector commitment's hash.
+   * @param commitment Node's vector commitment.
+   * @param children The list of children nodes.
+   */
+  public BranchNode(
+      final Bytes location,
+      final Bytes32 hash,
+      final Bytes commitment,
+      final List<Node<V>> children) {
+    this(Optional.of(location), Optional.of(hash), Optional.of(commitment), children);
+  }
+
+  /**
    * Constructs a new BranchNode with optional location and path, initializing children to
    * NullNodes.
    *
    * @param location The optional location in the tree.
    */
   public BranchNode(final Bytes location) {
-    super(false, true);
-    this.location = Optional.of(location);
-    this.children = new ArrayList<>();
-    for (int i = 0; i < maxChild(); i++) {
-      final NullNode<V> nullNode = new NullNode<V>();
-      children.add(nullNode);
-    }
-    hash = Optional.of(EMPTY_HASH);
-    commitment = Optional.empty();
+    this(
+        Optional.of(location),
+        Optional.of(EMPTY_HASH),
+        Optional.empty(),
+        new ArrayList<>() {
+          {
+            for (int i = 0; i < maxChild(); i++) {
+              add(new NullNode<>());
+            }
+          }
+        });
   }
 
   /**

@@ -24,7 +24,6 @@ import org.hyperledger.besu.ethereum.trie.verkle.hasher.PedersenHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
@@ -135,11 +134,5 @@ public class HashVisitor<V extends Bytes> implements PathNodeVisitor<V> {
   public Node<V> visit(final NullNode<V> nullNode, final Bytes path) {
     nullNode.markClean();
     return nullNode;
-  }
-
-  @Override
-  public Node<V> visit(final NullLeafNode<V> nullLeafNode, final Bytes path) {
-    nullLeafNode.markClean();
-    return nullLeafNode;
   }
 }

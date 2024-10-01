@@ -22,7 +22,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import org.hyperledger.besu.ethereum.trie.verkle.factory.StoredNodeFactory;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
@@ -303,7 +302,7 @@ public class NodeDirtyTest {
    */
   private List<Node<Bytes32>> collectNodes(
       Node<Bytes32> node, String path, List<Node<Bytes32>> nodes) {
-    if (node instanceof NullNode || node instanceof NullLeafNode) {
+    if (node instanceof NullNode) {
       return nodes;
     }
 

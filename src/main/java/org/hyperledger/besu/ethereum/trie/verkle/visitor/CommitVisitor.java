@@ -19,7 +19,6 @@ import org.hyperledger.besu.ethereum.trie.NodeUpdater;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
@@ -124,17 +123,5 @@ public class CommitVisitor<V> implements PathNodeVisitor<V> {
   @Override
   public Node<V> visit(final NullNode<V> nullNode, final Bytes location) {
     return nullNode;
-  }
-
-  /**
-   * Visits a NullLeafNode, indicating no changes to commit.
-   *
-   * @param nullLeafNode The NullLeafNode being visited.
-   * @param location The location in the Trie tree.
-   * @return The NullLeafNode indicating no changes.
-   */
-  @Override
-  public Node<V> visit(final NullLeafNode<V> nullLeafNode, final Bytes location) {
-    return nullLeafNode;
   }
 }

@@ -24,7 +24,6 @@ import org.hyperledger.besu.ethereum.trie.verkle.node.BranchNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StoredNode;
@@ -65,8 +64,7 @@ public class VerkleTrieBatchHasher {
   public void addNodeToBatch(final Optional<Bytes> maybeLocation, final Node<?> node) {
     maybeLocation.ifPresent(
         location -> {
-          if ((node instanceof NullNode<?> || node instanceof NullLeafNode<?>)
-              && !location.isEmpty()) {
+          if (node instanceof NullNode<?> && !location.isEmpty()) {
             updatedNodes.remove(location);
           } else {
             updatedNodes.put(location, node);

@@ -187,7 +187,7 @@ public abstract class StoredNode<V> extends Node<V> {
   @Override
   public String toDot(Boolean showNullNodes) {
     String result =
-        getClass().getSimpleName()
+        getName()
             + getLocation().orElse(Bytes.EMPTY)
             + " [label=\"SD: "
             + getLocation().orElse(Bytes.EMPTY)
@@ -206,9 +206,9 @@ public abstract class StoredNode<V> extends Node<V> {
     if (loadedNode.isPresent()) {
       return loadedNode.get();
     } else if (location.size() == 32) {
-      return new NullLeafNode<>();
+      return NullNode.nullLeafNode();
     } else {
-      return new NullNode<>();
+      return NullNode.nullNode();
     }
   }
 }

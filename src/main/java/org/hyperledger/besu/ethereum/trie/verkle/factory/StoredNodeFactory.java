@@ -21,7 +21,6 @@ import org.hyperledger.besu.ethereum.trie.NodeLoader;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StoredInternalNode;
@@ -52,9 +51,6 @@ enum NodeType {
  * @param <V> The type of values stored in Verkle Trie nodes.
  */
 public class StoredNodeFactory<V> implements NodeFactory<V> {
-
-  private final NullLeafNode<V> nullLeafNode = new NullLeafNode<V>();
-
   private final NodeLoader nodeLoader;
   private final Function<Bytes, V> valueDeserializer;
   private final Boolean areCommitmentsCompressed;
@@ -182,7 +178,7 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
     List<Node<V>> children = new ArrayList<>(nChild);
     for (int i = 0; i < nChild; i++) {
       if (scalars.get(i).compareTo(Bytes32.ZERO) == 0) {
-        children.add(new NullNode<V>());
+        children.add(NullNode.nullNode());
       } else {
         if (indices.containsKey((byte) i)) {
           children.add(
@@ -227,7 +223,7 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
     List<Node<V>> children = new ArrayList<>(nChild);
     for (int i = 0; i < nChild; i++) {
       if (values.get(i) == Bytes.EMPTY) {
-        children.add(nullLeafNode);
+        children.add(NullNode.nullLeafNode());
       } else {
         children.add(
             createLeafNode(

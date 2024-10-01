@@ -51,23 +51,6 @@ public class InternalNode<V> extends BranchNode<V> {
     this.previous = Optional.of(hash);
   }
 
-  /**
-   * Constructs a new InternalNode with location, hash, path, and children.
-   *
-   * @param location The location in the tree.
-   * @param hash Node's vector commitment's hash.
-   * @param commitment Node's vector commitment.
-   * @param children The list of children nodes.
-   */
-  public InternalNode(
-      final Optional<Bytes> location,
-      final Optional<Bytes32> hash,
-      final Optional<Bytes> commitment,
-      final List<Node<V>> children) {
-    super(location, hash, commitment, children);
-    this.previous = hash;
-  }
-
   public InternalNode(
       final Optional<Bytes> location,
       final Optional<Bytes32> hash,
@@ -122,9 +105,11 @@ public class InternalNode<V> extends BranchNode<V> {
   public InternalNode<V> replaceLocation(Bytes newLocation) {
     List<Node<V>> newChildren = new ArrayList<>(maxChild());
     for (int i = 0; i < maxChild(); i++) {
-      Bytes index = Bytes.of(i);
-      Bytes childLocation = Bytes.concatenate(newLocation, index);
-      newChildren.add(child((byte) i).replaceLocation(childLocation));
+      final Bytes index = Bytes.of(i);
+      final Bytes childLocation = Bytes.concatenate(newLocation, index);
+      final Node<V> vNode = child((byte) i).replaceLocation(childLocation);
+      vNode.markDirty();
+      newChildren.add(vNode);
     }
     return new InternalNode<V>(
         Optional.of(newLocation), hash, commitment, (Optional<Bytes32>) previous, newChildren);

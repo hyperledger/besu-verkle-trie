@@ -29,7 +29,7 @@ import org.apache.tuweni.bytes.Bytes;
  * @param <V> The type of node values.
  */
 public class GetVisitor<V> implements PathNodeVisitor<V> {
-  private final Node<V> NULL_NODE_RESULT = new NullLeafNode<>();
+  public final Node<V> NULL_NODE_RESULT = new NullLeafNode<>();
 
   /**
    * Visits a internalNode to determine the node matching a given path.

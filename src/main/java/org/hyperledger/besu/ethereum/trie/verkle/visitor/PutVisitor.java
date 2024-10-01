@@ -115,17 +115,18 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
       return stemNode;
     } else { // Divergent stems => push the stem node one level deeper
       InternalNode<V> newNode = new InternalNode<V>(location);
+      newNode.getChildren().forEach(Node::markDirty);
       newNode.setPrevious(stemNode.getPrevious());
       final int depth = location.size();
       StemNode<V> updatedStemNode = stemNode.replaceLocation(stem.slice(0, depth + 1));
+      updatedStemNode.markDirty();
       batchProcessor.ifPresent(
           processor -> processor.addNodeToBatch(updatedStemNode.getLocation(), updatedStemNode));
 
       newNode.replaceChild(stem.get(depth), updatedStemNode);
-      updatedStemNode.markDirty();
+      newNode.markDirty();
       batchProcessor.ifPresent(
           processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
-      newNode.markDirty();
       return newNode.accept(this, path);
     }
   }
@@ -168,6 +169,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     // Replace NullNode with a StemNode and visit it
     final Bytes leafKey = Bytes.concatenate(visited, path);
     final StemNode<V> stemNode = new StemNode<V>(visited, leafKey);
+    stemNode.getChildren().forEach(Node::markDirty);
     final Node<V> updatedNode = stemNode.accept(this, path);
     batchProcessor.ifPresent(
         processor -> processor.addNodeToBatch(updatedNode.getLocation(), updatedNode));

@@ -102,9 +102,9 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     stemNode.replaceChild(childIndex, updatedChild);
     if (allLeavesAreNull(stemNode)) {
       final NullNode<V> nullNode = new NullNode<>();
+      nullNode.markDirty();
       batchProcessor.ifPresent(
           processor -> processor.addNodeToBatch(stemNode.getLocation(), nullNode));
-      nullNode.markDirty();
       return nullNode;
     }
     if (!(child instanceof NullLeafNode)) { // Removed a genuine leaf-node
@@ -126,9 +126,9 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   @Override
   public Node<V> visit(LeafNode<V> leafNode, Bytes path) {
     final NullLeafNode<V> nullLeafNode = new NullLeafNode<>(leafNode.getPrevious());
+    nullLeafNode.markDirty();
     batchProcessor.ifPresent(
         processor -> processor.addNodeToBatch(leafNode.getLocation(), nullLeafNode));
-    nullLeafNode.markDirty();
     return nullLeafNode;
   }
 

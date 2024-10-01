@@ -117,7 +117,6 @@ public class StemNode<V> extends BranchNode<V> {
     super(location);
     for (int i = 0; i < maxChild(); i++) {
       NullLeafNode<V> nullLeafNode = new NullLeafNode<V>();
-      nullLeafNode.markDirty();
       replaceChild((byte) i, nullLeafNode);
     }
     this.stem = extractStem(stem);
@@ -216,9 +215,11 @@ public class StemNode<V> extends BranchNode<V> {
   public StemNode<V> replaceLocation(Bytes newLocation) {
     List<Node<V>> newChildren = new ArrayList<>(maxChild());
     for (int i = 0; i < maxChild(); i++) {
-      Bytes index = Bytes.of(i);
-      Bytes childLocation = Bytes.concatenate(newLocation, index);
-      newChildren.add(child((byte) i).replaceLocation(childLocation));
+      final Bytes index = Bytes.of(i);
+      final Bytes childLocation = Bytes.concatenate(newLocation, index);
+      final Node<V> vNode = child((byte) i).replaceLocation(childLocation);
+      vNode.markDirty();
+      newChildren.add(vNode);
     }
     return new StemNode<V>(
         Optional.of(newLocation),

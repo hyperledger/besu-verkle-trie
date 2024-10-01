@@ -60,6 +60,17 @@ public class NullNode<V> extends Node<V> {
   }
 
   /**
+   * Replace node's Location
+   *
+   * @param newLocation The new location for the Node
+   * @return The updated Node
+   */
+  @Override
+  public NullNode<V> replaceLocation(Bytes newLocation) {
+    return this;
+  }
+
+  /**
    * Get the hash associated with the `NullNode`.
    *
    * @return An optional containing the empty hash.

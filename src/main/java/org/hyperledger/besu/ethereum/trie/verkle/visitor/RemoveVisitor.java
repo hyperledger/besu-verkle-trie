@@ -22,7 +22,6 @@ import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
-import org.hyperledger.besu.ethereum.trie.verkle.node.StoredNode;
 
 import java.util.List;
 import java.util.Optional;
@@ -80,6 +79,8 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
     final Node<V> newNode = internalNode.child(onlyChildIndex.get()).accept(flatten);
     if (!(newNode instanceof NullNode)) { // Flatten StemNode one-level up
       newNode.markDirty();
+      batchProcessor.ifPresent(
+          processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
       return newNode;
     }
     return internalNode; // Unique child was a internalNode, do nothing
@@ -158,22 +159,19 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
   /**
    * Finds the index of the only non-null child in the list of children nodes.
    *
-   * @param branchNode BranchNode to scan for unique child.
+   * @param internalNode BranchNode to scan for unique child.
    * @return The index of the only non-null child if it exists, or an empty optional if there is no
    *     or more than one non-null child.
    */
-  Optional<Byte> findOnlyChild(final InternalNode<V> branchNode) {
-    final List<Node<V>> children = branchNode.getChildren();
+  Optional<Byte> findOnlyChild(final InternalNode<V> internalNode) {
+    final List<Node<V>> children = internalNode.getChildren();
     Optional<Byte> onlyChildIndex = Optional.empty();
     for (int i = 0; i < children.size(); ++i) {
       if (!(children.get(i) instanceof NullNode)) {
-        if (!(children.get(i) instanceof StoredNode)
-            || !children.get(i).getEncodedValue().isEmpty()) {
-          if (onlyChildIndex.isPresent()) {
-            return Optional.empty();
-          }
-          onlyChildIndex = Optional.of((byte) i);
+        if (onlyChildIndex.isPresent()) {
+          return Optional.empty();
         }
+        onlyChildIndex = Optional.of((byte) i);
       }
     }
     return onlyChildIndex;

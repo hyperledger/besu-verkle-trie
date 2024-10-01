@@ -15,17 +15,16 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.node;
 
+import org.hyperledger.besu.ethereum.rlp.BytesValueRLPOutput;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.NodeVisitor;
 import org.hyperledger.besu.ethereum.trie.verkle.visitor.PathNodeVisitor;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.rlp.RLP;
-import org.apache.tuweni.rlp.RLPWriter;
 
 /**
  * Represents a stem node in the Verkle Trie.
@@ -207,25 +206,31 @@ public class StemNode<V> extends BranchNode<V> {
   }
 
   /**
-   * Creates a new node by replacing its location
+   * Replace node's Location
    *
-   * @param location The location in the tree.
-   * @return StemNode with new location.
+   * @param newLocation The new location for the Node
+   * @return The updated Node
    */
-  public StemNode<V> replaceLocation(final Bytes location) {
-    StemNode<V> vStemNode =
-        new StemNode<>(
-            Optional.of(location),
-            stem,
-            getHash(),
-            Optional.empty(),
-            getCommitment(),
-            leftHash,
-            leftCommitment,
-            rightHash,
-            rightCommitment,
-            getChildren());
-    return vStemNode;
+  @Override
+  @SuppressWarnings("unchecked")
+  public StemNode<V> replaceLocation(Bytes newLocation) {
+    List<Node<V>> newChildren = new ArrayList<>(maxChild());
+    for (int i = 0; i < maxChild(); i++) {
+      Bytes index = Bytes.of(i);
+      Bytes childLocation = Bytes.concatenate(newLocation, index);
+      newChildren.add(child((byte) i).replaceLocation(childLocation));
+    }
+    return new StemNode<V>(
+        Optional.of(newLocation),
+        stem,
+        hash,
+        (Optional<Bytes32>) previous,
+        commitment,
+        leftHash,
+        leftCommitment,
+        rightHash,
+        rightCommitment,
+        newChildren);
   }
 
   /**
@@ -262,16 +267,17 @@ public class StemNode<V> extends BranchNode<V> {
     if (encodedValue.isPresent()) {
       return encodedValue.get();
     }
-    List<Bytes> values =
-        Arrays.asList(
-            getStem(),
-            (Bytes) getHash().get(),
-            getCommitment().get(),
-            (Bytes) getLeftHash().get(),
-            getLeftCommitment().get(),
-            (Bytes) getRightHash().get(),
-            getRightCommitment().get());
-    Bytes result = RLP.encodeList(values, RLPWriter::writeValue);
+    BytesValueRLPOutput values = new BytesValueRLPOutput();
+    values.startList();
+    values.writeByte((byte) (getLocation().get().size() & 0xff));
+    values.writeBytes(encodeCommitment(getCommitment().get()));
+    values.writeBytes(encodeCommitment(getLeftCommitment().get()));
+    values.writeBytes(encodeCommitment(getRightCommitment().get()));
+    values.writeBytes(encodeScalar(getLeftHash().get()));
+    values.writeBytes(encodeScalar(getRightHash().get()));
+    values.writeList(getChildren(), (child, writer) -> writer.writeBytes(child.getEncodedValue()));
+    values.endList();
+    Bytes result = values.encoded();
     this.encodedValue = Optional.of(result);
     return result;
   }
@@ -287,10 +293,10 @@ public class StemNode<V> extends BranchNode<V> {
     builder.append(String.format("Stem: %s", stem));
     for (int i = 0; i < maxChild(); i++) {
       final Node<V> child = child((byte) i);
-      if (!(child instanceof NullNode)) {
+      if (!(child instanceof NullNode) && !(child instanceof NullLeafNode)) {
         final String label = String.format("[%02x] ", i);
-        final String childRep = child.print().replaceAll("\n\t", "\n\t\t");
-        builder.append("\n\t").append(label).append(childRep);
+        final String childRep = child.print().replaceAll("\n  ", "\n    ");
+        builder.append("\n  ").append(label).append(childRep);
       }
     }
     return builder.toString();

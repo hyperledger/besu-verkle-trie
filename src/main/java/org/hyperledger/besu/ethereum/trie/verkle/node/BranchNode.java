@@ -31,7 +31,7 @@ import org.apache.tuweni.bytes.Bytes32;
  * @param <V> The type of the node's value.
  */
 public abstract class BranchNode<V> extends Node<V> {
-  private final Optional<Bytes> location; // Location in the tree
+  protected Optional<Bytes> location; // Location in the tree
   protected Optional<Bytes32> hash; // Vector commitment's hash
   protected Optional<Bytes> commitment; // Vector commitment serialized
   private final List<Node<V>> children; // List of children nodes

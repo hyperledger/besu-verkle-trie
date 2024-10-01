@@ -67,7 +67,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     final byte index = path.get(0);
     visited = Bytes.concatenate(visited, Bytes.of(index));
     final Node<V> child = internalNode.child(index);
-    final Node<V> updatedChild = internalNode.child(index).accept(this, path.slice(1));
+    final Node<V> updatedChild = child.accept(this, path.slice(1));
     if (child instanceof NullNode<V> || child instanceof NullLeafNode<V>) {
       batchProcessor.ifPresent(
           processor -> processor.addNodeToBatch(updatedChild.getLocation(), updatedChild));
@@ -97,11 +97,12 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     final Bytes newStem = fullPath.slice(0, stem.size());
     if (stem.compareTo(newStem) == 0) { // Same stem => skip to leaf in StemNode
       final byte index = fullPath.get(newStem.size());
-      visited = Bytes.concatenate(newStem, Bytes.of(index));
+      visited = Bytes.concatenate(visited, Bytes.of(index));
       final Node<V> child = stemNode.child(index);
-      final Node<V> updatedChild = stemNode.child(index).accept(this, fullPath);
+      final Node<V> updatedChild = stemNode.child(index).accept(this, path.slice(1));
       if (child instanceof NullNode<V> || child instanceof NullLeafNode<V>) {
-        // This call may lead to the removal of the node from the batch if a null node is inserted.
+        // This call may lead to the removal of the node from the batch if a null node
+        // is inserted.
         batchProcessor.ifPresent(
             processor -> processor.addNodeToBatch(updatedChild.getLocation(), updatedChild));
       }
@@ -142,14 +143,15 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     LeafNode<V> newNode;
     oldValue = leafNode.getValue();
     if (oldValue != value) {
-      newNode = new LeafNode<>(leafNode.getLocation(), value, oldValue);
+      newNode =
+          new LeafNode<>(
+              leafNode.getLocation(), value, leafNode.isPersisted() ? oldValue : Optional.empty());
       batchProcessor.ifPresent(
           processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
       newNode.markDirty();
     } else {
       newNode = leafNode;
     }
-    visited = Bytes.EMPTY;
     return newNode;
   }
 
@@ -184,10 +186,10 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
   public Node<V> visit(final NullLeafNode<V> nullLeafNode, final Bytes path) {
     assert path.size() < 33;
     oldValue = Optional.empty();
+    visited = Bytes.concatenate(visited, path.slice(path.size()));
     LeafNode<V> newNode = new LeafNode<>(visited, value);
     batchProcessor.ifPresent(processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
     newNode.markDirty();
-    visited = Bytes.EMPTY;
     return newNode;
   }
 

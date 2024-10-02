@@ -211,6 +211,15 @@ public abstract class Node<V> {
   public abstract String toDot(Boolean showNullNodes);
 
   /**
+   * Gets the name for the DOT representation for the Node.
+   *
+   * @return name for the DOT representation for the Node.
+   */
+  public String getName() {
+    return getClass().getSimpleName();
+  }
+
+  /**
    * Generates DOT representation for the Node.
    *
    * <p>Representation does not contain repeating edges.

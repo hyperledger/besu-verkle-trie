@@ -17,7 +17,6 @@ package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
@@ -29,8 +28,6 @@ import org.apache.tuweni.bytes.Bytes;
  * @param <V> The type of node values.
  */
 public class GetVisitor<V> implements PathNodeVisitor<V> {
-
-  private final Node<V> NULL_LEAF_NODE = new NullLeafNode<>();
 
   /**
    * Visits a internalNode to determine the node matching a given path.
@@ -57,7 +54,7 @@ public class GetVisitor<V> implements PathNodeVisitor<V> {
     final Bytes extension = stemNode.getPathExtension().get();
     final int prefix = path.commonPrefixLength(extension);
     if (prefix < extension.size()) {
-      return NULL_LEAF_NODE;
+      return NullNode.newNullLeafNode();
     }
     final byte childIndex = path.get(prefix); // extract suffix
     return stemNode.child(childIndex).accept(this, path.slice(prefix + 1));
@@ -73,17 +70,5 @@ public class GetVisitor<V> implements PathNodeVisitor<V> {
   @Override
   public Node<V> visit(NullNode<V> nullNode, Bytes path) {
     return nullNode;
-  }
-
-  /**
-   * Visits a NullLeafNode to determine the matching node based on a given path.
-   *
-   * @param nullLeafNode The NullLeafNode being visited.
-   * @param path The path to search in the tree.
-   * @return NullLeafNode represents a missing leaf node on the path.
-   */
-  @Override
-  public Node<V> visit(NullLeafNode<V> nullLeafNode, Bytes path) {
-    return nullLeafNode;
   }
 }

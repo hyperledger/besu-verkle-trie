@@ -89,7 +89,7 @@ public abstract class BranchNode<V> extends Node<V> {
         new ArrayList<>() {
           {
             for (int i = 0; i < maxChild(); i++) {
-              add(new NullNode<>());
+              add(NullNode.nullNode());
             }
           }
         });
@@ -236,7 +236,7 @@ public abstract class BranchNode<V> extends Node<V> {
   public String toDot(Boolean showNullNodes) {
     StringBuilder result =
         new StringBuilder()
-            .append(getClass().getSimpleName())
+            .append(getName())
             .append(getLocation().orElse(Bytes.EMPTY))
             .append(" [label=\"B: ")
             .append(getLocation().orElse(Bytes.EMPTY))
@@ -247,10 +247,10 @@ public abstract class BranchNode<V> extends Node<V> {
 
     for (Node<V> child : getChildren()) {
       String edgeString =
-          getClass().getSimpleName()
+          getName()
               + getLocation().orElse(Bytes.EMPTY)
               + " -> "
-              + child.getClass().getSimpleName()
+              + child.getName()
               + child.getLocation().orElse(Bytes.EMPTY)
               + "\n";
 

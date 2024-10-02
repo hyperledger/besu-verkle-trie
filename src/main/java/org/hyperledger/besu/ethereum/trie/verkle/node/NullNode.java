@@ -32,8 +32,15 @@ import org.apache.tuweni.bytes.Bytes32;
  */
 public class NullNode<V> extends Node<V> {
 
-  public NullNode() {
+  private boolean isLeaf;
+
+  private NullNode() {
     super(false, true);
+  }
+
+  private NullNode(Optional<V> previousValue) {
+    super(false, true);
+    this.previous = previousValue;
   }
 
   /**
@@ -95,6 +102,10 @@ public class NullNode<V> extends Node<V> {
     dirty = true;
   }
 
+  public boolean isLeaf() {
+    return isLeaf;
+  }
+
   /**
    * Get a string representation of the `NullNode`.
    *
@@ -102,7 +113,7 @@ public class NullNode<V> extends Node<V> {
    */
   @Override
   public String print() {
-    return "[NULL]";
+    return isLeaf() ? "[NULL-LEAF]" : "[NULL]";
   }
 
   /**
@@ -115,12 +126,44 @@ public class NullNode<V> extends Node<V> {
     if (!showRepeatingEdges) {
       return "";
     }
-    String result =
-        getClass().getSimpleName()
-            + getLocation().orElse(Bytes.EMPTY)
-            + " [label=\"NL: "
-            + getLocation().orElse(Bytes.EMPTY)
-            + "\"]\n";
-    return result;
+    return getName()
+        + getLocation().orElse(Bytes.EMPTY)
+        + " [label=\"NL: "
+        + getLocation().orElse(Bytes.EMPTY)
+        + "\"]\n";
+  }
+
+  @Override
+  public String getName() {
+    return isLeaf() ? "NullLeafNode" : "NullNode";
+  }
+
+  @SuppressWarnings("rawtypes")
+  private static NullNode nullLeafNode;
+
+  @SuppressWarnings("rawtypes")
+  private static NullNode nullNode;
+
+  @SuppressWarnings("unchecked")
+  public static <T> NullNode<T> nullNode() {
+    if (nullNode == null) {
+      nullNode = new NullNode<>();
+    }
+    return nullNode;
+  }
+
+  @SuppressWarnings("unchecked")
+  public static <T> NullNode<T> newNullLeafNode() {
+    if (nullLeafNode == null) {
+      nullLeafNode = new NullNode<>();
+      nullLeafNode.isLeaf = true;
+    }
+    return nullLeafNode;
+  }
+
+  public static <T> NullNode<T> newNullLeafNode(Optional<T> previousValue) {
+    NullNode<T> nullLeafNode = new NullNode<>(previousValue);
+    nullLeafNode.isLeaf = true;
+    return nullLeafNode;
   }
 }

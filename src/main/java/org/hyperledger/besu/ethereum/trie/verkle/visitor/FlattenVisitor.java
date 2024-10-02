@@ -18,7 +18,6 @@ package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 import org.hyperledger.besu.ethereum.trie.verkle.VerkleTrieBatchHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
@@ -45,7 +44,7 @@ public class FlattenVisitor<V> implements NodeVisitor<V> {
 
   @Override
   public Node<V> visit(InternalNode<V> internalNode) {
-    return new NullNode<>();
+    return NullNode.nullNode();
   }
 
   @Override
@@ -54,20 +53,22 @@ public class FlattenVisitor<V> implements NodeVisitor<V> {
     final Bytes newLocation = location.slice(0, location.size() - 1);
     // Should not flatten root node
     if (newLocation.isEmpty()) {
-      return new NullNode<>();
+      return NullNode.nullNode();
     }
     final StemNode<V> updateStemNode = stemNode.replaceLocation(newLocation);
     updateStemNode.markDirty();
     batchProcessor.ifPresent(
         processor -> {
-          final NullNode<V> nullNode = new NullNode<>();
+          final NullNode<V> nullNode = NullNode.nullNode();
           nullNode.markDirty();
           processor.addNodeToBatch(stemNode.getLocation(), nullNode);
           processor.addNodeToBatch(updateStemNode.getLocation(), updateStemNode);
           for (int i = 0; i < StemNode.maxChild(); i++) {
             Byte index = Bytes.of(i).get(0);
-            if (!(stemNode.child(index) instanceof NullLeafNode)) {
-              final NullLeafNode<V> childNullNode = new NullLeafNode<>();
+            boolean isNullLeafNode =
+                stemNode.child(index) instanceof NullNode<V> nullLeafNode && nullLeafNode.isLeaf();
+            if (!isNullLeafNode) {
+              final NullNode<V> childNullNode = NullNode.newNullLeafNode();
               childNullNode.markDirty();
               processor.addNodeToBatch(stemNode.child(index).getLocation(), childNullNode);
               processor.addNodeToBatch(

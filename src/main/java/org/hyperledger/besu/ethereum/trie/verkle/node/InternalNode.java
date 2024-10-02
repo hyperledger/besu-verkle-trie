@@ -196,7 +196,7 @@ public class InternalNode<V> extends BranchNode<V> {
   public String toDot(Boolean showNullNodes) {
     StringBuilder result =
         new StringBuilder()
-            .append(getClass().getSimpleName())
+            .append(getName())
             .append(getLocation().orElse(Bytes.EMPTY))
             .append(" [label=\"I: ")
             .append(getLocation().orElse(Bytes.EMPTY))
@@ -206,10 +206,10 @@ public class InternalNode<V> extends BranchNode<V> {
 
     for (Node<V> child : getChildren()) {
       String edgeString =
-          getClass().getSimpleName()
+          getName()
               + getLocation().orElse(Bytes.EMPTY)
               + " -> "
-              + child.getClass().getSimpleName()
+              + child.getName()
               + child.getLocation().orElse(Bytes.EMPTY)
               + "\n";
 

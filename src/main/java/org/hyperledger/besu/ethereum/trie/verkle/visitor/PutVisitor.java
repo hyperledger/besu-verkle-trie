@@ -19,7 +19,6 @@ import org.hyperledger.besu.ethereum.trie.verkle.VerkleTrieBatchHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
@@ -68,7 +67,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
     visited = Bytes.concatenate(visited, Bytes.of(index));
     final Node<V> child = internalNode.child(index);
     final Node<V> updatedChild = child.accept(this, path.slice(1));
-    if (child instanceof NullNode<V> || child instanceof NullLeafNode<V>) {
+    if (child instanceof NullNode<V>) {
       batchProcessor.ifPresent(
           processor -> processor.addNodeToBatch(updatedChild.getLocation(), updatedChild));
     }
@@ -100,7 +99,7 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
       visited = Bytes.concatenate(visited, Bytes.of(index));
       final Node<V> child = stemNode.child(index);
       final Node<V> updatedChild = stemNode.child(index).accept(this, path.slice(1));
-      if (child instanceof NullNode<V> || child instanceof NullLeafNode<V>) {
+      if (child instanceof NullNode<V>) {
         // This call may lead to the removal of the node from the batch if a null node
         // is inserted.
         batchProcessor.ifPresent(
@@ -166,33 +165,23 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
   @Override
   public Node<V> visit(final NullNode<V> nullNode, final Bytes path) {
     assert path.size() < 33;
+    Node<V> newNode = createNode(nullNode, path);
+    batchProcessor.ifPresent(processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
+    newNode.markDirty();
+    return newNode;
+  }
+
+  private Node<V> createNode(final NullNode<V> nullNode, final Bytes path) {
+    if (nullNode.isLeaf()) {
+      oldValue = Optional.empty();
+      visited = Bytes.concatenate(visited, path.slice(path.size()));
+      return new LeafNode<>(visited, value);
+    }
     // Replace NullNode with a StemNode and visit it
     final Bytes leafKey = Bytes.concatenate(visited, path);
     final StemNode<V> stemNode = new StemNode<V>(visited, leafKey);
     stemNode.getChildren().forEach(Node::markDirty);
-    final Node<V> updatedNode = stemNode.accept(this, path);
-    batchProcessor.ifPresent(
-        processor -> processor.addNodeToBatch(updatedNode.getLocation(), updatedNode));
-    updatedNode.markDirty();
-    return updatedNode;
-  }
-
-  /**
-   * Visits a null leaf node to insert a value associated with the provided path.
-   *
-   * @param nullLeafNode The null leaf node to visit.
-   * @param path The path associated with the value to insert or update.
-   * @return A new leaf node containing the inserted or updated value.
-   */
-  @Override
-  public Node<V> visit(final NullLeafNode<V> nullLeafNode, final Bytes path) {
-    assert path.size() < 33;
-    oldValue = Optional.empty();
-    visited = Bytes.concatenate(visited, path.slice(path.size()));
-    LeafNode<V> newNode = new LeafNode<>(visited, value);
-    batchProcessor.ifPresent(processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
-    newNode.markDirty();
-    return newNode;
+    return stemNode.accept(this, path);
   }
 
   /**

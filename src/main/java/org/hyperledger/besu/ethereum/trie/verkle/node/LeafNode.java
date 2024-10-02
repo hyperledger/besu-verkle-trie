@@ -176,14 +176,14 @@ public class LeafNode<V> extends Node<V> {
   public String toDot(Boolean showNullNodes) {
     Bytes locationBytes = getLocation().orElse(Bytes.EMPTY);
 
-    return getClass().getSimpleName()
+    return getName()
         + locationBytes
         + " [label=\"L: "
         + locationBytes
         + "\nSuffix: "
         + Bytes.of(locationBytes.get(locationBytes.size() - 1))
         + "\"]\n"
-        + getClass().getSimpleName()
+        + getName()
         + locationBytes
         + " -> "
         + "Value"

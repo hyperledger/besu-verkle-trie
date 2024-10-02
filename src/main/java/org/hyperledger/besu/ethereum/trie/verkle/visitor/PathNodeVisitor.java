@@ -18,7 +18,6 @@ package org.hyperledger.besu.ethereum.trie.verkle.visitor;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
-import org.hyperledger.besu.ethereum.trie.verkle.node.NullLeafNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.NullNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.StemNode;
 
@@ -74,16 +73,5 @@ public interface PathNodeVisitor<V> {
    */
   default Node<V> visit(NullNode<V> nullNode, Bytes path) {
     return nullNode;
-  }
-
-  /**
-   * Visits a null leaf node with a specified path.
-   *
-   * @param nullLeafNode The null leaf node to visit.
-   * @param path The path associated with the visit.
-   * @return The result of visiting the null node.
-   */
-  default Node<V> visit(NullLeafNode<V> nullLeafNode, Bytes path) {
-    return nullLeafNode;
   }
 }

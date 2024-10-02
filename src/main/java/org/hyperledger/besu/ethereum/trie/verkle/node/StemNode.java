@@ -116,7 +116,7 @@ public class StemNode<V> extends BranchNode<V> {
   public StemNode(final Bytes location, final Bytes stem) {
     super(location);
     for (int i = 0; i < maxChild(); i++) {
-      NullLeafNode<V> nullLeafNode = new NullLeafNode<V>();
+      NullNode<V> nullLeafNode = NullNode.newNullLeafNode();
       replaceChild((byte) i, nullLeafNode);
     }
     this.stem = extractStem(stem);
@@ -294,7 +294,7 @@ public class StemNode<V> extends BranchNode<V> {
     builder.append(String.format("Stem: %s", stem));
     for (int i = 0; i < maxChild(); i++) {
       final Node<V> child = child((byte) i);
-      if (!(child instanceof NullNode) && !(child instanceof NullLeafNode)) {
+      if (!(child instanceof NullNode)) {
         final String label = String.format("[%02x] ", i);
         final String childRep = child.print().replaceAll("\n  ", "\n    ");
         builder.append("\n  ").append(label).append(childRep);
@@ -311,7 +311,7 @@ public class StemNode<V> extends BranchNode<V> {
   public String toDot(Boolean showNullNodes) {
     StringBuilder result =
         new StringBuilder()
-            .append(getClass().getSimpleName())
+            .append(getName())
             .append(getLocation().orElse(Bytes.EMPTY))
             .append(" [label=\"S: ")
             .append(getLocation().orElse(Bytes.EMPTY))
@@ -325,10 +325,10 @@ public class StemNode<V> extends BranchNode<V> {
 
     for (Node<V> child : getChildren()) {
       String edgeString =
-          getClass().getSimpleName()
+          getName()
               + getLocation().orElse(Bytes.EMPTY)
               + " -> "
-              + child.getClass().getSimpleName()
+              + child.getName()
               + child.getLocation().orElse(Bytes.EMPTY)
               + "\n";
 

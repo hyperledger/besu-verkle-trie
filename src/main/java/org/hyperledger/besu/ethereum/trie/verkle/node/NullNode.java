@@ -153,7 +153,7 @@ public class NullNode<V> extends Node<V> {
   }
 
   @SuppressWarnings("unchecked")
-  public static <T> NullNode<T> nullLeafNode() {
+  public static <T> NullNode<T> newNullLeafNode() {
     if (nullLeafNode == null) {
       nullLeafNode = new NullNode<>();
       nullLeafNode.isLeaf = true;
@@ -161,7 +161,7 @@ public class NullNode<V> extends Node<V> {
     return nullLeafNode;
   }
 
-  public static <T> NullNode<T> nullLeafNode(Optional<T> previousValue) {
+  public static <T> NullNode<T> newNullLeafNode(Optional<T> previousValue) {
     NullNode<T> nullLeafNode = new NullNode<>(previousValue);
     nullLeafNode.isLeaf = true;
     return nullLeafNode;

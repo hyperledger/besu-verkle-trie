@@ -116,7 +116,7 @@ public class StemNode<V> extends BranchNode<V> {
   public StemNode(final Bytes location, final Bytes stem) {
     super(location);
     for (int i = 0; i < maxChild(); i++) {
-      NullNode<V> nullLeafNode = NullNode.nullLeafNode();
+      NullNode<V> nullLeafNode = NullNode.newNullLeafNode();
       replaceChild((byte) i, nullLeafNode);
     }
     this.stem = extractStem(stem);

@@ -125,7 +125,7 @@ public class RemoveVisitor<V> implements PathNodeVisitor<V> {
    */
   @Override
   public Node<V> visit(LeafNode<V> leafNode, Bytes path) {
-    final NullNode<V> nullLeafNode = NullNode.nullLeafNode(leafNode.getPrevious());
+    final NullNode<V> nullLeafNode = NullNode.newNullLeafNode(leafNode.getPrevious());
     nullLeafNode.markDirty();
     batchProcessor.ifPresent(
         processor -> processor.addNodeToBatch(leafNode.getLocation(), nullLeafNode));

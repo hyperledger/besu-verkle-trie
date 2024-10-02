@@ -206,7 +206,7 @@ public abstract class StoredNode<V> extends Node<V> {
     if (loadedNode.isPresent()) {
       return loadedNode.get();
     } else if (location.size() == 32) {
-      return NullNode.nullLeafNode();
+      return NullNode.newNullLeafNode();
     } else {
       return NullNode.nullNode();
     }

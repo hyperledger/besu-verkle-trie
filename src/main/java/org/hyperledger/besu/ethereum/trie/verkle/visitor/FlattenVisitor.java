@@ -68,7 +68,7 @@ public class FlattenVisitor<V> implements NodeVisitor<V> {
             boolean isNullLeafNode =
                 stemNode.child(index) instanceof NullNode<V> nullLeafNode && nullLeafNode.isLeaf();
             if (!isNullLeafNode) {
-              final NullNode<V> childNullNode = NullNode.nullLeafNode();
+              final NullNode<V> childNullNode = NullNode.newNullLeafNode();
               childNullNode.markDirty();
               processor.addNodeToBatch(stemNode.child(index).getLocation(), childNullNode);
               processor.addNodeToBatch(

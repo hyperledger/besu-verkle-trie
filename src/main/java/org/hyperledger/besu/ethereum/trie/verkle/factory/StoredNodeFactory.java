@@ -223,7 +223,7 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
     List<Node<V>> children = new ArrayList<>(nChild);
     for (int i = 0; i < nChild; i++) {
       if (values.get(i) == Bytes.EMPTY) {
-        children.add(NullNode.nullLeafNode());
+        children.add(NullNode.newNullLeafNode());
       } else {
         children.add(
             createLeafNode(

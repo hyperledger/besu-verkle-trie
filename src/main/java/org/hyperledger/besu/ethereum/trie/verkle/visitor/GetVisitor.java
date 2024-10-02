@@ -54,7 +54,7 @@ public class GetVisitor<V> implements PathNodeVisitor<V> {
     final Bytes extension = stemNode.getPathExtension().get();
     final int prefix = path.commonPrefixLength(extension);
     if (prefix < extension.size()) {
-      return NullNode.nullLeafNode();
+      return NullNode.newNullLeafNode();
     }
     final byte childIndex = path.get(prefix); // extract suffix
     return stemNode.child(childIndex).accept(this, path.slice(prefix + 1));

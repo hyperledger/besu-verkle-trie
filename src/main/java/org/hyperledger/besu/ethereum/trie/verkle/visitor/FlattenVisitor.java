@@ -57,12 +57,12 @@ public class FlattenVisitor<V> implements NodeVisitor<V> {
       return new NullNode<>();
     }
     final StemNode<V> updateStemNode = stemNode.replaceLocation(newLocation);
+    updateStemNode.markDirty();
     batchProcessor.ifPresent(
         processor -> {
           final NullNode<V> nullNode = new NullNode<>();
           nullNode.markDirty();
           processor.addNodeToBatch(stemNode.getLocation(), nullNode);
-          updateStemNode.markDirty();
           processor.addNodeToBatch(updateStemNode.getLocation(), updateStemNode);
           for (int i = 0; i < StemNode.maxChild(); i++) {
             Byte index = Bytes.of(i).get(0);

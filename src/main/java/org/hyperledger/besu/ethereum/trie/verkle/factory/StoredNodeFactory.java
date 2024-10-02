@@ -52,6 +52,9 @@ enum NodeType {
  * @param <V> The type of values stored in Verkle Trie nodes.
  */
 public class StoredNodeFactory<V> implements NodeFactory<V> {
+
+  private final NullLeafNode<V> nullLeafNode = new NullLeafNode<V>();
+
   private final NodeLoader nodeLoader;
   private final Function<Bytes, V> valueDeserializer;
   private final Boolean areCommitmentsCompressed;
@@ -224,7 +227,7 @@ public class StoredNodeFactory<V> implements NodeFactory<V> {
     List<Node<V>> children = new ArrayList<>(nChild);
     for (int i = 0; i < nChild; i++) {
       if (values.get(i) == Bytes.EMPTY) {
-        children.add(new NullLeafNode<V>());
+        children.add(nullLeafNode);
       } else {
         children.add(
             createLeafNode(

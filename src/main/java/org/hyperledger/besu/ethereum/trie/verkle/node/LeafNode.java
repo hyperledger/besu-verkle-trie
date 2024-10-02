@@ -42,10 +42,7 @@ public class LeafNode<V> extends Node<V> {
    * @param value The value associated with the node.
    */
   public LeafNode(final Bytes location, final V value) {
-    super(false, false);
-    this.location = Optional.of(location);
-    this.value = value;
-    this.valueSerializer = val -> (Bytes) val;
+    this(Optional.of(location), value, Optional.empty());
   }
 
   /**
@@ -56,11 +53,10 @@ public class LeafNode<V> extends Node<V> {
    */
   public LeafNode(final Optional<Bytes> location, final V value) {
     this(location, value, Optional.of(value));
-    this.previous = Optional.of(value);
   }
 
   public LeafNode(final Optional<Bytes> location, final V value, final Optional<V> previousValue) {
-    super(false, false);
+    super(false, true);
     this.location = location;
     this.value = value;
     this.previous = previousValue;

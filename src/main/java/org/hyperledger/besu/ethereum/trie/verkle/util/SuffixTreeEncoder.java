@@ -26,41 +26,9 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescripto
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.bytes.MutableBytes32;
 
 public class SuffixTreeEncoder {
-
-  private static final Bytes32 VERSION_VALUE_MASK;
-  private static final Bytes32 CODE_SIZE_VALUE_MASK;
-  private static final Bytes32 NONCE_VALUE_MASK;
-  private static final Bytes32 BALANCE_VALUE_MASK;
-
-  static {
-    VERSION_VALUE_MASK = createMask(VERSION_OFFSET, VERSION_BYTE_SIZE);
-    CODE_SIZE_VALUE_MASK = createMask(CODE_SIZE_OFFSET, CODE_SIZE_BYTE_SIZE);
-    NONCE_VALUE_MASK = createMask(NONCE_OFFSET, NONCE_BYTE_SIZE);
-    BALANCE_VALUE_MASK = createMask(BALANCE_OFFSET, BALANCE_BYTE_SIZE);
-  }
-
-  private static Bytes32 createMask(final int offset, final int size) {
-    Bytes value = Bytes.repeat((byte) 0xff, size);
-    return encodeIntoBasicDataLeaf(value, offset).not();
-  }
-
-  public static Bytes32 eraseVersion(final Bytes32 value) {
-    return value.and(VERSION_VALUE_MASK);
-  }
-
-  private static Bytes32 eraseCodeSize(final Bytes32 value) {
-    return value.and(CODE_SIZE_VALUE_MASK);
-  }
-
-  private static Bytes32 eraseNonce(final Bytes32 value) {
-    return value.and(NONCE_VALUE_MASK);
-  }
-
-  private static Bytes32 eraseBalance(final Bytes32 value) {
-    return value.and(BALANCE_VALUE_MASK);
-  }
 
   /**
    * Sets the new version and encodes it inside `value`.
@@ -71,8 +39,9 @@ public class SuffixTreeEncoder {
    */
   public static Bytes32 setVersionInValue(Bytes32 value, final Bytes version) {
     checkSize(version, VERSION_BYTE_SIZE);
-    value = eraseVersion(value);
-    return value.or(encodeIntoBasicDataLeaf(version, VERSION_OFFSET));
+    final MutableBytes32 mutableValue = value.mutableCopy();
+    mutableValue.set(VERSION_OFFSET, version);
+    return mutableValue;
   }
 
   /**
@@ -82,10 +51,11 @@ public class SuffixTreeEncoder {
    * @param codeSize value for the new code size
    * @return updated value with the new code size set
    */
-  public static Bytes32 setCodeSizeInValue(Bytes32 value, final Bytes codeSize) {
+  public static Bytes32 setCodeSizeInValue(final Bytes32 value, final Bytes codeSize) {
     checkSize(codeSize, CODE_SIZE_BYTE_SIZE);
-    value = eraseCodeSize(value);
-    return value.or(encodeIntoBasicDataLeaf(codeSize, CODE_SIZE_OFFSET));
+    final MutableBytes32 mutableValue = value.mutableCopy();
+    mutableValue.set(CODE_SIZE_OFFSET, codeSize);
+    return mutableValue;
   }
 
   /**
@@ -97,8 +67,9 @@ public class SuffixTreeEncoder {
    */
   public static Bytes32 setNonceInValue(Bytes32 value, final Bytes nonce) {
     checkSize(nonce, NONCE_BYTE_SIZE);
-    value = eraseNonce(value);
-    return value.or(encodeIntoBasicDataLeaf(nonce, NONCE_OFFSET));
+    final MutableBytes32 mutableValue = value.mutableCopy();
+    mutableValue.set(NONCE_OFFSET, nonce);
+    return mutableValue;
   }
 
   /**
@@ -110,39 +81,14 @@ public class SuffixTreeEncoder {
    */
   public static Bytes32 setBalanceInValue(Bytes32 value, final Bytes balance) {
     checkSize(balance, BALANCE_BYTE_SIZE);
-    value = eraseBalance(value);
-    return value.or(encodeIntoBasicDataLeaf(balance, BALANCE_OFFSET));
+    final MutableBytes32 mutableValue = value.mutableCopy();
+    mutableValue.set(BALANCE_OFFSET, balance);
+    return mutableValue;
   }
 
   private static void checkSize(final Bytes value, final int requiredSize) {
     if (value.size() != requiredSize) {
       throw new IllegalArgumentException("value should have size=" + requiredSize);
     }
-  }
-
-  /**
-   * Encoding of a field into the BasicDataLeaf 32 byte value, using Little-Endian order.
-   *
-   * @param value to encode into a 32 byte value
-   * @param byteShift byte position of `value` within the final 32 byte value
-   * @throws IllegalArgumentException if `value` does not fit within 32 bytes after being encoded
-   * @return encoded BasicDataLeaf value
-   */
-  static Bytes32 encodeIntoBasicDataLeaf(final Bytes value, final int byteShift) {
-    Bytes32 value32Bytes = Bytes32.rightPad(value);
-    if (byteShift == 0) {
-      return value32Bytes;
-    } else if (byteShift < 0) {
-      throw new IllegalArgumentException(
-          "invalid byteShift " + byteShift + " must be greater than zero");
-    } else if (value32Bytes.numberOfTrailingZeroBytes() < byteShift) {
-      int valueSizeBytes = 32 - value32Bytes.numberOfTrailingZeroBytes() + byteShift;
-      throw new IllegalArgumentException(
-          "value must be 32 bytes but becomes "
-              + valueSizeBytes
-              + " bytes with byteShift "
-              + byteShift);
-    }
-    return value32Bytes.shiftRight(byteShift * 8);
   }
 }

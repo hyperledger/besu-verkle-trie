@@ -15,18 +15,19 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.util;
 
+import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescriptor.BALANCE_BYTE_SIZE;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescriptor.BALANCE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescriptor.CODE_SIZE_BYTE_SIZE;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescriptor.CODE_SIZE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescriptor.NONCE_BYTE_SIZE;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescriptor.NONCE_OFFSET;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescriptor.VERSION_BYTE_SIZE;
+import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescriptor.VERSION_OFFSET;
+
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 public class SuffixTreeEncoder {
-  private static final int VERSION_OFFSET = 0;
-  private static final int VERSION_BYTE_SIZE = 1;
-  private static final int CODE_SIZE_OFFSET = 5;
-  private static final int CODE_SIZE_BYTE_SIZE = 3;
-  private static final int NONCE_OFFSET = 8;
-  private static final int NONCE_BYTE_SIZE = 8;
-  private static final int BALANCE_OFFSET = 16;
-  private static final int BALANCE_BYTE_SIZE = 16;
 
   private static final Bytes32 VERSION_VALUE_MASK;
   private static final Bytes32 CODE_SIZE_VALUE_MASK;

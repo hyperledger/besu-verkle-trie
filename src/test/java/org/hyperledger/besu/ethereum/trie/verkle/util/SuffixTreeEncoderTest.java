@@ -18,8 +18,6 @@ package org.hyperledger.besu.ethereum.trie.verkle.util;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.stream.Stream;
-
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
@@ -29,8 +27,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.converter.ArgumentConversionException;
 import org.junit.jupiter.params.converter.ArgumentConverter;
 import org.junit.jupiter.params.converter.ConvertWith;
-import org.junit.jupiter.params.provider.Arguments;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 public class SuffixTreeEncoderTest {
@@ -45,108 +41,6 @@ public class SuffixTreeEncoderTest {
       String hexString = (String) source;
       return Bytes32.fromHexString(hexString);
     }
-  }
-
-  public static Stream<Arguments> valuesEnd() {
-    return Stream.of(
-        Arguments.of(Bytes32.ZERO, Bytes32.ZERO),
-        Arguments.of(
-            Bytes.of(0xff),
-            Bytes32.fromHexString(
-                "0x00000000000000000000000000000000000000000000000000000000000000FF")),
-        Arguments.of(
-            Bytes32.leftPad(Bytes.of(0xff)),
-            Bytes32.fromHexString(
-                "0x00000000000000000000000000000000000000000000000000000000000000FF")),
-        Arguments.of(
-            Bytes.repeat((byte) 0xff, 12),
-            Bytes32.fromHexString(
-                "0x0000000000000000000000000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF")),
-        Arguments.of(
-            Bytes.fromHexString("0xadef"),
-            Bytes32.fromHexString(
-                "0x000000000000000000000000000000000000000000000000000000000000ADEF")),
-        Arguments.of(
-            Bytes.fromHexString("0x1123d3"),
-            Bytes32.fromHexString(
-                "0x00000000000000000000000000000000000000000000000000000000001123D3")));
-  }
-
-  public static Stream<Arguments> valuesMiddle() {
-    return Stream.of(
-        Arguments.of(Bytes32.ZERO, Bytes32.ZERO),
-        Arguments.of(
-            Bytes.of(0xff),
-            Bytes32.fromHexString(
-                "0x000000000000000000000000000000FF00000000000000000000000000000000")),
-        Arguments.of(
-            Bytes.repeat((byte) 0xff, 12),
-            Bytes32.fromHexString(
-                "0x00000000000000000000FFFFFFFFFFFFFFFFFFFFFFFF00000000000000000000")),
-        Arguments.of(
-            Bytes.fromHexString("0xadef"),
-            Bytes32.fromHexString(
-                "0x000000000000000000000000000000ADEF000000000000000000000000000000")),
-        Arguments.of(
-            Bytes.fromHexString("0x1123d3"),
-            Bytes32.fromHexString(
-                "0x00000000000000000000000000001123D3000000000000000000000000000000")));
-  }
-
-  public static Stream<Arguments> valuesStart() {
-    return Stream.of(
-        Arguments.of(Bytes32.ZERO, Bytes32.ZERO),
-        Arguments.of(
-            Bytes.repeat((byte) 0xff, 12),
-            Bytes32.fromHexString(
-                "0xFFFFFFFFFFFFFFFFFFFFFFFF0000000000000000000000000000000000000000")),
-        Arguments.of(
-            Bytes.of(0xff),
-            Bytes32.fromHexString(
-                "0xFF00000000000000000000000000000000000000000000000000000000000000")),
-        Arguments.of(
-            Bytes.fromHexString("0xadef"),
-            Bytes32.fromHexString(
-                "0xADEF000000000000000000000000000000000000000000000000000000000000")),
-        Arguments.of(
-            Bytes.fromHexString("0x1123d3"),
-            Bytes32.fromHexString(
-                "0x1123D30000000000000000000000000000000000000000000000000000000000")));
-  }
-
-  public static Stream<Arguments> valuesOutOfRange() {
-    return Stream.of(
-        Arguments.of(Bytes.repeat((byte) 0xff, 12), 25),
-        Arguments.of(Bytes.of(0xff), 32),
-        Arguments.of(Bytes.fromHexString("0xadef"), 31),
-        Arguments.of(Bytes.fromHexString("0x1123d3"), 30));
-  }
-
-  @ParameterizedTest
-  @MethodSource("valuesStart")
-  void encodeBytesStart(final Bytes value, final Bytes32 expected) {
-    assertEquals(expected, SuffixTreeEncoder.encodeIntoBasicDataLeaf(value, 0));
-  }
-
-  @ParameterizedTest
-  @MethodSource("valuesMiddle")
-  void encodeBytesMiddle(final Bytes value, final Bytes32 expected) {
-    assertEquals(
-        expected, SuffixTreeEncoder.encodeIntoBasicDataLeaf(value, (32 - value.size()) / 2));
-  }
-
-  @ParameterizedTest
-  @MethodSource("valuesEnd")
-  void encodeBytesEnd(final Bytes value, final Bytes32 expected) {
-    assertEquals(expected, SuffixTreeEncoder.encodeIntoBasicDataLeaf(value, 32 - value.size()));
-  }
-
-  @ParameterizedTest
-  @MethodSource("valuesOutOfRange")
-  void encodeBytesOutsideRange(final Bytes value, final int byteShift) {
-    assertThrows(
-        IllegalArgumentException.class,
-        () -> SuffixTreeEncoder.encodeIntoBasicDataLeaf(value, byteShift));
   }
 
   @ParameterizedTest

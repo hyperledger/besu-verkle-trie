@@ -19,6 +19,8 @@ import java.util.stream.Stream;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.units.bigints.UInt256;
+import org.apache.tuweni.units.ethereum.Wei;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -90,5 +92,19 @@ public class SuffixTreeDecoderTest {
     for (int i = 0; i < expected.length; i++) {
       Assertions.assertThat(expected[i]).isEqualTo(decodedValues[i]);
     }
+  }
+
+  @ParameterizedTest
+  @MethodSource("decodeValues")
+  void decodeFieldByFieldBasicDataLeafTest(
+      final Bytes32 basicDataLeafValue, final Bytes[] expected) {
+    Assertions.assertThat(expected[0].get(SuffixTreeDescriptor.VERSION_OFFSET))
+        .isEqualTo(SuffixTreeDecoder.decodeVersion(basicDataLeafValue));
+    Assertions.assertThat(expected[1].toInt())
+        .isEqualTo(SuffixTreeDecoder.decodeCodeSize(basicDataLeafValue));
+    Assertions.assertThat(expected[2].toLong())
+        .isEqualTo(SuffixTreeDecoder.decodeNonce(basicDataLeafValue));
+    Assertions.assertThat(Wei.valueOf(UInt256.fromBytes(expected[3])))
+        .isEqualTo(SuffixTreeDecoder.decodeBalance(basicDataLeafValue));
   }
 }

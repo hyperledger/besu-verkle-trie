@@ -26,44 +26,39 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescripto
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
-import org.apache.tuweni.bytes.MutableBytes32;
+import org.apache.tuweni.units.bigints.UInt256;
+import org.apache.tuweni.units.ethereum.Wei;
 
 public class SuffixTreeDecoder {
-
-  private static final Bytes32 VERSION_VALUE_MASK;
-  private static final Bytes32 CODE_SIZE_VALUE_MASK;
-  private static final Bytes32 NONCE_VALUE_MASK;
-  private static final Bytes32 BALANCE_VALUE_MASK;
-
-  static {
-    VERSION_VALUE_MASK = createMask(VERSION_OFFSET, VERSION_BYTE_SIZE);
-    CODE_SIZE_VALUE_MASK = createMask(CODE_SIZE_OFFSET, CODE_SIZE_BYTE_SIZE);
-    NONCE_VALUE_MASK = createMask(NONCE_OFFSET, NONCE_BYTE_SIZE);
-    BALANCE_VALUE_MASK = createMask(BALANCE_OFFSET, BALANCE_BYTE_SIZE);
-  }
-
-  private static Bytes32 createMask(final int offset, final int size) {
-    final MutableBytes32 value = MutableBytes32.create();
-    value.set(offset, Bytes.repeat((byte) 0xff, size));
-    return value;
-  }
 
   public static Bytes[] decodeBasicDataLeaf(final Bytes32 value) {
     Bytes[] decodedFields = new Bytes[4];
 
-    decodedFields[0] =
-        extractField(value, VERSION_OFFSET, VERSION_VALUE_MASK).slice(0, VERSION_BYTE_SIZE);
-    decodedFields[1] =
-        extractField(value, CODE_SIZE_OFFSET, CODE_SIZE_VALUE_MASK).slice(0, CODE_SIZE_BYTE_SIZE);
-    decodedFields[2] =
-        extractField(value, NONCE_OFFSET, NONCE_VALUE_MASK).slice(0, NONCE_BYTE_SIZE);
-    decodedFields[3] =
-        extractField(value, BALANCE_OFFSET, BALANCE_VALUE_MASK).slice(0, BALANCE_BYTE_SIZE);
+    decodedFields[0] = extractField(value, VERSION_OFFSET, VERSION_BYTE_SIZE);
+    decodedFields[1] = extractField(value, CODE_SIZE_OFFSET, CODE_SIZE_BYTE_SIZE);
+    decodedFields[2] = extractField(value, NONCE_OFFSET, NONCE_BYTE_SIZE);
+    decodedFields[3] = extractField(value, BALANCE_OFFSET, BALANCE_BYTE_SIZE);
 
     return decodedFields;
   }
 
-  private static Bytes extractField(final Bytes32 value, int offset, Bytes32 mask) {
-    return value.and(mask).shiftLeft(offset * 8);
+  public static Byte decodeVersion(final Bytes32 value) {
+    return value.get(VERSION_OFFSET);
+  }
+
+  public static int decodeCodeSize(final Bytes32 value) {
+    return extractField(value, CODE_SIZE_OFFSET, CODE_SIZE_BYTE_SIZE).toInt();
+  }
+
+  public static long decodeNonce(final Bytes32 value) {
+    return extractField(value, NONCE_OFFSET, NONCE_BYTE_SIZE).toLong();
+  }
+
+  public static Wei decodeBalance(final Bytes32 value) {
+    return Wei.valueOf(UInt256.fromBytes(extractField(value, BALANCE_OFFSET, BALANCE_BYTE_SIZE)));
+  }
+
+  private static Bytes extractField(final Bytes32 value, final int offset, int size) {
+    return value.slice(offset, size);
   }
 }

@@ -15,25 +15,33 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.ImmutableMap;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
 public class CachedPedersenHasher implements Hasher {
-  private final Map<Bytes32, Bytes32> preloadedTrieKeyHashes;
+  private final Cache<Bytes32, Bytes> stemCache;
   private final Hasher fallbackHasher;
 
-  public CachedPedersenHasher(final Map<Bytes32, Bytes32> preloadedTrieKeyHashes) {
-    this.preloadedTrieKeyHashes = preloadedTrieKeyHashes;
-    this.fallbackHasher = new PedersenHasher();
+  public CachedPedersenHasher(final int cacheSize) {
+    this(cacheSize, new HashMap<>());
+  }
+
+  public CachedPedersenHasher(final int cacheSize, final Map<Bytes32, Bytes> preloadedStems) {
+    this(cacheSize, preloadedStems, new PedersenHasher());
   }
 
   public CachedPedersenHasher(
-      final Map<Bytes32, Bytes32> preloadedTrieKeyHashes, final Hasher fallbackHasher) {
-    this.preloadedTrieKeyHashes = preloadedTrieKeyHashes;
+      final int cacheSize, final Map<Bytes32, Bytes> preloadedStems, final Hasher fallbackHasher) {
+    this.stemCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build();
+    this.stemCache.putAll(preloadedStems);
     this.fallbackHasher = fallbackHasher;
   }
 
@@ -62,18 +70,37 @@ public class CachedPedersenHasher implements Hasher {
   }
 
   @Override
-  public Bytes32 trieKeyHash(final Bytes bytes, final Bytes32 bytes32) {
-    final Bytes32 hash = preloadedTrieKeyHashes.get(bytes32);
-    if (hash != null) {
-      return hash;
+  public Bytes computeStem(final Bytes address, final Bytes32 trieKeyIndex) {
+    Bytes stem = stemCache.getIfPresent(trieKeyIndex);
+    if (stem != null) {
+      return stem;
     } else {
-      return fallbackHasher.trieKeyHash(bytes, bytes32);
+      stem = fallbackHasher.computeStem(address, trieKeyIndex);
+      stemCache.put(trieKeyIndex, stem);
+      return stem;
     }
   }
 
   @Override
-  public Map<Bytes32, Bytes32> manyTrieKeyHashes(final Bytes bytes, final List<Bytes32> list) {
-    return fallbackHasher.manyTrieKeyHashes(bytes, list);
+  public Map<Bytes32, Bytes> manyStems(final Bytes address, final List<Bytes32> trieKeyIndexes) {
+    // Retrieve stems already present in the cache
+    final ImmutableMap<Bytes32, Bytes> alreadyPresent = stemCache.getAllPresent(trieKeyIndexes);
+
+    // Identify missing stems that are not in the cache
+    final List<Bytes32> missing =
+        trieKeyIndexes.stream().filter(trieKey -> !alreadyPresent.containsKey(trieKey)).toList();
+
+    // Generate missing stems using the fallback hasher
+    final Map<Bytes32, Bytes> generatedStems = fallbackHasher.manyStems(address, missing);
+
+    // Update the cache with the newly generated stems
+    stemCache.putAll(generatedStems);
+
+    // Merge already present stems and newly generated stems into a new map
+    final Map<Bytes32, Bytes> result = new HashMap<>(alreadyPresent);
+    result.putAll(generatedStems);
+
+    return result;
   }
 
   @Override

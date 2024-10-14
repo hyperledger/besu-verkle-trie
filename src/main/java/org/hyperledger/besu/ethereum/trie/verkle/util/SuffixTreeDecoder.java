@@ -27,7 +27,6 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.SuffixTreeDescripto
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
-import org.apache.tuweni.units.ethereum.Wei;
 
 public class SuffixTreeDecoder {
 
@@ -54,8 +53,8 @@ public class SuffixTreeDecoder {
     return extractField(value, NONCE_OFFSET, NONCE_BYTE_SIZE).toLong();
   }
 
-  public static Wei decodeBalance(final Bytes32 value) {
-    return Wei.valueOf(UInt256.fromBytes(extractField(value, BALANCE_OFFSET, BALANCE_BYTE_SIZE)));
+  public static UInt256 decodeBalance(final Bytes32 value) {
+    return UInt256.fromBytes(extractField(value, BALANCE_OFFSET, BALANCE_BYTE_SIZE));
   }
 
   private static Bytes extractField(final Bytes32 value, final int offset, int size) {

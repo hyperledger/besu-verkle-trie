@@ -15,15 +15,12 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.proof;
 
-import org.hyperledger.besu.nativelib.ipamultipoint.LibIpaMultipoint;
-
 import java.util.List;
 import java.util.function.Function;
 
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
+import verkle.cryptography.LibIpaMultipoint;
 
 /**
  * This class validates the Verkle proof against the specified pre-state root.
@@ -32,27 +29,6 @@ import org.apache.tuweni.bytes.Bytes32;
  * pre-state root.
  */
 public class ProofVerifier {
-
-  private static final Logger LOG = LogManager.getLogger(ProofVerifier.class);
-
-  static boolean nativeEnabled;
-
-  static {
-    maybeEnableNative();
-  }
-
-  public static void maybeEnableNative() {
-    try {
-      nativeEnabled = LibIpaMultipoint.ENABLED;
-    } catch (UnsatisfiedLinkError | NoClassDefFoundError ule) {
-      LOG.info("ipa multipoint native library not available: {}", ule.getMessage());
-      nativeEnabled = false;
-    }
-  }
-
-  public static boolean isNativeEnabled() {
-    return nativeEnabled;
-  }
 
   public boolean verifyVerkleProof(
       final List<Bytes> keys,

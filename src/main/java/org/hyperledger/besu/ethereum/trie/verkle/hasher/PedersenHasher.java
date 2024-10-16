@@ -15,8 +15,6 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
-import org.hyperledger.besu.nativelib.ipamultipoint.LibIpaMultipoint;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -28,6 +26,7 @@ import java.util.Optional;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.bytes.MutableBytes;
+import verkle.cryptography.LibIpaMultipoint;
 
 /**
  * A class responsible for hashing an array of Bytes32 using the pedersen commitment - multi scalar

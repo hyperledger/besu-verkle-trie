@@ -78,8 +78,8 @@ public class TrieKeyAdapter {
    */
   public Bytes32 storageKey(final Bytes address, final Bytes32 storageKey) {
     final Bytes stem = getStorageStem(address, storageKey);
-    final UInt256 suffix = getStorageKeySuffix(storageKey);
-    return swapLastByte(stem, suffix);
+    final Bytes suffix = getStorageKeySuffix(storageKey);
+    return Bytes32.wrap(Bytes.concatenate(stem, suffix));
   }
 
   public UInt256 getStorageKeyTrieIndex(final Bytes32 storageKey) {
@@ -95,19 +95,17 @@ public class TrieKeyAdapter {
     }
   }
 
-  public UInt256 getStorageKeySuffix(final Bytes32 storageKey) {
+  public Bytes getStorageKeySuffix(final Bytes32 storageKey) {
     final UInt256 uintStorageKey = UInt256.fromBytes(storageKey);
     if (uintStorageKey.compareTo(HEADER_STORAGE_SIZE) < 0) {
-      final UInt256 mod = uintStorageKey.add(HEADER_STORAGE_OFFSET).mod(VERKLE_NODE_WIDTH);
-      return UInt256.fromBytes(mod.slice(mod.size() - 1));
+      return getLastByte(uintStorageKey.add(HEADER_STORAGE_OFFSET).mod(VERKLE_NODE_WIDTH));
     } else {
-      return UInt256.fromBytes(storageKey.slice(Bytes32.SIZE - 1));
+      return getLastByte(storageKey);
     }
   }
 
   public Bytes getStorageStem(final Bytes address, final Bytes32 storageKey) {
     final UInt256 trieIndex = getStorageKeyTrieIndex(storageKey);
-    System.out.println("trieindex " + trieIndex);
     return hasher.computeStem(address, trieIndex);
   }
 
@@ -120,15 +118,16 @@ public class TrieKeyAdapter {
    */
   public Bytes32 codeChunkKey(final Bytes address, final UInt256 chunkId) {
     final Bytes stem = getCodeChunkStem(address, chunkId);
-    return swapLastByte(stem, getCodeChunkKeySuffix(chunkId));
+    final Bytes suffix = getCodeChunkKeySuffix(chunkId);
+    return Bytes32.wrap(Bytes.concatenate(stem, suffix));
   }
 
   public UInt256 getCodeChunkKeyTrieIndex(final Bytes32 chunkId) {
     return CODE_OFFSET.add(UInt256.fromBytes(chunkId)).divide(VERKLE_NODE_WIDTH);
   }
 
-  public UInt256 getCodeChunkKeySuffix(final Bytes32 chunkId) {
-    return CODE_OFFSET.add(UInt256.fromBytes(chunkId)).mod(VERKLE_NODE_WIDTH);
+  public Bytes getCodeChunkKeySuffix(final Bytes32 chunkId) {
+    return getLastByte(CODE_OFFSET.add(UInt256.fromBytes(chunkId)).mod(VERKLE_NODE_WIDTH));
   }
 
   public Bytes getCodeChunkStem(final Bytes address, final UInt256 chunkId) {
@@ -145,7 +144,7 @@ public class TrieKeyAdapter {
    */
   public Bytes32 headerKey(final Bytes address, final UInt256 leafKey) {
     final Bytes stem = getHeaderStem(address);
-    return swapLastByte(stem, leafKey);
+    return Bytes32.wrap(Bytes.concatenate(stem, getLastByte(leafKey)));
   }
 
   public Bytes getHeaderStem(final Bytes address) {
@@ -153,15 +152,13 @@ public class TrieKeyAdapter {
   }
 
   /**
-   * Swaps the last byte of the base key with a given subIndex.
+   * Get the last byte of the base .
    *
    * @param base The base key.
-   * @param subIndex The subIndex.
-   * @return The modified key.
+   * @return The last byte of the key.
    */
-  public Bytes32 swapLastByte(final Bytes base, final Bytes subIndex) {
-    final Bytes lastByte = subIndex.slice(subIndex.size() - 1, 1);
-    return (Bytes32) Bytes.concatenate(base, lastByte);
+  public Bytes getLastByte(final Bytes32 base) {
+    return base.slice(Bytes32.SIZE - 1);
   }
 
   /**

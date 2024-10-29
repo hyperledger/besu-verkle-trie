@@ -17,6 +17,8 @@ dependencyManagement {
     dependencies {
         dependency "com.google.guava:guava:33.0.0-jre"
 
+        dependency 'com.github.ben-manes.caffeine:caffeine:3.1.8'
+
         dependency 'net.java.dev.jna:jna:5.14.0'
 
         dependency 'org.assertj:assertj-core:3.25.1'

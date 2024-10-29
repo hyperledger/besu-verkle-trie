@@ -20,9 +20,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
-import com.google.common.collect.ImmutableMap;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 
@@ -40,7 +39,7 @@ public class CachedPedersenHasher implements Hasher {
 
   public CachedPedersenHasher(
       final int cacheSize, final Map<Bytes32, Bytes> preloadedStems, final Hasher fallbackHasher) {
-    this.stemCache = CacheBuilder.newBuilder().maximumSize(cacheSize).build();
+    this.stemCache = Caffeine.newBuilder().maximumSize(cacheSize).build();
     this.stemCache.putAll(preloadedStems);
     this.fallbackHasher = fallbackHasher;
   }
@@ -84,7 +83,7 @@ public class CachedPedersenHasher implements Hasher {
   @Override
   public Map<Bytes32, Bytes> manyStems(final Bytes address, final List<Bytes32> trieKeyIndexes) {
     // Retrieve stems already present in the cache
-    final ImmutableMap<Bytes32, Bytes> alreadyPresent = stemCache.getAllPresent(trieKeyIndexes);
+    final Map<Bytes32, Bytes> alreadyPresent = stemCache.getAllPresent(trieKeyIndexes);
 
     // Identify missing stems that are not in the cache
     final List<Bytes32> missing =

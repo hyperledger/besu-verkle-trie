@@ -225,7 +225,7 @@ public class StemNode<V> extends BranchNode<V> {
         Optional.of(newLocation),
         stem,
         hash,
-        (Optional<Bytes32>) previous,
+        Optional.empty(),
         commitment,
         leftHash,
         leftCommitment,

@@ -46,7 +46,10 @@ public class GenesisTest {
             "0x382960711d9ccf58b9db20122e2253eb9bfa99d513f8c9d4e85b55971721f4de"),
         Arguments.of(
             "/gen-devnet-6.csv",
-            "0x1fbf85345a3cbba9a6d44f991b721e55620a22397c2a93ee8d5011136ac300ee"));
+            "0x1fbf85345a3cbba9a6d44f991b721e55620a22397c2a93ee8d5011136ac300ee"),
+        Arguments.of(
+            "/gen-devnet-7.csv",
+            "0x514a0e5715b0b6c635ac140a5f25b8665af36cf31836344d27d9645fc57eab76"));
   }
 
   @ParameterizedTest

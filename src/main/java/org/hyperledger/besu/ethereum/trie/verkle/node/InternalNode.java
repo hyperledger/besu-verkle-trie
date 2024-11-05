@@ -160,8 +160,10 @@ public class InternalNode<V> extends BranchNode<V> {
     int depth = location.size();
     List<Bytes> extensions = new ArrayList<>();
     for (Node<V> childNode : getChildren()) {
-      if (childNode instanceof StemNode) {
+      if (childNode instanceof StemNode<V>) {
         extensions.add(((StemNode<V>) childNode).getStem().slice(depth));
+      } else if (childNode instanceof StoredStemNode<V>) {
+        extensions.add(((StoredStemNode<V>) childNode).getStem().slice(depth));
       }
     }
     return extensions;

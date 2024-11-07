@@ -162,6 +162,8 @@ public class InternalNode<V> extends BranchNode<V> {
     for (Node<V> childNode : getChildren()) {
       if (childNode instanceof StemNode) {
         extensions.add(((StemNode<V>) childNode).getStem().slice(depth));
+      } else if (childNode instanceof StoredStemNode) {
+        extensions.add(((StoredStemNode<V>) childNode).getStem().slice(depth));
       }
     }
     return extensions;

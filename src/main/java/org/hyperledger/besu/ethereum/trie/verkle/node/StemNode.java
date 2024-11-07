@@ -80,6 +80,7 @@ public class StemNode<V> extends BranchNode<V> {
    * @param location Optional location in the tree.
    * @param stem Node's stem.
    * @param hash Optional node's vector commitment's hash.
+   * @param previousHash Optional node's vector previous commitment's hash.
    * @param commitment Optional node's vector commitment.
    * @param leftHash Optional hash of vector commitment to left values.
    * @param leftCommitment Optional vector commitment to left values.
@@ -225,7 +226,7 @@ public class StemNode<V> extends BranchNode<V> {
         Optional.of(newLocation),
         stem,
         hash,
-        (Optional<Bytes32>) previous,
+        Optional.empty(),
         commitment,
         leftHash,
         leftCommitment,

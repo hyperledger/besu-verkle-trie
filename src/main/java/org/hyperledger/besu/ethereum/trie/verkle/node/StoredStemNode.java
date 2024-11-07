@@ -74,6 +74,10 @@ public class StoredStemNode<V> extends StoredNode<V> {
     return node.accept(visitor);
   }
 
+  public Bytes getStem() {
+    return stem;
+  }
+
   /**
    * Get a string representation of the node.
    *

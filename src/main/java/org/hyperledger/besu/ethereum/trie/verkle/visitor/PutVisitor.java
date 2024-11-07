@@ -141,11 +141,9 @@ public class PutVisitor<V> implements PathNodeVisitor<V> {
   public Node<V> visit(final LeafNode<V> leafNode, final Bytes path) {
     assert path.size() < 33;
     LeafNode<V> newNode;
-    oldValue = leafNode.getValue();
-    if (oldValue != value) {
-      newNode =
-          new LeafNode<>(
-              leafNode.getLocation(), value, leafNode.isPersisted() ? oldValue : Optional.empty());
+    oldValue = leafNode.isPersisted() ? leafNode.getValue() : leafNode.getPrevious();
+    if (leafNode.getValue() != value) {
+      newNode = new LeafNode<>(leafNode.getLocation(), value, oldValue);
       batchProcessor.ifPresent(
           processor -> processor.addNodeToBatch(newNode.getLocation(), newNode));
       newNode.markDirty();

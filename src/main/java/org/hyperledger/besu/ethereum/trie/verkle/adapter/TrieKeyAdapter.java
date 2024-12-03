@@ -25,7 +25,7 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_N
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH_LOG2;
 
 import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
-import org.hyperledger.besu.ethereum.trie.verkle.hasher.PedersenHasher;
+import org.hyperledger.besu.ethereum.trie.verkle.hasher.StemHasher;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,19 +44,14 @@ public class TrieKeyAdapter {
 
   private static final int CHUNK_SIZE = 31;
 
-  private final Hasher hasher;
-
-  /** Creates a TrieKeyAdapter with the default Perdersen hasher. */
-  public TrieKeyAdapter() {
-    this.hasher = new PedersenHasher();
-  }
+  private final StemHasher hasher;
 
   /**
    * Creates a TrieKeyAdapter with the provided hasher.
    *
    * @param hasher The hasher used for key generation.
    */
-  public TrieKeyAdapter(final Hasher hasher) {
+  public TrieKeyAdapter(final StemHasher hasher) {
     this.hasher = hasher;
   }
 
@@ -65,7 +60,7 @@ public class TrieKeyAdapter {
    *
    * @return The {@link Hasher} instance used for key generation operations.
    */
-  public Hasher getHasher() {
+  public StemHasher getHasher() {
     return hasher;
   }
 

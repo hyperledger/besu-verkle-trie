@@ -17,6 +17,8 @@ package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import org.hyperledger.besu.ethereum.trie.verkle.hasher.builder.StemHasherBuilder;
+
 import java.math.BigInteger;
 
 import org.apache.tuweni.bytes.Bytes;
@@ -24,9 +26,9 @@ import org.apache.tuweni.bytes.Bytes32;
 import org.apache.tuweni.units.bigints.UInt256;
 import org.junit.jupiter.api.Test;
 
-public class PedersenHasherTest {
+public class StemHasherTest {
 
-  PedersenHasher hasher = new PedersenHasher();
+  StemHasher hasher = StemHasherBuilder.builder().build();
 
   // Pulled out of geth, good test case to compare in case of breaking changes on key generation
   @Test

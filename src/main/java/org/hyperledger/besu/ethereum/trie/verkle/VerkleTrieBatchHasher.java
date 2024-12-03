@@ -18,8 +18,7 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 import static org.hyperledger.besu.ethereum.trie.verkle.node.Node.getHighValue;
 import static org.hyperledger.besu.ethereum.trie.verkle.node.Node.getLowValue;
 
-import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
-import org.hyperledger.besu.ethereum.trie.verkle.hasher.PedersenHasher;
+import org.hyperledger.besu.ethereum.trie.verkle.hasher.TrieCommitmentHasher;
 import org.hyperledger.besu.ethereum.trie.verkle.node.BranchNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.InternalNode;
 import org.hyperledger.besu.ethereum.trie.verkle.node.LeafNode;
@@ -50,7 +49,7 @@ public class VerkleTrieBatchHasher {
   private static final Logger LOG = LogManager.getLogger(VerkleTrieBatchHasher.class);
   private static final int MAX_BATCH_SIZE = 1000; // Maximum number of nodes in a batch
   private static final Bytes[] EMPTY_ARRAY_TEMPLATE = new Bytes[0];
-  private final Hasher hasher = new PedersenHasher(); // Hasher for node hashing
+  private final TrieCommitmentHasher hasher = new TrieCommitmentHasher(); // Hasher for node hashing
   private final Map<Bytes, Node<?>> updatedNodes =
       new HashMap<>(); // Map to hold nodes for batching
 
@@ -256,7 +255,7 @@ public class VerkleTrieBatchHasher {
 
     if (!leftIndices.isEmpty()) {
       commitmentsHashes.add(
-          hasher.commitUpdate(
+          hasher.commitPartialUpdate(
               stemNode.getLeftCommitment(), leftIndices, leftOldValues, leftNewValues));
       leftIndices.clear();
       leftOldValues.clear();
@@ -266,7 +265,7 @@ public class VerkleTrieBatchHasher {
     }
     if (!rightIndices.isEmpty()) {
       commitmentsHashes.add(
-          hasher.commitUpdate(
+          hasher.commitPartialUpdate(
               stemNode.getRightCommitment(), rightIndices, rightOldValues, rightNewValues));
       rightIndices.clear();
       rightOldValues.clear();
@@ -315,7 +314,7 @@ public class VerkleTrieBatchHasher {
       }
     }
     commitmentsHashes.add(
-        hasher.commitUpdate(internalNode.getCommitment(), indices, oldValues, newValues));
+        hasher.commitPartialUpdate(internalNode.getCommitment(), indices, oldValues, newValues));
     return commitmentsHashes;
   }
 

@@ -15,92 +15,25 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-
 import org.apache.tuweni.bytes.Bytes;
-import org.apache.tuweni.bytes.Bytes32;
+import org.apache.tuweni.bytes.MutableBytes;
 
 /** Defines an interface for a Verkle Trie node hashing strategy. */
 public interface Hasher {
 
-  Bytes DEFAULT_COMMITMENT =
-      Bytes.concatenate(Bytes32.ZERO, Bytes32.rightPad(Bytes.fromHexString("0x01")));
+  default Bytes prepareScalars(final Bytes[] inputs) {
+    return rightPadInput(32, inputs);
+  }
 
-  /**
-   * Commit to a vector of values.
-   *
-   * @param inputs vector of serialised scalars to commit to.
-   * @return uncompressed serialised commitment.
-   */
-  Bytes commit(Bytes32[] inputs);
-
-  /**
-   * Compute and serialise compress commitment to a dense vector of scalar values.
-   *
-   * @param scalars Serialised scalar values to commit to, up to 32-bytes-le.
-   * @return The compressed serialized commitment used for calucating root Commitment.
-   */
-  Bytes32 commitRoot(Bytes[] scalars);
-
-  /**
-   * Update a commitment with a sparse vector of values.
-   *
-   * @param commitment Actual commitment value.
-   * @param indices List of vector's indices where values are updated.
-   * @param oldScalars List of previous scalar values.
-   * @param newScalars List of new scalar values.
-   * @return The uncompressed serialized updated commitment.
-   */
-  Bytes commitUpdate(
-      Optional<Bytes> commitment,
-      List<Byte> indices,
-      List<Bytes> oldScalars,
-      List<Bytes> newScalars);
-
-  /**
-   * Convert a commitment to its serialised compressed form.
-   *
-   * @param commitment uncompressed serialised commitment
-   * @return serialised scalar
-   */
-  Bytes32 compress(Bytes commitment);
-
-  /**
-   * Convert a commitment to its corresponding scalar.
-   *
-   * @param commitment uncompressed serialised commitment
-   * @return serialised scalar
-   */
-  Bytes32 hash(Bytes commitment);
-
-  /**
-   * Map a vector of commitments to its corresponding vector of scalars.
-   *
-   * <p>The vectorised version is highly optimised, making use of Montgoméry's batch inversion
-   * trick.
-   *
-   * @param commitments uncompressed serialised commitments
-   * @return serialised scalars
-   */
-  List<Bytes32> hashMany(Bytes[] commitments);
-
-  /**
-   * Calculates the stem for an address and index.
-   *
-   * @param address Account address.
-   * @param index index in storage.
-   * @return trie-key hash
-   */
-  Bytes computeStem(Bytes address, Bytes32 index);
-
-  /**
-   * Calculates the stem for an address and indexes.
-   *
-   * @param address Account address.
-   * @param indexes list of indexes in storage.
-   * @return The list of trie-key hashes
-   */
-  Map<Bytes32, Bytes> manyStems(Bytes address, List<Bytes32> indexes);
+  default Bytes rightPadInput(final int size, final Bytes[] inputs) {
+    MutableBytes result = MutableBytes.create(inputs.length * size);
+    for (int i = 0; i < inputs.length; i++) {
+      int offset = i * size;
+      if (inputs[i].size() > size) {
+        throw new IllegalArgumentException("Input size exceeds the specified padding size");
+      }
+      result.set(offset, inputs[i]);
+    }
+    return result;
+  }
 }

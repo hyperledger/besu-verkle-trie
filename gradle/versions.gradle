@@ -23,7 +23,7 @@ dependencyManagement {
 
         dependency 'org.assertj:assertj-core:3.25.1'
 
-        dependency 'io.github.crate-crypto:java-verkle-cryptography:0.0.2'
+        dependency 'io.github.crate-crypto:java-verkle-cryptography:0.0.3'
 
         dependencySet(group: 'org.hyperledger.besu.internal', version: '24.7.0') {
             entry 'rlp'

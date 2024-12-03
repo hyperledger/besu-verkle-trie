@@ -19,8 +19,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import org.hyperledger.besu.ethereum.trie.verkle.adapter.TrieKeyAdapter;
 import org.hyperledger.besu.ethereum.trie.verkle.adapter.TrieKeyBatchAdapter;
-import org.hyperledger.besu.ethereum.trie.verkle.hasher.CachedPedersenHasher;
-import org.hyperledger.besu.ethereum.trie.verkle.hasher.PedersenHasher;
+import org.hyperledger.besu.ethereum.trie.verkle.hasher.builder.StemHasherBuilder;
+import org.hyperledger.besu.ethereum.trie.verkle.hasher.cache.InMemoryCacheStrategy;
 import org.hyperledger.besu.ethereum.trie.verkle.util.Parameters;
 
 import java.io.IOException;
@@ -41,7 +41,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public class TrieKeyBatchAdapterTest {
   Bytes address = Bytes.fromHexString("0x00112233445566778899aabbccddeeff00112233");
-  TrieKeyBatchAdapter adapter = new TrieKeyBatchAdapter(new PedersenHasher());
+  TrieKeyBatchAdapter adapter = new TrieKeyBatchAdapter(StemHasherBuilder.builder().build());
 
   @Test
   public void testAccountKeys() {
@@ -52,7 +52,11 @@ public class TrieKeyBatchAdapterTest {
     final Map<Bytes32, Bytes> generatedStems =
         adapter.manyStems(address, expectedIndexes, new ArrayList<>(), new ArrayList<>());
     final TrieKeyAdapter cachedTrieKeyAdapter =
-        new TrieKeyAdapter(new CachedPedersenHasher(100, generatedStems, new FailedHasher()));
+        new TrieKeyAdapter(
+            StemHasherBuilder.builder()
+                .withStemCache(new InMemoryCacheStrategy<>(100, generatedStems))
+                .withAddressCommitmentCache(new InMemoryCacheStrategy<>(100))
+                .build());
     assertThat(cachedTrieKeyAdapter.basicDataKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
@@ -80,7 +84,11 @@ public class TrieKeyBatchAdapterTest {
         adapter.manyStems(address, expectedIndexes, List.of(storage, storage2), new ArrayList<>());
 
     final TrieKeyAdapter cachedTrieKeyAdapter =
-        new TrieKeyAdapter(new CachedPedersenHasher(100, generatedStems, new FailedHasher()));
+        new TrieKeyAdapter(
+            StemHasherBuilder.builder()
+                .withStemCache(new InMemoryCacheStrategy<>(100, generatedStems))
+                .withAddressCommitmentCache(new InMemoryCacheStrategy<>(100))
+                .build());
     assertThat(cachedTrieKeyAdapter.basicDataKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
@@ -111,7 +119,11 @@ public class TrieKeyBatchAdapterTest {
     final Map<Bytes32, Bytes> generatedStems =
         adapter.manyStems(address, expectedIndexes, new ArrayList<>(), List.of(chunkId));
     final TrieKeyAdapter cachedTrieKeyAdapter =
-        new TrieKeyAdapter(new CachedPedersenHasher(100, generatedStems, new FailedHasher()));
+        new TrieKeyAdapter(
+            StemHasherBuilder.builder()
+                .withStemCache(new InMemoryCacheStrategy<>(100, generatedStems))
+                .withAddressCommitmentCache(new InMemoryCacheStrategy<>(100))
+                .build());
     assertThat(cachedTrieKeyAdapter.basicDataKey(address))
         .isEqualTo(
             Bytes32.fromHexString(
@@ -161,7 +173,11 @@ public class TrieKeyBatchAdapterTest {
         adapter.manyStems(addr, new ArrayList<>(), new ArrayList<>(), chunkIds);
 
     final TrieKeyAdapter cachedTrieKeyAdapter =
-        new TrieKeyAdapter(new CachedPedersenHasher(100, generatedStems, new FailedHasher()));
+        new TrieKeyAdapter(
+            StemHasherBuilder.builder()
+                .withStemCache(new InMemoryCacheStrategy<>(100, generatedStems))
+                .withAddressCommitmentCache(new InMemoryCacheStrategy<>(100))
+                .build());
     for (int i = 0; i < chunks.size(); ++i) {
       Bytes32 key = cachedTrieKeyAdapter.codeChunkKey(addr, UInt256.valueOf(i));
       Bytes32 expectedKey = Bytes32.fromHexString(testData.chunks.get(i).key);
@@ -169,13 +185,6 @@ public class TrieKeyBatchAdapterTest {
       Bytes32 value = chunks.get(i);
       Bytes32 expectedValue = Bytes32.fromHexString(testData.chunks.get(i).value);
       assertThat(value).as(String.format("Value %s", i)).isEqualTo(expectedValue);
-    }
-  }
-
-  private static class FailedHasher extends PedersenHasher {
-    @Override
-    public Bytes32 computeStem(final Bytes address, final Bytes32 index) {
-      throw new RuntimeException("should be found in the cache not in the fallback hasher");
     }
   }
 }

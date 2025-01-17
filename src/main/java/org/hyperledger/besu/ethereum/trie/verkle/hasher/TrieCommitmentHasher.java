@@ -15,6 +15,8 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.hasher;
 
+import org.hyperledger.besu.ethereum.trie.verkle.node.Node;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -23,46 +25,52 @@ import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
 import verkle.cryptography.LibIpaMultipoint;
 
+/**
+ * This class provides methods to commit to vectors of values, perform partial updates on
+ * commitments, compress commitments, and convert them to scalars. It serves as a utility for
+ * cryptographic operations in the context of Verkle trie data structures.
+ */
 public class TrieCommitmentHasher implements Hasher {
 
-  Bytes DEFAULT_COMMITMENT =
-      Bytes.concatenate(Bytes32.ZERO, Bytes32.rightPad(Bytes.fromHexString("0x01")));
-
   /**
-   * Commit to a vector of values.
+   * Commits to a vector of values.
    *
-   * @param inputs vector of serialized scalars to commit to.
-   * @return uncompressed serialized commitment.
+   * @param inputs an array of {@link Bytes32} representing serialized scalars to commit to.
+   * @return a {@link Bytes} object representing the uncompressed serialized commitment.
    */
   public Bytes commit(Bytes32[] inputs) {
     return Bytes.wrap(LibIpaMultipoint.commit(Bytes.concatenate(inputs).toArray()));
   }
 
   /**
-   * Commit for the root node
+   * Commits to the root node of a trie.
    *
-   * @param inputs An array of Bytes inputs to commit.
-   * @return Compressed serialized commitment (32 bytes).
+   * @param inputs an array of {@link Bytes} inputs to commit.
+   * @return a {@link Bytes32} object representing the compressed serialized commitment (32 bytes).
    */
   public Bytes32 commitRoot(final Bytes[] inputs) {
     return Bytes32.wrap(LibIpaMultipoint.commitAsCompressed(Bytes.concatenate(inputs).toArray()));
   }
 
   /**
-   * Commit to a partially updated vector of values.
+   * Commits to a partially updated vector of values.
    *
-   * @param commitment Optional existing commitment.
-   * @param indices List of indices to update.
-   * @param oldScalars List of old scalar values.
-   * @param newScalars List of new scalar values.
-   * @return Updated uncompressed serialized commitment.
+   * <p>This method updates an existing commitment with new scalar values, optionally using a prior
+   * commitment.
+   *
+   * @param commitment an {@link Optional} containing an existing commitment, or empty for a new
+   *     one.
+   * @param indices a {@link List} of indices representing the positions to update.
+   * @param oldScalars a {@link List} of {@link Bytes} representing old scalar values.
+   * @param newScalars a {@link List} of {@link Bytes} representing new scalar values.
+   * @return a {@link Bytes} object representing the updated uncompressed serialized commitment.
    */
   public Bytes commitPartialUpdate(
       final Optional<Bytes> commitment,
       final List<Byte> indices,
       final List<Bytes> oldScalars,
       final List<Bytes> newScalars) {
-    final Bytes cmnt = commitment.orElse(DEFAULT_COMMITMENT);
+    final Bytes cmnt = commitment.orElse(Node.EMPTY_COMMITMENT);
     final byte[] idx = new byte[indices.size()];
     for (int i = 0; i < indices.size(); i++) {
       idx[i] = indices.get(i);

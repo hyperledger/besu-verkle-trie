@@ -66,6 +66,9 @@ dependencies {
   implementation 'org.hyperledger.besu.internal:rlp'
   implementation 'org.hyperledger.besu.internal:trie'
 
+
+  testImplementation 'org.mockito:mockito-core'
+  testImplementation 'org.mockito:mockito-junit-jupiter'
   testImplementation 'com.fasterxml.jackson.core:jackson-databind'
   testImplementation 'org.assertj:assertj-core'
   testImplementation 'org.apache.commons:commons-csv:1.10.0'

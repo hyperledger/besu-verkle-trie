@@ -15,7 +15,7 @@
  */
 package org.hyperledger.besu.ethereum.trie.verkle.adapter;
 
-import org.hyperledger.besu.ethereum.trie.verkle.hasher.Hasher;
+import org.hyperledger.besu.ethereum.trie.verkle.hasher.StemHasher;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -34,7 +34,7 @@ public class TrieKeyBatchAdapter extends TrieKeyAdapter {
    *
    * @param hasher The hasher used for key generation.
    */
-  public TrieKeyBatchAdapter(final Hasher hasher) {
+  public TrieKeyBatchAdapter(final StemHasher hasher) {
     super(hasher);
   }
 

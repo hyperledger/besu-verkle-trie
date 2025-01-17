@@ -18,7 +18,7 @@ package org.hyperledger.besu.ethereum.trie.verkle;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.hyperledger.besu.ethereum.trie.verkle.adapter.TrieKeyAdapter;
-import org.hyperledger.besu.ethereum.trie.verkle.hasher.PedersenHasher;
+import org.hyperledger.besu.ethereum.trie.verkle.hasher.builder.StemHasherBuilder;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -36,7 +36,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 
 public class TrieKeyAdapterTest {
   Bytes address = Bytes.fromHexString("0x00112233445566778899aabbccddeeff00112233");
-  TrieKeyAdapter adapter = new TrieKeyAdapter(new PedersenHasher());
+  TrieKeyAdapter adapter = new TrieKeyAdapter(StemHasherBuilder.builder().build());
 
   @Test
   public void testStorageKey() {

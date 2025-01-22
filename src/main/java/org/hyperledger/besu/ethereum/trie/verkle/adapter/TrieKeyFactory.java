@@ -74,7 +74,7 @@ public class TrieKeyFactory {
    * @return The generated storage stem.
    */
   public Bytes getStorageStem(final Bytes address, final Bytes32 storageKey) {
-    final UInt256 trieIndex = TrieKeyUtils.getStorageKeyTrieIndex(storageKey);
+    final Bytes32 trieIndex = TrieKeyUtils.getStorageKeyTrieIndex(storageKey);
     return hasher.computeStem(address, trieIndex);
   }
 
@@ -86,7 +86,7 @@ public class TrieKeyFactory {
    * @return The generated code chunk stem.
    */
   public Bytes getCodeChunkStem(final Bytes address, final UInt256 chunkId) {
-    final UInt256 trieIndex = TrieKeyUtils.getCodeChunkKeyTrieIndex(chunkId.toBytes());
+    final Bytes32 trieIndex = TrieKeyUtils.getCodeChunkKeyTrieIndex(chunkId.toBytes());
     return hasher.computeStem(address, trieIndex);
   }
 
@@ -101,9 +101,9 @@ public class TrieKeyFactory {
     if (!headerKeys.isEmpty()) {
       trieIndex.add(UInt256.ZERO);
     }
-    for (Bytes32 storageKey : storageKeys) {
-      trieIndex.add(TrieKeyUtils.getStorageKeyTrieIndex(storageKey));
-    }
+
+    trieIndex.addAll(TrieKeyUtils.getStorageKeyTrieIndexes(storageKeys));
+
     for (Bytes32 codeChunkId : codeChunkIds) {
       trieIndex.add(TrieKeyUtils.getCodeChunkKeyTrieIndex(codeChunkId));
     }

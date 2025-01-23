@@ -69,7 +69,7 @@ public class TrieKeyUtils {
     return Bytes32.wrap(CODE_OFFSET.add(UInt256.fromBytes(chunkId)).divide(VERKLE_NODE_WIDTH));
   }
 
-  public static List<Bytes32> getCodeChunkTrieKeyIndexes(final Bytes code) {
+  public static List<Bytes32> getCodeChunkKeyTrieIndexes(final Bytes code) {
     return IntStream.range(0, TrieKeyUtils.getNbChunk(code))
         .mapToObj(UInt256::valueOf)
         .collect(Collectors.toUnmodifiableList());

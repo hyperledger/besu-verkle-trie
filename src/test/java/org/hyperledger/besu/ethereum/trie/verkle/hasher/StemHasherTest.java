@@ -114,8 +114,8 @@ class StemHasherTest {
   @Test
   void testManyStems_AllKeysInCache() {
     final Bytes address = Bytes.random(32);
-    final Bytes32 index1 = Bytes32.random();
-    final Bytes32 index2 = Bytes32.random();
+    final UInt256 index1 = UInt256.fromBytes(Bytes32.random());
+    final UInt256 index2 = UInt256.fromBytes(Bytes32.random());
     final Bytes value1 = Bytes.random(31);
     final Bytes value2 = Bytes.random(31);
 
@@ -134,9 +134,9 @@ class StemHasherTest {
   @Test
   void testManyStems_MissingKeys() {
     final Bytes address = Bytes.random(32);
-    final Bytes32 index1 = Bytes32.leftPad(Bytes.of(1));
-    final Bytes32 index2 = Bytes32.leftPad(Bytes.of(2));
-    final Bytes32 index3 = Bytes32.leftPad(Bytes.of(3));
+    final UInt256 index1 = UInt256.fromBytes(Bytes32.leftPad(Bytes.of(1)));
+    final UInt256 index2 = UInt256.fromBytes(Bytes32.leftPad(Bytes.of(2)));
+    final UInt256 index3 = UInt256.fromBytes(Bytes32.leftPad(Bytes.of(3)));
     final Bytes value1 = Bytes.random(31);
 
     when(mockStemCache.getIfPresent(index1)).thenReturn(value1);

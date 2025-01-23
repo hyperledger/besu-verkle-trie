@@ -22,8 +22,12 @@ import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.MAIN_STO
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH;
 import static org.hyperledger.besu.ethereum.trie.verkle.util.Parameters.VERKLE_NODE_WIDTH_LOG2;
 
+import org.hyperledger.besu.ethereum.trie.verkle.util.Parameters;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.apache.tuweni.bytes.Bytes;
 import org.apache.tuweni.bytes.Bytes32;
@@ -36,17 +40,39 @@ public class TrieKeyUtils {
 
   private TrieKeyUtils() {}
 
-  public static UInt256 getStorageKeyTrieIndex(final Bytes32 storageKey) {
+  public static Bytes32 getAccountKeyTrieIndex() {
+    return Parameters.BASIC_DATA_LEAF_KEY;
+  }
+
+  public static Bytes32 getStorageKeyTrieIndex(final Bytes32 storageKey) {
     final UInt256 uintStorageKey = UInt256.fromBytes(storageKey);
     if (uintStorageKey.compareTo(HEADER_STORAGE_SIZE) < 0) {
       return uintStorageKey.add(HEADER_STORAGE_OFFSET).divide(VERKLE_NODE_WIDTH);
     } else {
       // We divide by VerkleNodeWidthLog2 to make space and prevent any potential overflow
       // Then, we increment, a step that is safeguarded against overflow.
-      return uintStorageKey
-          .shiftRight(VERKLE_NODE_WIDTH_LOG2.intValue())
-          .add(MAIN_STORAGE_OFFSET_SHIFT_LEFT_VERKLE_NODE_WIDTH);
+      return Bytes32.wrap(
+          uintStorageKey
+              .shiftRight(VERKLE_NODE_WIDTH_LOG2.intValue())
+              .add(MAIN_STORAGE_OFFSET_SHIFT_LEFT_VERKLE_NODE_WIDTH));
     }
+  }
+
+  public static List<Bytes32> getStorageKeyTrieIndexes(final List<Bytes32> storageSlotKeys) {
+    return storageSlotKeys.stream()
+        .map(TrieKeyUtils::getStorageKeyTrieIndex)
+        .map(Bytes32::wrap)
+        .toList();
+  }
+
+  public static Bytes32 getCodeChunkKeyTrieIndex(final Bytes32 chunkId) {
+    return Bytes32.wrap(CODE_OFFSET.add(UInt256.fromBytes(chunkId)).divide(VERKLE_NODE_WIDTH));
+  }
+
+  public static List<Bytes32> getCodeChunkKeyTrieIndexes(final Bytes code) {
+    return IntStream.range(0, TrieKeyUtils.getNbChunk(code))
+        .mapToObj(UInt256::valueOf)
+        .collect(Collectors.toUnmodifiableList());
   }
 
   public static Bytes getStorageKeySuffix(final Bytes32 storageKey) {
@@ -56,10 +82,6 @@ public class TrieKeyUtils {
     } else {
       return getLastByte(storageKey);
     }
-  }
-
-  public static UInt256 getCodeChunkKeyTrieIndex(final Bytes32 chunkId) {
-    return CODE_OFFSET.add(UInt256.fromBytes(chunkId)).divide(VERKLE_NODE_WIDTH);
   }
 
   public static Bytes getCodeChunkKeySuffix(final Bytes32 chunkId) {

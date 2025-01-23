@@ -40,7 +40,7 @@ public class TrieKeyUtils {
 
   private TrieKeyUtils() {}
 
-  public static Bytes32 getAccountTrieKeyIndex() {
+  public static Bytes32 getAccountKeyTrieIndex() {
     return Parameters.BASIC_DATA_LEAF_KEY;
   }
 
